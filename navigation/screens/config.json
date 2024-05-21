@@ -1,0 +1,5 @@
+{
+  "compilerOptions": {},
+  "extends": "expo/tsconfig.base",
+  "URLAPI": "http://192.168.1.8:8888"
+}
