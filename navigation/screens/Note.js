@@ -141,7 +141,7 @@ export default function Note() {
                 </View>
                 <FlatList
                     data={notes}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={(item) => item.note_id}
                     numColumns={2}
                     renderItem={renderNote}
                 />

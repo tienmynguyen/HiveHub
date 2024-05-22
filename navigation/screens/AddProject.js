@@ -143,7 +143,7 @@ export default function AddProject({ route }) {
             </View>
             <View style={styles.addbtnContainer}>
                 <TouchableOpacity style={styles.addbtn} onPress={onSubmitPressed}>
-                    <Text style={styles.taddbtn}>ADD</Text>
+                    <Text style={styles.taddbtn}>Create</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>

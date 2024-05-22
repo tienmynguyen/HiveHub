@@ -19,7 +19,7 @@ export default function AddTask({ route }) {
                             placeholder=""
 
                         />
-                        <Text>Deadline:</Text>
+                        <Text>Description:</Text>
                         <TextInput
                             style={styles.input}
 

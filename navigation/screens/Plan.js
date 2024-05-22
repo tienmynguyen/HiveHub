@@ -1,69 +1,49 @@
-import React from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, Image,} from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import Icon from "react-native-vector-icons/FontAwesome";
+import Config from "./config.json";
+import {AuthContext} from "../context/AuthContext";
+import {useIsFocused} from "@react-navigation/native";
 
 
-const dummyTasks1 = [
-    {
-        id: "1",
-        title:"Phân tích thiết kế hệ thống",
-        time_start:"01/01/2024",
-        time_end:"02/01/2024",
-        deadline:"03/01/2024",
-        status:"Done",
-        user:"Tmy",
-        projectId: "1",
-    },{
-        id: "2",
-        title:"Thiết kế giao diện",
-        time_start:"01/01/2024",
-        time_end:"02/01/2024",
-        deadline:"03/01/2024",
-        status:"Done",
-        user:"Tmy",
-        projectId: "1",
-    },{
-        id: "3",
-        title:"FrontEnd",
-        time_start:"01/01/2024",
-        time_end:"02/01/2024",
-        deadline:"03/01/2024",
-        status:"Done",
-        user:"Tmy",
-        projectId: "1",
-    },{
-        id: "4",
-        title:"Backend",
-        time_start:"01/01/2024",
-        time_end:"02/01/2024",
-        deadline:"03/01/2024",
-        status:"Doing",
-        user:"Tmy",
-        projectId: "1",
-    },{
-        id: "5",
-        title:"Build",
-        time_start:"01/01/2024",
-        time_end:"02/01/2024",
-        deadline:"03/01/2024",
-        status:"To do",
-        user:"Tmy",
-        projectId: "1",
-    },
-
-
-]
 export default function Plan({navigation , route }) {
+    const { userData, logout } = useContext(AuthContext);
+    const [tasks, setTasks] = useState([]);
     const { projectId } = route.params;
+    const isFocused = useIsFocused();
+
+    useEffect(() => {
+        if (isFocused) {
+            fetchData();
+        }
+    }, [isFocused]);
+    console.log(projectId)
+
+    async function fetchData() {
+        try {
+            const response = await fetch(`${Config.URLAPI}/gettaskbyprojectid?projectid=${projectId}`);
+            const data = await response.json();
+            setTasks(data);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+    function formatDate(isoString) {
+        const date = new Date(isoString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
 
     const getStatusStyle = (status) => {
         switch (status) {
-            case 'Done':
+            case 'DONE':
                 return styles.done;
-            case 'Doing':
+            case 'DOING':
                 return styles.doing;
-            case 'To do':
+            case 'TODO':
                 return styles.todo;
             default:
                 return styles.default;
@@ -87,16 +67,18 @@ export default function Plan({navigation , route }) {
                     <Text style={{fontSize:25,}}>Plan</Text>
                     <TouchableOpacity ></TouchableOpacity>
                 </View>
-                <FlatList  data={dummyTasks1}
-                           keyExtractor={(item) => item.id} // Chỉ định keyExtractor ở đây
+                <FlatList  data={tasks}
+                           keyExtractor={(item) => item.task_id} // Chỉ định keyExtractor ở đây
                            renderItem={({ item }) =>
                                <TouchableOpacity style={styles.TaskItem}  onPress={()=>gotoTaskDetail(item)}>
                                    <View style={{flexDirection:"column",justifyContent:"center"}}>
-                                       <Text style={{fontSize:20,color:"#000000"}}>{item.title}</Text>
-                                       <Text>{item.deadline}</Text>
+                                        <Text style={{fontSize:20,color:"#000000"}}>{item.taskName}</Text>
+                                       <Text style={{fontSize:16,color:"#000000"}}>{item.description}</Text>
+                                       <View style={{height:10}}></View>
+                                       <Text>{formatDate(item.deadline)}</Text>
                                    </View>
                                    <View>
-                                       <Text style={getStatusStyle(item.status)}>{item.status}</Text>
+                                       <Text style={getStatusStyle(item.taskStatus)}>{item.taskStatus}</Text>
                                    </View>
                                </TouchableOpacity>
 
