@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TextInput, TouchableOpacity, Modal } from 'react-native';
+import {View, Text, StyleSheet, FlatList, Image, TextInput, TouchableOpacity, Modal, Alert} from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Background from '../components/Background2';
@@ -13,6 +13,7 @@ export default function Project({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [joinModalVisible, setJoinModalVisible] = useState(false);
     const [joinProjectCode, setJoinProjectCode] = useState('');
+    const [joinSuccess, setJoinSuccess] = useState(false); // Thêm trạng thái joinSuccess
 
     const isFocused = useIsFocused();
 
@@ -20,7 +21,7 @@ export default function Project({ navigation }) {
         if (isFocused) {
             fetchData();
         }
-    }, [isFocused]);
+    }, [isFocused, joinSuccess]);
 
     async function fetchData() {
         try {
@@ -44,14 +45,32 @@ export default function Project({ navigation }) {
         navigation.navigate('AddProject');
     };
 
-    const joinProject = () => {
-        // Handle join project with joinProjectCode
-        console.log('Joining project with code:', joinProjectCode);
+    const joinProject = async () => {
+        try {
+            const response = await fetch(`${Config.URLAPI}/joinproject?userId=${userData.user_id}&projectId=${joinProjectCode}`, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+            });
+
+
+                setJoinSuccess(true);
+
+            Alert.alert('Tham gia dự án thành công!');
+        } catch (error) {
+            console.error(error);
+            setJoinSuccess(false);
+        }
         setJoinModalVisible(false);
     };
 
+
     return (
         <Background>
+
             <View style={{ flexDirection: 'row', marginTop: 80 }}>
                 <TextInput
                     style={styles.input}
@@ -71,25 +90,36 @@ export default function Project({ navigation }) {
                     data={tasks}
                     keyExtractor={(item) => item.project_id}
                     renderItem={({ item }) => (
-                        <View style={{ flexDirection: "row", gap: 5 }}>
-                            <TouchableOpacity onPress={() => gotoChat(item.project_id)}>
-                                <View style={styles.projectItem}>
-                                    <View>
-                                        <Image source={{ uri: item.avt }} />
-                                    </View>
-                                    <View>
-                                        <Text>{item.projectName}</Text>
-                                        <Text> {item.projectDescription}</Text>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
-                            <View>
-                                <TouchableOpacity onPress={() => gotoPlan(item.project_id)}>
-                                    <View style={styles.projectPlan}>
-                                        <Icon name="list" color={'#FFFFFF'} size={25} />
+                        <View style={{flexDirection:"column"}}>
+                                <TouchableOpacity onPress={() => gotoChat(item.project_id)}>
+                                    <View style={styles.projectcard}>
+                                        <View style={{alignItems:"center",justifyContent:"center",backgroundColor:"#ffeded",borderRadius:10}}>
+                                            <Image source={require("./images/group.png")}
+                                                   style={styles.addbtn}
+                                            />
+                                        </View>
+                                        <View style={styles.projectItem}>
+
+                                            <View>
+
+                                                    <View style={{paddingLeft:5}}>
+                                                        <Text style={{fontSize:18}}>{item.projectName}</Text>
+                                                    </View>
+
+                                                <View style={{padding:5,backgroundColor:"#ffd69e",borderRadius:10}}>
+                                                    <Text> {item.projectDescription}</Text>
+                                                </View>
+                                            </View>
+                                        </View>
+                                        <View>
+                                            <TouchableOpacity onPress={() => gotoPlan(item.project_id)}>
+                                                <View style={styles.projectPlan}>
+                                                    <Icon name="list" color={'#FFFFFF'} size={25} />
+                                                </View>
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
                                 </TouchableOpacity>
-                            </View>
                         </View>
                     )}
                 />
@@ -157,27 +187,36 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         padding: 10,
         borderRadius: 5,
+
+    },
+    projectcard:{
+    flexDirection:"row",
+        backgroundColor: "#ffb267",
+        alignItems:"center",
+        padding:10,
+        gap:10,
+        marginTop:10,
+        borderRadius:15,
+        position: 'relative',
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.29,
+        shadowRadius: 4.65,
+
+        elevation: 7,
     },
     projectItem: {
-       padding:10,
-        width: 330,
-        backgroundColor: "#ffb267",
-        marginTop: 15,
-        flexDirection: 'row',
-        borderRadius: 15,
+        width: 270,
+        flexDirection: 'column',
+
         paddingLeft: 15,
-        paddingTop: 10,
-        gap: 15,
+        paddingRight:15
     },
     projectPlan: {
-        width: 50,
-        marginTop: 15,
-        flexDirection: 'row',
-        backgroundColor: "#e78f3a",
-        borderRadius: 15,
-        alignItems: "center",
-        justifyContent: "center",
-        height: 60
+
     },
     add: {
         backgroundColor: "#ffab33",
@@ -188,6 +227,16 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
+        position: 'relative',
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.29,
+        shadowRadius: 4.65,
+
+        elevation: 7,
     },
     modalOverlay: {
         flex: 1,

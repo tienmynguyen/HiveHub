@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState,useEffect  } from 'react';
 import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, TextInput } from 'react-native';
 import Background from '../components/Background2';
 import { AuthContext } from '../context/AuthContext';
@@ -17,7 +17,15 @@ export default function Profile({ navigation }) {
     const [editname, setEditname] = useState(userData.username);
     const [editemail, setEditemail] = useState(userData.email);
 
+    useEffect(() => {
+        if (userData) {
+            setPicture(userData.imagePath);
 
+            setDescription(userData.description);
+            setEditname(userData.username);
+            setEditemail(userData.email);
+        }
+    }, [userData]);
 
     if (!userData) {
         return <Text>Loading...</Text>;
@@ -62,13 +70,13 @@ export default function Profile({ navigation }) {
                 name: asset.fileName ? asset.fileName : `IMG_${Date.now()}.jpg`,
             };
 
-            console.log(source);
+
             handleUpdate(source);
             setPicture(asset.uri);
         }
     };
     const handleSaveDescription = async () => {
-        console.log('New Description:', description);
+
 
         const newDescription = {
             userName: editname,
@@ -100,7 +108,7 @@ export default function Profile({ navigation }) {
             .then((data) => {
                 setPicture(data.url);
                 setModal(false);
-                console.log(data);
+
                 handleSaveDescription();
             })
             .catch((err) => {
@@ -114,7 +122,7 @@ export default function Profile({ navigation }) {
                 <TouchableOpacity style={styles.iconedit} onPress={() => setModalVisible(true)}>
                     <Icon name="edit" size={40} color="#794400" />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={pickImage}>
+                <TouchableOpacity >
                     <Image
                         style={styles.avt}
                         source={picture ? { uri: picture } : require('../assets/logo.png')}
@@ -154,7 +162,7 @@ export default function Profile({ navigation }) {
                     <View>
                         <TouchableOpacity onPress={pickImage}>
                            <View style={styles.changeavt}>
-                               <Text >
+                               <Text style={{color:"#FFFFFF",fontWeight:"bold",fontSize:16}}>
                                    change avata
                                </Text>
                            </View>
