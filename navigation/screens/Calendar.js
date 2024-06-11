@@ -2,27 +2,34 @@
 import * as React from 'react';
 import { SafeAreaView, ScrollView, Text, View } from 'react-native';
 import Background from '../components/Background2';
-import GanttChart from '../components/GanttChart'; // Đảm bảo đường dẫn chính xác đến file GanttChart
-
+import GanttChart from '../components/GanttChartCalendar';
+import Config from "./config.json";
+import { AuthContext } from "../context/AuthContext";
+import {useContext, useEffect, useState} from "react";
+import {useIsFocused} from "@react-navigation/native";
 export default function Calendar({ navigation }) {
-    // Ví dụ về dữ liệu các công việc
-    const tasks = [
-        { name: 'Task 1', start: '2024-06-10', end: '2024-06-15', projectid: 'abc1' },
-        { name: 'Task 2', start: '2024-06-14', end: '2024-06-17', projectid: 'abc1' },
-        { name: 'Task 3', start: '2024-06-16', end: '2024-06-17', projectid: 'ab2' },
-        { name: 'Task 4', start: '2024-06-17', end: '2024-06-18', projectid: 'ab2' },
-        { name: 'Task 5', start: '2024-06-15', end: '2024-06-19', projectid: 'abc1' },
-        { name: 'Task 6', start: '2024-06-19', end: '2024-06-20', projectid: 'ab3' },
-        { name: 'Task 7', start: '2024-06-17', end: '2024-06-19', projectid: 'abf' },
-        { name: 'Task 1', start: '2024-06-10', end: '2024-06-15', projectid: 'abc1' },
-        { name: 'Task 2', start: '2024-06-14', end: '2024-06-17', projectid: 'abc1' },
-        { name: 'Task 3', start: '2024-06-16', end: '2024-06-17', projectid: 'ab2' },
-        { name: 'Task 4', start: '2024-06-17', end: '2024-06-18', projectid: 'ab2' },
-        { name: 'Task 5', start: '2024-06-15', end: '2024-06-19', projectid: 'abc1' },
-        { name: 'Task 6', start: '2024-06-19', end: '2024-06-20', projectid: 'ab3' },
-        { name: 'Task 7', start: '2024-06-28', end: '2024-07-19', projectid: 'abf' },
+    const { userData } = useContext(AuthContext);
+    const [tasks, setTasks] = useState([]);
+    const isFocused = useIsFocused();
 
-    ];
+    useEffect(() => {
+        if (isFocused) {
+            fetchData();
+
+        }
+    }, [isFocused]);
+
+    async function fetchData() {
+        try {
+            const response = await fetch(`${Config.URLAPI}/getalltaskbyuser?userId=${userData.user_id}`);
+
+            const data = await response.json();
+            setTasks(data);
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
 
     const [currentMonth, setCurrentMonth] = React.useState(new Date());
 

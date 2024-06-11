@@ -73,7 +73,7 @@ export default function Plan({ navigation, route }) {
             const response = await fetch(`${Config.URLAPI}/getalluserbyprojectId?projectId=${projectId}`);
             const data = await response.json();
             setUser(data);
-            console.log(data);
+
         } catch (error) {
             console.error(error);
         }
