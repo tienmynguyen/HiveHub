@@ -1,24 +1,28 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, Image, Alert } from 'react-native';
-import { createStackNavigator } from '@react-navigation/stack';
-import Icon from "react-native-vector-icons/FontAwesome";
+import { View, Text, FlatList, SafeAreaView, TouchableOpacity, Image, Alert, Modal, StyleSheet,Easing  } from 'react-native'; // Corrected import
+import Icon from 'react-native-vector-icons/FontAwesome';
+import Background from '../components/Background2';
 import Config from "./config.json";
 import { AuthContext } from "../context/AuthContext";
 import { useIsFocused } from "@react-navigation/native";
-import { Clipboard } from 'react-native';// Import Clipboard from @react-native-clipboard/clipboard
+import { Clipboard } from 'react-native';
+import GanttChart from "../components/GanttChart";
 
 export default function Plan({ navigation, route }) {
     const { userData, logout } = useContext(AuthContext);
-    const [tasks, setTasks] = useState([]);
-    const { projectId } = route.params;
     const isFocused = useIsFocused();
-
+    const [drawerVisible, setDrawerVisible] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [tasks, setTasks] = useState([]);
+    const { projectId, projectName } = route.params;
+    const [user, setUser] = useState([]);
     useEffect(() => {
         if (isFocused) {
             fetchData();
+            getuser();
         }
     }, [isFocused]);
-    console.log(projectId)
 
     async function fetchData() {
         try {
@@ -64,40 +68,107 @@ export default function Plan({ navigation, route }) {
         Alert.alert('Copied to Clipboard', `Invite code ${projectId} copied!`);
     };
 
+    async function getuser() {
+        try {
+            const response = await fetch(`${Config.URLAPI}/getalluserbyprojectId?projectId=${projectId}`);
+            const data = await response.json();
+            setUser(data);
+            console.log(data);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     return (
-        <SafeAreaView>
-            <View style={{ padding: 15, marginTop: 80 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <TouchableOpacity onPress={copyToClipboard} style={{ flexDirection: "row", gap: 5 }}>
-                        <Text style={{ fontSize: 15 }}>Invite code: {projectId}</Text>
-                        <Icon name={"copy"} style={{ fontSize: 17 }} />
-                    </TouchableOpacity>
-                </View>
-                <FlatList
-                    data={tasks}
-                    keyExtractor={(item) => item.task_id}
-                    renderItem={({ item }) =>
-                        <TouchableOpacity style={styles.TaskItem} onPress={() => gotoTaskDetail(item)}>
-                            <View style={{ flexDirection: "column", justifyContent: "center" }}>
-                                <Text style={{ fontSize: 20, color: "#000000" }}>{item.taskName}</Text>
-                                <Text style={{ fontSize: 16, color: "#000000" }}>{item.description}</Text>
-                                <View style={{ height: 10 }}></View>
-                                <Text>{formatDate(item.deadline)}</Text>
-                            </View>
-                            <View>
-                                <Text style={getStatusStyle(item.taskStatus)}>{item.taskStatus}</Text>
-                            </View>
-                        </TouchableOpacity>
-                    }
-                />
-                <TouchableOpacity style={styles.addbtnbox} onPress={() => gotoAddTask(projectId)}>
-                    <Image
-                        source={require("./images/add.png")}
-                        style={styles.addbtn}
-                    />
-                </TouchableOpacity>
-            </View>
-        </SafeAreaView>
+       <Background>
+           <SafeAreaView>
+               <View style={{ padding: 15, marginTop: 80 }}>
+                   <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 15 }}>
+                       <TouchableOpacity>
+                           <Icon name="bell" size={25} color="#000" />
+                       </TouchableOpacity>
+
+                       <TouchableOpacity onPress={() => setModalVisible(true)}>
+                           <Icon name="bars" size={25} color="#000" />
+                       </TouchableOpacity>
+                   </View>
+
+                   <Text style={{ fontSize: 25 }}>
+                       {projectName}
+                   </Text>
+
+                   <FlatList
+                       style={{ height: 640 }}
+                       data={tasks}
+                       keyExtractor={(item) => item.task_id}
+                       ListHeaderComponent={
+                           <View>
+                               <GanttChart tasks={tasks} currentMonth={currentMonth} setCurrentMonth={setCurrentMonth} />
+                           </View>
+                       }
+                       renderItem={({ item }) => (
+                           <TouchableOpacity style={styles.TaskItem} onPress={() => gotoTaskDetail(item)}>
+                               <View style={{ flexDirection: "column", justifyContent: "center" }}>
+                                   <Text style={{ fontSize: 20, color: "#000000" }}>{item.taskName}</Text>
+                                   <Text style={{ fontSize: 16, color: "#000000" }}>{item.description}</Text>
+                                   <View style={{ height: 10 }}></View>
+                                   <Text>{formatDate(item.deadline)}</Text>
+                               </View>
+                               <View>
+                                   <Text style={getStatusStyle(item.taskStatus)}>{item.taskStatus}</Text>
+                               </View>
+                           </TouchableOpacity>
+                       )}
+                   />
+
+                   <TouchableOpacity style={styles.addbtnbox} onPress={() => gotoAddTask(projectId)}>
+                       <Image
+                           source={require("./images/add.png")}
+                           style={styles.addbtn}
+                       />
+                   </TouchableOpacity>
+
+                   {/* Modal */}
+                   <Modal
+
+                       transparent={true}
+                       visible={modalVisible}
+                       onRequestClose={() => setModalVisible(false)}
+                       animationIn="slideInLeft"
+                       animationOut="slideOutRight"
+                       animationInTiming={1500}
+                       animationOutTiming={750}
+                       useNativeDriver={true}
+                   >
+                       <View style={styles.modalContainer}>
+                           <View style={styles.modalContent}>
+
+                               <TouchableOpacity style={styles.modalButton} onPress={copyToClipboard}>
+                                   <Text>Copy Invite Code</Text>
+                               </TouchableOpacity>
+
+                               <View style={{  marginTop: 10 }}></View>
+                               {user.map((userData)=>(
+                                   <View key={userData.user_id} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, paddingLeft:5, gap: 10 }}>
+
+                                       <Image
+                                           style={styles.avt}
+                                           source={userData.imagePath ? { uri: userData.imagePath } : require('../assets/logo.png')}
+                                       />
+
+                                       <Text>{userData.username}</Text>
+                                   </View>
+                               ))}
+
+                               <TouchableOpacity style={styles.modalButton} onPress={() => setModalVisible(false)}>
+                                   <Text>Close</Text>
+                               </TouchableOpacity>
+                           </View>
+                       </View>
+                   </Modal>
+               </View>
+           </SafeAreaView>
+       </Background>
     );
 }
 
@@ -136,4 +207,29 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        alignItems: 'flex-end',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)'
+    },
+    modalContent: {
+        width: '70%',
+        height: '100%',
+        backgroundColor: '#fff',
+        paddingTop:80,
+
+
+    },
+    modalButton: {
+        marginTop: 10,
+        padding: 10,
+        backgroundColor: '#eee',
+        borderRadius: 5,
+        alignItems: 'center'
+    },avt:{
+        height:50,
+        width:50,
+        borderRadius:10
+    }
 });

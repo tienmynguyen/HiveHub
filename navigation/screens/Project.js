@@ -17,6 +17,10 @@ export default function Project({ navigation }) {
 
     const isFocused = useIsFocused();
 
+
+
+
+
     useEffect(() => {
         if (isFocused) {
             fetchData();
@@ -37,8 +41,8 @@ export default function Project({ navigation }) {
         navigation.navigate('Chat', { projectId: id });
     };
 
-    const gotoPlan = (id) => {
-        navigation.navigate('Plan', { projectId: id });
+    const gotoPlan = (id,name) => {
+        navigation.navigate('Plan', { projectId: id , projectName: name});
     };
 
     const gotoAddProject = () => {
@@ -68,6 +72,9 @@ export default function Project({ navigation }) {
     };
 
 
+
+
+
     return (
         <Background>
 
@@ -91,7 +98,7 @@ export default function Project({ navigation }) {
                     keyExtractor={(item) => item.project_id}
                     renderItem={({ item }) => (
                         <View style={{flexDirection:"column"}}>
-                                <TouchableOpacity onPress={() => gotoChat(item.project_id)}>
+                                <TouchableOpacity onPress={() => gotoChat(item.project_id, item.projectName)}>
                                     <View style={styles.projectcard}>
                                         <View style={{alignItems:"center",justifyContent:"center",backgroundColor:"#ffeded",borderRadius:10}}>
                                             <Image source={require("./images/group.png")}
@@ -112,7 +119,7 @@ export default function Project({ navigation }) {
                                             </View>
                                         </View>
                                         <View>
-                                            <TouchableOpacity onPress={() => gotoPlan(item.project_id)}>
+                                            <TouchableOpacity onPress={() => gotoPlan(item.project_id,item.projectName)}>
                                                 <View style={styles.projectPlan}>
                                                     <Icon name="list" color={'#FFFFFF'} size={25} />
                                                 </View>
@@ -197,16 +204,7 @@ const styles = StyleSheet.create({
         gap:10,
         marginTop:10,
         borderRadius:15,
-        position: 'relative',
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.29,
-        shadowRadius: 4.65,
 
-        elevation: 7,
     },
     projectItem: {
         width: 270,

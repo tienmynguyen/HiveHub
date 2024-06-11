@@ -3,6 +3,7 @@ import {View, Text, StyleSheet, FlatList, Image, TouchableOpacity} from 'react-n
 import {useState} from 'react';
 import { RadioButton } from 'react-native-paper';
 import Background from '../components/Background2';
+import Config from "./config.json";
 
 const dummyTasks1 = [
 {
@@ -59,6 +60,15 @@ const dummyTasks3 = [
 
 ]
 
+async function fetchData() {
+    try {
+        const response = await fetch(`${Config.URLAPI}/getprjectbyuserId?userId=${userData.user_id}`);
+        const data = await response.json();
+        setTasks(data);
+    } catch (error) {
+        console.error(error);
+    }
+}
 
 export default function Home({ navigation }) {
     const [tasks, setTasks] = useState(dummyTasks1);

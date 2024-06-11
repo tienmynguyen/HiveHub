@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import Modal from 'react-native-modal';
 import Config from "./config.json";
 
@@ -7,10 +7,17 @@ export default function PlanDetail({ route }) {
     const { task } = route.params;
     const [isModalVisible, setModalVisible] = useState(false);
     const [status, setStatus] = useState(task.taskStatus);
+    const [users, setUsers] = useState([]);
+
+    // Ensure fetchData is called once when the component mounts
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     const toggleModal = () => {
         setModalVisible(!isModalVisible);
     };
+
     function formatDate(isoString) {
         const date = new Date(isoString);
         const year = date.getFullYear();
@@ -19,8 +26,17 @@ export default function PlanDetail({ route }) {
         return `${year}-${month}-${day}`;
     }
 
-    async function postJSON(data) {
+    async function fetchData() {
+        try {
+            const response = await fetch(`${Config.URLAPI}/getalluserbytaskId?taskId=${task.task_id}`);
+            const data = await response.json();
+            setUsers(data);
+        } catch (error) {
+            console.error(error);
+        }
+    }
 
+    async function postJSON(data) {
         try {
             const response = await fetch(`${Config.URLAPI}/updatetask?taskId=${task.task_id}`, {
                 method: "POST",
@@ -77,10 +93,18 @@ export default function PlanDetail({ route }) {
                     </TouchableOpacity>
                 </View>
                 <View style={styles.TaskItem2}>
-                    <Text>Phụ trách: {task.user}</Text>
                     <Text>Ngày bắt đầu: {formatDate(task.timeStart)}</Text>
                     <Text>Ngày kết thúc: {formatDate(task.timeEnd)}</Text>
                     <Text>Deadline: {formatDate(task.deadline)}</Text>
+                    <View>
+                        <Text>Phụ trách: </Text>
+                        {users.map(user => (
+                            <View key={user.user_id} style={styles.userItem}>
+                                <Text>Tên: {user.username}</Text>
+                                <Text>Email: {user.email}</Text>
+                            </View>
+                        ))}
+                    </View>
                 </View>
             </View>
 
@@ -143,5 +167,8 @@ const styles = StyleSheet.create({
     optionText: {
         fontSize: 18,
         marginVertical: 10
+    },
+    userItem: {
+        marginTop: 0,
     }
 });
