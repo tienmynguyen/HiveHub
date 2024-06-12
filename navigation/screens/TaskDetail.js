@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
 import Modal from 'react-native-modal';
 import Config from "./config.json";
+import { AuthContext } from "../context/AuthContext";
 
 export default function PlanDetail({ route }) {
+
     const { task } = route.params;
     const [isModalVisible, setModalVisible] = useState(false);
     const [status, setStatus] = useState(task.taskStatus);
     const [users, setUsers] = useState([]);
+    const { userData, logout } = useContext(AuthContext);
 
-    // Ensure fetchData is called once when the component mounts
     useEffect(() => {
         fetchData();
     }, []);
@@ -36,6 +38,10 @@ export default function PlanDetail({ route }) {
         }
     }
 
+    function checkPermission() {
+        return users.some(user => user.user_id === userData.user_id);
+    }
+
     async function postJSON(data) {
         try {
             const response = await fetch(`${Config.URLAPI}/updatetask?taskId=${task.task_id}`, {
@@ -48,7 +54,7 @@ export default function PlanDetail({ route }) {
 
             const result = await response.json();
             console.log("Success:", result);
-            return result; // Return the added note
+            return result;
         } catch (error) {
             console.error("Error:", error);
             return null;
@@ -56,14 +62,13 @@ export default function PlanDetail({ route }) {
     }
 
     const handleStatusChange = async (newStatus) => {
-        console.log(newStatus);
-        setStatus(newStatus);
-        const newst = {
-            taskStatus: newStatus
-        };
-
-        const addedNote = await postJSON(newst);
-
+        if (checkPermission()) {
+            setStatus(newStatus);
+            const newStatusData = { taskStatus: newStatus };
+            await postJSON(newStatusData);
+        } else {
+            Alert.alert("Permission Denied", "You do not have permission to change this task");
+        }
         toggleModal();
     };
 

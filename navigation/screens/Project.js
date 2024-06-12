@@ -60,8 +60,27 @@ export default function Project({ navigation }) {
                 body: JSON.stringify({}),
             });
 
+                setrole()
 
-                setJoinSuccess(true);
+        } catch (error) {
+            console.error(error);
+            setJoinSuccess(false);
+        }
+
+    };
+
+    const setrole = async () => {
+        try {
+            const response = await fetch(`${Config.URLAPI}/updateuserproject?projectId=${joinProjectCode}&userId=${userData.user_id}&roleId=1`, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+            });
+            setJoinSuccess(true);
+            setJoinSuccess(false);
 
             Alert.alert('Tham gia dự án thành công!');
         } catch (error) {
@@ -70,8 +89,6 @@ export default function Project({ navigation }) {
         }
         setJoinModalVisible(false);
     };
-
-
 
 
 

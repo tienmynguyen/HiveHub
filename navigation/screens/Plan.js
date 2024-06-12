@@ -7,7 +7,7 @@ import { AuthContext } from "../context/AuthContext";
 import { useIsFocused } from "@react-navigation/native";
 import { Clipboard } from 'react-native';
 import GanttChart from "../components/GanttChart";
-
+import {LinearGradient} from 'expo-linear-gradient'
 export default function Plan({ navigation, route }) {
     const { userData, logout } = useContext(AuthContext);
     const isFocused = useIsFocused();
@@ -15,8 +15,10 @@ export default function Plan({ navigation, route }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [tasks, setTasks] = useState([]);
+    const [expandedUser, setExpandedUser] = useState(null); // State for expanded user
     const { projectId, projectName } = route.params;
     const [user, setUser] = useState([]);
+
     useEffect(() => {
         if (isFocused) {
             fetchData();
@@ -68,107 +70,148 @@ export default function Plan({ navigation, route }) {
         Alert.alert('Copied to Clipboard', `Invite code ${projectId} copied!`);
     };
 
-    async function getuser() {
+    async function getRole(userId) {
         try {
-            const response = await fetch(`${Config.URLAPI}/getalluserbyprojectId?projectId=${projectId}`);
-            const data = await response.json();
-            setUser(data);
-
+            const response = await fetch(`${Config.URLAPI}/findroleinuspr?projectId=${projectId}&userId=${userId}`);
+            const json = await response.json();
+            return json.role.roleName;
         } catch (error) {
             console.error(error);
         }
     }
 
+    async function getuser() {
+        try {
+            const response = await fetch(`${Config.URLAPI}/getalluserbyprojectId?projectId=${projectId}`);
+            const data = await response.json();
+
+            const usersWithRoles = await Promise.all(data.map(async (user) => {
+                const roleName = await getRole(user.user_id);
+                return { ...user, roleName };
+            }));
+
+            setUser(usersWithRoles);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const toggleUserExpand = (userId) => {
+        setExpandedUser(expandedUser === userId ? null : userId);
+    };
+
+    const handleUserAction = (user) => {
+        console.log('User info:', user);
+    };
+
+
+
     return (
-       <Background>
-           <SafeAreaView>
-               <View style={{ padding: 15, marginTop: 80 }}>
-                   <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 15 }}>
-                       <TouchableOpacity>
-                           <Icon name="bell" size={25} color="#000" />
-                       </TouchableOpacity>
+        <Background>
+            <SafeAreaView>
+                <View style={{ padding: 15, marginTop: 80 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 15 }}>
+                        <TouchableOpacity>
+                            <Icon name="bell" size={25} color="#000" />
+                        </TouchableOpacity>
 
-                       <TouchableOpacity onPress={() => setModalVisible(true)}>
-                           <Icon name="bars" size={25} color="#000" />
-                       </TouchableOpacity>
-                   </View>
+                        <TouchableOpacity onPress={() => setModalVisible(true)}>
+                            <Icon name="bars" size={25} color="#000" />
+                        </TouchableOpacity>
+                    </View>
 
-                   <Text style={{ fontSize: 25 }}>
-                       {projectName}
-                   </Text>
+                    <Text style={{ fontSize: 25 }}>
+                        {projectName}
+                    </Text>
 
-                   <FlatList
-                       style={{ height: 640 }}
-                       data={tasks}
-                       keyExtractor={(item) => item.task_id}
-                       ListHeaderComponent={
-                           <View>
-                               <GanttChart tasks={tasks} currentMonth={currentMonth} setCurrentMonth={setCurrentMonth} />
-                           </View>
-                       }
-                       renderItem={({ item }) => (
-                           <TouchableOpacity style={styles.TaskItem} onPress={() => gotoTaskDetail(item)}>
-                               <View style={{ flexDirection: "column", justifyContent: "center" }}>
-                                   <Text style={{ fontSize: 20, color: "#000000" }}>{item.taskName}</Text>
-                                   <Text style={{ fontSize: 16, color: "#000000" }}>{item.description}</Text>
-                                   <View style={{ height: 10 }}></View>
-                                   <Text>{formatDate(item.deadline)}</Text>
-                               </View>
-                               <View>
-                                   <Text style={getStatusStyle(item.taskStatus)}>{item.taskStatus}</Text>
-                               </View>
-                           </TouchableOpacity>
-                       )}
-                   />
+                    <FlatList
+                        style={{ height: 640 }}
+                        data={tasks}
+                        keyExtractor={(item) => item.task_id}
+                        ListHeaderComponent={
+                            <View>
+                                <GanttChart tasks={tasks} currentMonth={currentMonth} setCurrentMonth={setCurrentMonth} />
+                            </View>
+                        }
+                        renderItem={({ item }) => (
+                            <TouchableOpacity style={styles.TaskItem} onPress={() => gotoTaskDetail(item)}>
+                                <View style={{ flexDirection: "column", justifyContent: "center" }}>
+                                    <Text style={{ fontSize: 20, color: "#000000" }}>{item.taskName}</Text>
+                                    <Text style={{ fontSize: 16, color: "#000000" }}>{item.description}</Text>
+                                    <View style={{ height: 10 }}></View>
+                                    <Text>{formatDate(item.deadline)}</Text>
+                                </View>
+                                <View>
+                                    <Text style={getStatusStyle(item.taskStatus)}>{item.taskStatus}</Text>
+                                </View>
+                            </TouchableOpacity>
+                        )}
+                    />
 
-                   <TouchableOpacity style={styles.addbtnbox} onPress={() => gotoAddTask(projectId)}>
-                       <Image
-                           source={require("./images/add.png")}
-                           style={styles.addbtn}
-                       />
-                   </TouchableOpacity>
+                    <TouchableOpacity style={styles.addbtnbox} onPress={() => gotoAddTask(projectId)}>
+                        <Image
+                            source={require("./images/add.png")}
+                            style={styles.addbtn}
+                        />
+                    </TouchableOpacity>
 
-                   {/* Modal */}
-                   <Modal
+                    {/* Modal */}
+                    <Modal
+                        transparent={true}
+                        visible={modalVisible}
+                        onRequestClose={() => setModalVisible(false)}
+                        animationIn="slideInLeft"
+                        animationOut="slideOutRight"
+                        animationInTiming={1500}
+                        animationOutTiming={750}
+                        useNativeDriver={true}
+                    >
+                        <View style={styles.modalContainer}>
+                            <View style={styles.modalContent}>
+                                <TouchableOpacity style={styles.modalButton} onPress={copyToClipboard}>
+                                    <Text>Copy Invite Code</Text>
+                                </TouchableOpacity>
 
-                       transparent={true}
-                       visible={modalVisible}
-                       onRequestClose={() => setModalVisible(false)}
-                       animationIn="slideInLeft"
-                       animationOut="slideOutRight"
-                       animationInTiming={1500}
-                       animationOutTiming={750}
-                       useNativeDriver={true}
-                   >
-                       <View style={styles.modalContainer}>
-                           <View style={styles.modalContent}>
+                                <View style={{ marginTop: 10 }}></View>
+                                {user.map((userData) => (
+                                    <View key={userData.user_id}>
+                                        <TouchableOpacity
+                                            style={styles.userItem}
+                                            onPress={() => toggleUserExpand(userData.user_id)}
+                                        >
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                                                <Image
+                                                    style={styles.avt}
+                                                    source={userData.imagePath ? { uri: userData.imagePath } : require('../assets/logo.png')}
+                                                />
+                                                <Text>{userData.username}</Text>
+                                            </View>
+                                            <Text>{userData.roleName}</Text>
+                                        </TouchableOpacity>
+                                        {expandedUser === userData.user_id && (
+                                            <View style={styles.userDetails}>
+                                                <Text>{userData.email}</Text>
+                                                <Text>{userData.description}</Text>
+                                                <TouchableOpacity
+                                                    style={styles.actionButton}
+                                                    onPress={() => handleUserAction(userData)}
+                                                >
+                                                    <Text>Perform Action</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        )}
+                                    </View>
+                                ))}
 
-                               <TouchableOpacity style={styles.modalButton} onPress={copyToClipboard}>
-                                   <Text>Copy Invite Code</Text>
-                               </TouchableOpacity>
-
-                               <View style={{  marginTop: 10 }}></View>
-                               {user.map((userData)=>(
-                                   <View key={userData.user_id} style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, paddingLeft:5, gap: 10 }}>
-
-                                       <Image
-                                           style={styles.avt}
-                                           source={userData.imagePath ? { uri: userData.imagePath } : require('../assets/logo.png')}
-                                       />
-
-                                       <Text>{userData.username}</Text>
-                                   </View>
-                               ))}
-
-                               <TouchableOpacity style={styles.modalButton} onPress={() => setModalVisible(false)}>
-                                   <Text>Close</Text>
-                               </TouchableOpacity>
-                           </View>
-                       </View>
-                   </Modal>
-               </View>
-           </SafeAreaView>
-       </Background>
+                                <TouchableOpacity style={styles.modalButton} onPress={() => setModalVisible(false)}>
+                                    <Text>Close</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </Modal>
+                </View>
+            </SafeAreaView>
+        </Background>
     );
 }
 
@@ -212,24 +255,49 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
         alignItems: 'flex-end',
         backgroundColor: 'rgba(0, 0, 0, 0.4)'
+
     },
     modalContent: {
         width: '70%',
         height: '100%',
-        backgroundColor: '#fff',
-        paddingTop:80,
-
-
+        backgroundColor: 'rgb(255,224,184)',
+        paddingTop: 80,
     },
     modalButton: {
         marginTop: 10,
         padding: 10,
-        backgroundColor: '#eee',
+        backgroundColor: "#ffb267",
         borderRadius: 5,
         alignItems: 'center'
-    },avt:{
-        height:50,
-        width:50,
-        borderRadius:10
+    },
+    avt: {
+        height: 50,
+        width: 50,
+        borderRadius: 10
+    },
+    userItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 10,
+        backgroundColor: "#ffb267",
+        marginTop: 10,
+        borderRadius: 5
+    },
+    userDetails: {
+        paddingLeft: 15,
+        paddingBottom: 10,
+        marginTop:-5,
+        paddingTop: 10,
+        backgroundColor: "#fdc288",
+        borderBottomEndRadius:5,
+        borderBottomStartRadius:5
+    },
+    actionButton: {
+        marginTop: 10,
+        padding: 10,
+        backgroundColor: "#ffb267",
+        borderRadius: 5,
+        alignItems: 'center'
     }
 });

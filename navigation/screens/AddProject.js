@@ -1,5 +1,5 @@
 import React, {useContext, useState} from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, StyleSheet } from 'react-native';
+import {View, Text, TextInput, TouchableOpacity, SafeAreaView, StyleSheet, Alert} from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import {emailValidator, nameValidator, passwordValidator, textValidator} from "../helpers/validators";
 import Config from "./config.json";
@@ -53,7 +53,7 @@ export default function AddProject({ route }) {
 
                 projectName: ProjectName,
                 projectDescription: ProjectDescription,
-                projectowner: Owner,
+                projectowner: userData.user_id,
                 timeStart: TimeStart,
                 timeEnd: TimeEnd
             }),
@@ -65,6 +65,7 @@ export default function AddProject({ route }) {
 
                     alert( 'Create sussces');
 
+                    setrole(responseData.project_id);
                 } else {
                     alert(responseData.message || 'Create failed');
                 }
@@ -74,6 +75,27 @@ export default function AddProject({ route }) {
                 alert('Something went wrong. Please try again.');
             });
     };
+
+    const setrole = async (role) => {
+        try {
+            const response = await fetch(`${Config.URLAPI}/updateuserproject?projectId=${role}&userId=${userData.user_id}&roleId=3`, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+            });
+
+
+
+        } catch (error) {
+            console.error(error);
+
+        }
+
+    };
+
 
     const formatDate = (date) => {
         const year = date.getFullYear();
@@ -104,12 +126,7 @@ export default function AddProject({ route }) {
                 />
             </View>
             <View style={styles.TaskItem2}>
-                <Text>Owner:</Text>
-                <TextInput
-                    style={styles.input}
-                    value={userData.user_id.toString()}
-                    onChangeText={text => setOwner(text)}
-                />
+
                 <Text>Time start:</Text>
                 <TouchableOpacity onPress={showStartPicker}>
                     <TextInput
