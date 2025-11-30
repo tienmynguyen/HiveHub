@@ -63,12 +63,12 @@ npx react-native start
 ```
 
 <p align="left">
- <img src="image1.png" alt="spring" width="30%"/> 
-  <img src="image2.png" alt="spring" width="30%"/> 
+ <img src="image1.jpg" alt="spring" width="30%"/> 
+  <img src="image2.jpg" alt="spring" width="30%"/> 
    <img src="image3.jpg" alt="spring" width="30%"/> 
    </br>
-   <img src="image4.png" alt="spring" width="30%"/> 
-  <img src="image5.png" alt="spring" width="30%"/> 
+   <img src="image4.jpg" alt="spring" width="30%"/> 
+  <img src="image5.jpg" alt="spring" width="30%"/> 
    <img src="image6.jpg" alt="spring" width="30%"/> 
    </p>
 
