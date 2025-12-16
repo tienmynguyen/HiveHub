@@ -8,6 +8,8 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -29,29 +31,18 @@ public class Users implements UserDetails {
             name = "user_id"
     )
     private long user_id;
+   
     private String email;
     private String password;
     private String userName;
     private String imagePath;
     private String description;
-
-//    @ManyToOne(
-//            fetch = FetchType.EAGER
-//    )
-//    @JoinColumn(
-//            name = "department_id",
-//            referencedColumnName = "department_id"
-//    )
-//    private Department department;
-
-
-//    @OneToOne(mappedBy = "user",
-//            cascade = {CascadeType.ALL}
-//    )
-//    private Participant participant_id;
+    @Column(name = "wallet_address")
+    private String walletAddress;
     @OneToMany(
             mappedBy = "users"
     )
+    @JsonIgnore
     private List<User_Task> userTaskList;
 
 //    @OneToMany(
@@ -62,16 +53,19 @@ public class Users implements UserDetails {
     @OneToMany(
             mappedBy = "users"
     )
+    @JsonIgnore
     private List<Comment> commentList;
 
     @OneToMany(
             mappedBy = "users"
     )
+    @JsonIgnore
     private List<UserNote> userNotes;
 
     @OneToMany(
             mappedBy = "users"
     )
+    @JsonIgnore
     private List<User_Project> userProjectList;
 
 

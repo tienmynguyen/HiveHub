@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -56,34 +57,57 @@ private UsersRepository usersRepository;
         return ResponseEntity.ok(userServiceImpl.update(userDto,userId));
     }
 
-    @GetMapping("/getalluserbyprojectId")
-    public ResponseEntity<List<Users>> getalluserbyprojectId(@RequestParam("projectId")String projectId) {
-        List<Users> projectList= usersRepository.findUsersByProjectId(projectId);
-        for(Users pro:projectList){
-            pro.setUserProjectList(null);
-            pro.setUserTaskList(null);
-            pro.setUserNotes(null);
-            pro.setCommentList(null);
+   @GetMapping("/getalluserbyprojectId")
+    public ResponseEntity<List<Users>> getalluserbyprojectId(@RequestParam("projectId") String projectId) {
+        List<Users> projectList = usersRepository.findUsersByProjectId(projectId);
+        
+        // Kiểm tra null trước khi trả về
+        if (projectList == null) {
+            return ResponseEntity.ok(new ArrayList<>());
+        }
+
+        // Vệ sinh dữ liệu (Data Cleaning) an toàn
+        for (Users user : projectList) {
+            user.setUserProjectList(null);
+            user.setUserTaskList(null);
+            user.setUserNotes(null);
+            user.setCommentList(null);
+            user.setPassword("********"); // Bảo mật: Không trả về pass thật
         }
         return ResponseEntity.ok(projectList);
     }
 
-    @GetMapping("/getalluserbytaskId")
-    public ResponseEntity<List<Users>> getalluserbytask(@RequestParam("taskId")Long taskId) {
-        List<Users> projectList= usersRepository.getalluserbytask(taskId);
-        for(Users users:projectList){
-            users.setUserProjectList(null);
-            for(User_Task task:users.getUserTaskList()){
-                task.getTask().setUserTaskList(null);
-                task.getTask().setCommentList(null);
-                task.setUsers(null);
-                task.getTask().setProject(null);
+   @GetMapping("/getalluserbytaskId")
+    public ResponseEntity<List<Users>> getalluserbytask(@RequestParam("taskId") Long taskId) {
+        try {
+            List<Users> userList = usersRepository.getalluserbytask(taskId);
+
+            // 1. Nếu không tìm thấy ai, trả về danh sách rỗng [] ngay lập tức
+            if (userList == null || userList.isEmpty()) {
+                return ResponseEntity.ok(new ArrayList<>());
             }
-            users.setUserNotes(null);
-            users.setCommentList(null);
-            users.setPassword("********");
+
+            // 2. Vệ sinh dữ liệu để tránh lỗi vòng lặp (Circular Reference)
+            for (Users user : userList) {
+                user.setPassword("********"); // Che mật khẩu
+                
+                // Ngắt các quan hệ để JSON không bị lỗi đệ quy vô tận
+                user.setUserProjectList(null);
+                user.setCommentList(null);
+                user.setUserNotes(null);
+                
+                // QUAN TRỌNG: Ngắt quan hệ task list để tránh load nặng và lỗi
+                user.setUserTaskList(null); 
+            }
+
+            return ResponseEntity.ok(userList);
+
+        } catch (Exception e) {
+            // In lỗi ra màn hình Console của IntelliJ để bạn biết tại sao
+            e.printStackTrace();
+            // Trả về danh sách rỗng để App không bị crash, dù server có lỗi
+            return ResponseEntity.ok(new ArrayList<>());
         }
-        return ResponseEntity.ok(projectList);
     }
 
 

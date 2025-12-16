@@ -22,14 +22,11 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
             "    where u.project_id like lower(concat('%',:projectId,'%'))\n",nativeQuery = true)
     List<Users> findUsersByProjectId(String projectId);
 
-    @Query(value="select u.user_id,u.description,\n" +
-            "u.email,u.imagePath,u.userName,\n" +
-            "us.task_id,u.password from users u\n" +
-            "join user_task us\n" +
-            "on u.user_id=us.user_id\n" +
-            "where task_id=?1\n" +
-            "group by u.user_id;",nativeQuery = true)
-    List<Users> getalluserbytask (Long taskId);
+    @Query(value = "SELECT u.* FROM users u " +
+                   "JOIN user_task us ON u.user_id = us.user_id " +
+                   "WHERE us.task_id = ?1 " +
+                   "GROUP BY u.user_id", nativeQuery = true)
+    List<Users> getalluserbytask(Long taskId);
 
 
 

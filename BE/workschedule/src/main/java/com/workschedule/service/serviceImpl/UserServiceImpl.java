@@ -97,6 +97,10 @@ private UsersRepository usersRepository;
         usersave.setUserNotes(null);
         usersave.setCommentList(null);
         usersave.setUserTaskList(null);
+
+        if (userDto.getWalletAddress() != null && !userDto.getWalletAddress().isEmpty()) {
+        usersave.setWalletAddress(userDto.getWalletAddress());
+}
         return usersave;
     }
 

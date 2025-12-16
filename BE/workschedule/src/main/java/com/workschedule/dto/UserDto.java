@@ -21,4 +21,5 @@ String passworddto;
     String userName;
     String imagePath;
     private String description;
+    private String walletAddress;
 }

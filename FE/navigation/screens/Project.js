@@ -222,7 +222,7 @@ export default function Project({ navigation }) {
                                 placeholder="Nhập ID dự án..."
                                 value={joinProjectCode}
                                 onChangeText={setJoinProjectCode}
-                                keyboardType="numeric" // Vì code cũ có vẻ dùng ID số
+                               // keyboardType="numeric" // Vì code cũ có vẻ dùng ID số
                             />
 
                             <View style={{flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 10}}>

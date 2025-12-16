@@ -11,9 +11,9 @@ const { width } = Dimensions.get('window');
 
 // DỮ LIỆU GIẢ ĐỂ TEST
 const MOCK_TASKS = [
-    { task_id: 1, taskName: "Thiết kế Database", description: "Vẽ ERD và tạo bảng", taskStatus: "DONE", deadline: new Date().toISOString(), timeStart: new Date(), timeEnd: new Date() },
-    { task_id: 2, taskName: "Code API Login", description: "JWT Authentication", taskStatus: "DOING", deadline: new Date().toISOString(), timeStart: new Date(), timeEnd: new Date() },
-    { task_id: 3, taskName: "Test giao diện", description: "Kiểm tra trên iPhone", taskStatus: "TODO", deadline: new Date().toISOString(), timeStart: new Date(), timeEnd: new Date() },
+    { task_id: 1, taskName: "Thiết kế Database", description: "Vẽ ERD và tạo bảng", taskStatus: "DONE", is_approved: false, deadline: new Date().toISOString(), timeStart: new Date(), timeEnd: new Date() },
+    { task_id: 2, taskName: "Code API Login", description: "JWT Authentication", taskStatus: "DOING", is_approved: false, deadline: new Date().toISOString(), timeStart: new Date(), timeEnd: new Date() },
+    { task_id: 3, taskName: "Test giao diện", description: "Kiểm tra trên iPhone", taskStatus: "TODO", is_approved: false, deadline: new Date().toISOString(), timeStart: new Date(), timeEnd: new Date() },
 ];
 
 export default function Plan({ navigation, route }) {
@@ -38,6 +38,70 @@ export default function Plan({ navigation, route }) {
             if(projectId) checkRole();
         }
     }, [isFocused]);
+
+    // --- LOGIC MỚI: TÍNH TOÁN CHO NÚT THÔNG BÁO ---
+    const currentUserInfo = user.find(u => u.user_id === userData.user_id);
+    const isOwner = currentUserInfo?.roleName === 'Owner'; 
+
+    // Lọc danh sách task DONE nhưng chưa duyệt (chưa có txHash hoặc is_approved = false)
+    const pendingTasks = tasks.filter(t => t.taskStatus === 'DONE' && !t.txHash && !t.is_approved);
+    const pendingCount = pendingTasks.length;
+
+    const handleReviewTask = async () => {
+        // 1. Lấy task cần duyệt
+        const taskToApprove = pendingTasks[0]; 
+        if (!taskToApprove) {
+            Alert.alert("Thông báo", "Không có task nào cần duyệt.");
+            return;
+        }
+
+        // 2. Lấy ID Admin
+        const adminId = userData.user_id; 
+
+        setLoading(true);
+        try {
+            console.log("Đang gọi API duyệt task...");
+            
+            // 3. Gọi API Spring Boot
+            const response = await fetch(`${Config.URLAPI}/approvetask`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    taskId: taskToApprove.task_id,
+                    projectId: projectId.toString(),
+                    adminId: adminId
+                })
+            });
+
+            const textData = await response.text(); 
+            let data;
+            try {
+                data = JSON.parse(textData);
+            } catch (e) {
+                console.error("Lỗi parse JSON:", textData);
+                Alert.alert("Lỗi Server", "Server trả về dữ liệu không hợp lệ.");
+                return;
+            }
+
+            // 4. Xử lý kết quả
+            if (response.ok && data.txHash) {
+                Alert.alert(
+                    "Thành công! 🎉", 
+                    `Đã duyệt và ghi lên Blockchain.\nTxHash: ${data.txHash}`
+                );
+                fetchData(); 
+            } else {
+                Alert.alert("Lỗi", data.message || "Không thể duyệt bài.");
+            }
+
+        } catch (error) {
+            console.error(error);
+            Alert.alert("Lỗi mạng", "Không thể kết nối tới Server.");
+        } finally {
+            setLoading(false);
+        }
+    };
+    // ------------------------------------------------
 
     async function checkRole() {
         try {
@@ -78,6 +142,7 @@ export default function Plan({ navigation, route }) {
 
     const getStatusConfig = (status) => {
         switch (status) {
+            case 'COMPLETED': return { color: '#27ae60', bg: '#d5f5e3', label: 'Approved' }; // Đã duyệt blockchain
             case 'DONE': return { color: '#2ecc71', bg: '#e8f8f5', label: 'Done' };
             case 'DOING': return { color: '#f1c40f', bg: '#fef9e7', label: 'Doing' };
             case 'TODO': return { color: '#e74c3c', bg: '#fdedec', label: 'To Do' };
@@ -86,7 +151,7 @@ export default function Plan({ navigation, route }) {
         }
     };
 
-    const gotoTaskDetail = (item) => navigation.navigate('TaskDetail', { task: item });
+    const gotoTaskDetail = (item) => navigation.navigate('TaskDetail', { task: item ,projectId: projectId});
     const gotoAddTask = () => navigation.navigate('AddTask', { projectId: projectId });
     const copyToClipboard = () => {
         Clipboard.setString(projectId ? projectId.toString() : "");
@@ -140,10 +205,26 @@ export default function Plan({ navigation, route }) {
 
     const renderTaskItem = ({ item }) => {
         const statusConfig = getStatusConfig(item.taskStatus);
+        
+        // KIỂM TRA BLOCKCHAIN
+        const hasBlockchainProof = item.txHash && item.txHash.length > 5;
+
         return (
             <TouchableOpacity activeOpacity={0.9} style={[styles.taskCard, { borderLeftColor: statusConfig.color }]} onPress={() => gotoTaskDetail(item)}>
                 <View style={styles.taskContent}>
-                    <Text style={styles.taskTitle} numberOfLines={1}>{item.taskName}</Text>
+                    {/* Hàng Tiêu đề + Icon Blockchain */}
+                    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                        <Text style={[styles.taskTitle, {flex: 1}]} numberOfLines={1}>{item.taskName}</Text>
+                        
+                        {/* ICON BLOCKCHAIN (MỚI) */}
+                        {hasBlockchainProof && (
+                            <View style={{flexDirection: 'row', alignItems: 'center', backgroundColor: '#e8f8f5', padding: 3, borderRadius: 4, marginLeft: 5}}>
+                                <Icon name="link" size={10} color="#27ae60" />
+                                <Text style={{fontSize: 9, color: '#27ae60', fontWeight: 'bold', marginLeft: 2}}>On-Chain</Text>
+                            </View>
+                        )}
+                    </View>
+
                     <Text style={styles.taskDesc} numberOfLines={1}>{item.description}</Text>
                     <View style={styles.dateContainer}>
                         <Icon name="clock-o" size={12} color="#888" style={{ marginRight: 5 }} />
@@ -159,7 +240,6 @@ export default function Plan({ navigation, route }) {
 
     return (
         <View style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
-            {/* Sử dụng SafeAreaView để tự động tránh tai thỏ/status bar */}
             <SafeAreaView style={{ flex: 1 }}>
                 <View style={styles.container}>
                     {/* --- HEADER --- */}
@@ -173,6 +253,20 @@ export default function Plan({ navigation, route }) {
                         </Text>
 
                         <View style={{ flexDirection: 'row', gap: 10 }}>
+                            {/* --- NÚT THÔNG BÁO CHO OWNER --- */}
+                            {isOwner && (
+                                <TouchableOpacity style={styles.iconBtn} onPress={handleReviewTask}>
+                                    <Icon name="bell-o" size={18} color="#333" />
+                                    {pendingCount > 0 && (
+                                        <View style={styles.badge}>
+                                            <Text style={styles.badgeText}>
+                                                {pendingCount > 99 ? '99+' : pendingCount}
+                                            </Text>
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+                            )}
+
                             <TouchableOpacity style={styles.iconBtn} onPress={copyToClipboard}>
                                 <Icon name="copy" size={18} color="#333" />
                             </TouchableOpacity>
@@ -194,19 +288,19 @@ export default function Plan({ navigation, route }) {
                                 showsVerticalScrollIndicator={false}
                                 ListHeaderComponent={
                                     <View style={styles.chartContainer}>
-                                        {tasks.length > 0 ? (
-                                            <GanttChart tasks={tasks} currentMonth={currentMonth} setCurrentMonth={setCurrentMonth} />
-                                        ) : (
-                                            <View style={styles.emptyChart}>
-                                                <Text style={{ color: '#999' }}>Chưa có công việc nào</Text>
-                                            </View>
-                                        )}
+                                            {tasks.length > 0 ? (
+                                                <GanttChart tasks={tasks} currentMonth={currentMonth} setCurrentMonth={setCurrentMonth} />
+                                            ) : (
+                                                <View style={styles.emptyChart}>
+                                                    <Text style={{ color: '#999' }}>Chưa có công việc nào</Text>
+                                                </View>
+                                            )}
                                     </View>
                                 }
                                 renderItem={renderTaskItem}
                                 ListEmptyComponent={
                                     <View style={{ alignItems: 'center', marginTop: 30 }}>
-                                        <Text style={{ color: '#888' }}>Danh sách trống</Text>
+                                            <Text style={{ color: '#888' }}>Danh sách trống</Text>
                                     </View>
                                 }
                             />
@@ -291,7 +385,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: 15,
-        // SỬA LỖI Ở ĐÂY: Xóa marginTop cứng, chỉ thêm padding top cho Android nếu cần
         paddingTop: Platform.OS === 'android' ? 30 : 0, 
     },
     header: {
@@ -321,6 +414,26 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 2,
+    },
+    badge: {
+        position: 'absolute',
+        top: -2,
+        right: -2,
+        backgroundColor: '#e74c3c', 
+        borderRadius: 9,
+        minWidth: 18,
+        height: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 2,
+        zIndex: 10,
+        borderWidth: 1.5,
+        borderColor: '#fff'
+    },
+    badgeText: {
+        color: 'white',
+        fontSize: 9,
+        fontWeight: 'bold',
     },
     chartContainer: {
         marginBottom: 20,

@@ -47,7 +47,7 @@ spring.jpa.hibernate.ddl-auto=update
 ```bash
 cd BE
 cd workshedule
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
 ---
