@@ -13,106 +13,111 @@ import java.util.List;
 
 @Service
 public class UserServiceImpl implements UsersService {
-@Autowired
-private UsersRepository usersRepository;
+
+    @Autowired
+    private UsersRepository usersRepository;
 
     @Override
     public List<Users> findAll() {
-        List<Users> usersList=usersRepository.findAll();
-        return usersList;
+        return usersRepository.findAll();
     }
 
     @Override
     public Users findById(Long id) {
-        if (usersRepository.findById(id) != null) {
-            Users users = usersRepository.findById(id).get();
-            return users;
-        } else {
-            throw new ResourceNotFoundException("Cannot find user with id:"+id);
-        }
+        return usersRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cannot find user with id:" + id));
     }
 
     @Override
     public void deteleById(Long id) {
+        usersRepository.deleteById(id);
     }
 
     @Override
     public Users save(UserDto userDto) {
-        Users users=new Users();
-
-        List<Users> usersList=usersRepository.findAll();
+        List<Users> usersList = usersRepository.findAll();
 
         for (Users user : usersList) {
-            if(user.getEmail().equals(userDto.getEmaildto())){
+            if (user.getEmail().equals(userDto.getEmaildto())) {
                 throw new ResourceNotFoundException("Email already exists.");
             }
         }
 
-         if(userDto.getUserName().equals(userDto.getEmaildto())){
-    throw new ResourceNotFoundException("Username and email must not be the same.");
+        if (userDto.getUserName().equals(userDto.getEmaildto())) {
+            throw new ResourceNotFoundException("Username and email must not be the same.");
         }
 
+        Users users = new Users();
         users.setEmail(userDto.getEmaildto());
         users.setPassword(userDto.getPassworddto());
         users.setUserName(userDto.getUserName());
+        // Nếu muốn lưu ví ngay lúc tạo user mới thì thêm dòng này:
+        // if(userDto.getWalletAddress() != null) users.setWalletAddress(userDto.getWalletAddress());
+        
         return usersRepository.save(users);
     }
 
     @Override
-    public Users update(UserDto userDto,Long userId) {
-        Users users=findById(userId);
+    public Users update(UserDto userDto, Long userId) {
+        // 1. Tìm User cũ
+        Users users = findById(userId);
 
-
-        List<Users> usersList=usersRepository.findAll();
-
-        if(!userDto.getEmaildto().equals(users.getEmail())){
+        // 2. Validate Email (Nếu có thay đổi)
+        if (userDto.getEmaildto() != null && !userDto.getEmaildto().equals(users.getEmail())) {
+            List<Users> usersList = usersRepository.findAll();
             for (Users user : usersList) {
-                if(user.getEmail().equals(userDto.getEmaildto())){
+                if (user.getEmail().equals(userDto.getEmaildto())) {
                     throw new ResourceNotFoundException("Email already exists.");
                 }
             }
-        }
-        if(userDto.getUserName().equals(userDto.getEmaildto())){
-            throw new ResourceNotFoundException("Username and email must not be the same.");
-        }
-
-        if(userDto.getUserName()!=null){
-            users.setUserName(userDto.getUserName());
-        }
-        if(userDto.getImagePath()!=null){
-            users.setImagePath(userDto.getImagePath());
-        }
-        if(userDto.getEmaildto()!=null){
             users.setEmail(userDto.getEmaildto());
         }
-        if(userDto.getPassworddto()!=null){
+
+        // 3. Validate Username
+        String currentEmail = (userDto.getEmaildto() != null) ? userDto.getEmaildto() : users.getEmail();
+        if (userDto.getUserName() != null) {
+            if (userDto.getUserName().equals(currentEmail)) {
+                throw new ResourceNotFoundException("Username and email must not be the same.");
+            }
+            users.setUserName(userDto.getUserName());
+        }
+
+        // 4. Cập nhật các trường thông tin khác
+        if (userDto.getImagePath() != null) {
+            users.setImagePath(userDto.getImagePath());
+        }
+        if (userDto.getPassworddto() != null) {
             users.setPassword(userDto.getPassworddto());
         }
-        if(userDto.getDescription()!=null){
+        if (userDto.getDescription() != null) {
             users.setDescription(userDto.getDescription());
         }
 
-        Users usersave=usersRepository.save(users);
+        // --- 5. CẬP NHẬT VÍ (QUAN TRỌNG: PHẢI SET TRƯỚC KHI SAVE) ---
+        if (userDto.getWalletAddress() != null && !userDto.getWalletAddress().isEmpty()) {
+            users.setWalletAddress(userDto.getWalletAddress());
+        }
+
+        // 6. Lưu xuống Database
+        Users usersave = usersRepository.save(users);
+
+        // 7. Dọn dẹp dữ liệu trả về (tránh vòng lặp vô tận JSON)
         usersave.setUserProjectList(null);
         usersave.setUserNotes(null);
         usersave.setCommentList(null);
         usersave.setUserTaskList(null);
 
-        if (userDto.getWalletAddress() != null && !userDto.getWalletAddress().isEmpty()) {
-        usersave.setWalletAddress(userDto.getWalletAddress());
-}
         return usersave;
     }
 
     @Override
     public Users logintest(UserDto userDto) throws NotFoundException {
-        List<Users> usersList=findAll();
-
-
+        List<Users> usersList = findAll();
 
         for (Users user : usersList) {
-            if(user.getEmail().equals(userDto.getEmaildto())
-            &&user.getPassword().equals(userDto.getPassworddto())){
+            if (user.getEmail().equals(userDto.getEmaildto())
+                    && user.getPassword().equals(userDto.getPassworddto())) {
+                
                 user.setUserProjectList(null);
                 user.setUserNotes(null);
                 user.setCommentList(null);
@@ -120,34 +125,27 @@ private UsersRepository usersRepository;
                 return user;
             }
         }
-
-        throw new ResourceNotFoundException("User with emai "+userDto.getEmaildto()+"not found!!!");
+        throw new ResourceNotFoundException("User with email " + userDto.getEmaildto() + " not found!!!");
     }
 
     @Override
     public UserDto login(UserDto userDto) throws NotFoundException {
-        List<Users> usersList=findAll();
+        List<Users> usersList = findAll();
 
         for (Users user : usersList) {
-            if(user.getEmail().equals(userDto.getEmaildto())
-                    &&user.getPassword().equals(userDto.getPassworddto())){
+            if (user.getEmail().equals(userDto.getEmaildto())
+                    && user.getPassword().equals(userDto.getPassworddto())) {
 
-                UserDto userDto1=UserDto.builder()
+                return UserDto.builder()
                         .emaildto(user.getEmail())
                         .userName(user.getUsername())
                         .passworddto("************")
-                        .imagePath(user.getImagePath()).build();
-
-                return userDto1;
-
+                        .imagePath(user.getImagePath())
+                        // Có thể trả về ví ở đây nếu cần hiển thị ngay sau khi login
+                        .walletAddress(user.getWalletAddress()) 
+                        .build();
             }
         }
-
-        throw new ResourceNotFoundException("User with emai "+userDto.getEmaildto()+"not found!!!");
+        throw new ResourceNotFoundException("User with email " + userDto.getEmaildto() + " not found!!!");
     }
-
-
 }
-
-
-

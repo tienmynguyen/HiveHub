@@ -7,6 +7,7 @@ import com.workschedule.model.Task;
 import com.workschedule.model.User_Task;
 import com.workschedule.model.Users;
 import com.workschedule.repository.UsersRepository;
+import com.workschedule.service.BlockchainService;
 import com.workschedule.service.serviceImpl.UserServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class UserController {
@@ -23,6 +25,8 @@ public class UserController {
     private UserServiceImpl userServiceImpl;
 @Autowired
 private UsersRepository usersRepository;
+@Autowired
+private BlockchainService blockchainService;
 
 @PostMapping("/register")
     public ResponseEntity<Users> register(@RequestBody @Valid UserDto userDto
@@ -109,6 +113,44 @@ private UsersRepository usersRepository;
             return ResponseEntity.ok(new ArrayList<>());
         }
     }
+    @GetMapping("/getbalance")
+    public ResponseEntity<?> getBalance(@RequestParam("walletAddress") String walletAddress) {
+        if (walletAddress == null || walletAddress.length() < 10) {
+            return ResponseEntity.ok(Map.of("balance", "0", "symbol", "HIVE"));
+        }
+        
+        String balance = blockchainService.getTokenBalance(walletAddress);
+        
+        return ResponseEntity.ok(Map.of(
+            "balance", balance,
+            "symbol", "HIVE"
+        ));
+    }
+    @PostMapping("/transfertoken")
+    public ResponseEntity<?> transferToken(@RequestBody Map<String, String> payload) {
+        String privateKey = payload.get("privateKey");
+        String receiverAddress = payload.get("receiverAddress");
+        String amountStr = payload.get("amount");
 
+        if (privateKey == null || receiverAddress == null || amountStr == null) {
+            return ResponseEntity.badRequest().body("Thiếu thông tin chuyển tiền");
+        }
+
+        try {
+            int amount = Integer.parseInt(amountStr);
+            String txHash = blockchainService.transferTokenByUser(privateKey, receiverAddress, amount);
+
+            if (txHash != null) {
+                return ResponseEntity.ok(Map.of(
+                    "message", "Chuyển tiền thành công!",
+                    "txHash", txHash
+                ));
+            } else {
+                return ResponseEntity.status(400).body("Giao dịch thất bại. Kiểm tra lại số dư ETH (làm phí Gas) hoặc Private Key.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi: " + e.getMessage());
+        }
+    }
 
 }

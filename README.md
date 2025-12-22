@@ -49,6 +49,8 @@ cd BE
 cd workshedule
 mvn spring-boot:run
 ```
+https://remix.ethereum.org/#lang=en&optimize&runs=200&evmVersion&version=soljson-v0.8.31+commit.fd3a2265.js
+BE/workshedule/sevice/BlockchainService.java
 
 ---
 
@@ -58,8 +60,7 @@ mvn spring-boot:run
 
 ```bash
 cd ../FE
-npm install
-npx react-native start
+npm start
 ```
 
 <p align="left">
@@ -75,3 +76,4 @@ npx react-native start
 ## 📬 Contact
 
 - 📧 Email: mytom2401@gmail.com
+

@@ -14,6 +14,7 @@ import Plan from './screens/Plan';
 import TaskDetail from './screens/TaskDetail';
 import AddTask from './screens/AddTask';
 import AddProject from './screens/AddProject';
+import TransferToken from './screens/TransferToken';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -42,6 +43,9 @@ function MainTabs() {
                         case 'Project':
                             iconName = focused ? 'list' : 'list-outline';
                             break;
+                        case 'TransferToken':
+                            iconName = focused ? 'swap-horizontal' : 'swap-horizontal-outline';
+                            break;
                     }
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
@@ -59,7 +63,9 @@ function MainTabs() {
             <Tab.Screen name="Calendar" component={Calendar} />
             <Tab.Screen name="Project" component={Project} />
             <Tab.Screen name="Note" component={Note} />
+             <Tab.Screen name="TransferToken" component={TransferToken} />
             <Tab.Screen name="Profile" component={Profile} />
+           
         </Tab.Navigator>
     );
 }
