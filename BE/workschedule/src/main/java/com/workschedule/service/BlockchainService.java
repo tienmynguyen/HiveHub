@@ -32,14 +32,14 @@ public class BlockchainService {
     private final long CHAIN_ID = 1337;
 
     // 1. PRIVATE KEY ADMIN (Ví số 1 trong Ganache - Người trả tiền)
-    private final String PRIVATE_KEY = "0x56916a90964c219789f8b457f25a5221f542e7716cdef0ff5602383cc2c1e93e";
+    private final String PRIVATE_KEY = "your_admin_private_key_here";
 
     // 2. ĐỊA CHỈ CONTRACT QUẢN LÝ TASK (Contract cũ chứa hàm approveTask)
-    private final String TASK_CONTRACT_ADDRESS = "0xa6d6Bd0F65fb9CC9AA2A4E62D0c1f1f151D076A3";
+    private final String TASK_CONTRACT_ADDRESS = "your_task_contract_address_here";
 
     // 3. ĐỊA CHỈ CONTRACT TOKEN (Contract HiveToken - Mới deploy trên Remix)
     // ??? BẠN CẦN ĐIỀN ĐỊA CHỈ TOKEN VÀO ĐÂY ???
-    private final String TOKEN_CONTRACT_ADDRESS = "0xa6ED8c6b14C68b4AfD8e302B695B415684583E13";
+    private final String TOKEN_CONTRACT_ADDRESS = "your_token_contract_address_here";
 
 
     // --- HÀM 1: GHI BLOCKCHAIN (Proof of Work) ---
