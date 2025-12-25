@@ -1,5 +1,7 @@
 package com.workschedule.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -37,6 +39,7 @@ public class Message {
     )
     private Project project;
     @Transient
+    @JsonProperty("project_id")
     private String project_id;
 
     @ManyToOne(

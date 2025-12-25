@@ -1,92 +1,52 @@
 package com.workschedule.controller;
 
 import com.workschedule.model.Message;
-import com.workschedule.model.Project;
-import com.workschedule.model.Users;
 import com.workschedule.service.serviceImpl.MessageServiceImpl;
-import com.workschedule.service.serviceImpl.ProjectServiceImpl;
-import com.workschedule.service.serviceImpl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 
 @Controller
-@CrossOrigin(origins = "*")
 public class ChatController {
 
     @Autowired
-    private MessageServiceImpl messageServiceImpl;
+    private MessageServiceImpl messageService;
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
-    @Autowired
-    private ProjectServiceImpl projectServiceImpl;
-    @Autowired
-    private UserServiceImpl userServiceIml;
 
-    // WebSocket endpoint for user registration
-    @MessageMapping("/chat.register")
-    @SendTo("/topic/public")
-    public Message register(@Payload Message chatMessage) {
-        // Save the message to the database if needed
-        return chatMessage;
+    // --- 1. WEBSOCKET: Gửi & Nhận tin nhắn Realtime ---
+    @MessageMapping("/chat.sendMessage")
+    public Message sendMessage(@Payload Message message) {
+        System.out.println("DEBUG - Message Content: " + message.getMessage());
+    System.out.println("DEBUG - Project ID received: " + message.getProject_id()); 
+   
+        // A. Lưu vào Database
+        Message savedMsg = messageService.save(message);
+        
+        // B. Gửi tới Room (Topic) của Project đó
+        String destination = "/topic/project/" + message.getProject_id();
+        messagingTemplate.convertAndSend(destination, savedMsg);
+
+        return savedMsg;
     }
 
-    // WebSocket endpoint for sending messages
-    @MessageMapping("/chat.send")
-    @SendTo("/topic/public")
-    public Message sendMessage(@Payload Message chatMessage) {
-        Message savedMessage = messageServiceImpl.save(chatMessage);
-        return savedMessage;
-    }
-
-    // REST endpoint to add a message
-    @PostMapping("/chat/addmessage")
-    public ResponseEntity<Message> addMessage(@RequestBody Message message) {
-
-        Project pro=projectServiceImpl.findById(message.getProject_id());
-        message.setProject(pro);
-        Users user = userServiceIml.findById(message.getUser_id());
-        message.setUsers(user);
-        Message savedMessage = messageServiceImpl.save(message);
-        Message message1 =savedMessage;
-        // Send the saved message to WebSocket subscribers
-      //  messagingTemplate.convertAndSend("/topic/public", savedMessage);
-
-        message1.getProject().setUserProjectList(null);
-        message1.getProject().setMessageList(null);
-        message1.getUsers().setUserTaskList(null);
-        message1.getUsers().setUserNotes(null);
-        message1.getUsers().setUserProjectList(null);
-        return ResponseEntity.ok(message1);
-    }
-
-    // REST endpoint to delete a message
-    @DeleteMapping("/chat/deletemessage")
-    public ResponseEntity<Void> deleteMessage(@RequestParam("messageid") Long messageid) {
-        messageServiceImpl.deteleById(messageid);
-        return ResponseEntity.ok().build();
-    }
-
-    // REST endpoint to get all messages for a specific project
+    // --- 2. REST API: Lấy lịch sử chat (PHẦN BỊ THIẾU) ---
+    // Frontend gọi cái này khi vừa mở màn hình Chat
     @GetMapping("/chat/getallmessage")
+    @ResponseBody // <--- BẮT BUỘC: Để trả về JSON thay vì file HTML
     public ResponseEntity<List<Message>> getAllMessages(@RequestParam("projectId") String projectId) {
-        List<Message> messageList = messageServiceImpl.getallmessage(projectId);
-
-        for(Message message1:messageList){
-            message1.getProject().setUserProjectList(null);
-            message1.getProject().setMessageList(null);
-            message1.getUsers().setUserTaskList(null);
-            message1.getUsers().setUserNotes(null);
-            message1.getUsers().setUserProjectList(null);
-        }
-        return ResponseEntity.ok(messageList);
+        // Lưu ý: Kiểm tra lại tên hàm trong MessageServiceImpl của bạn 
+        // (ví dụ: findByProjectId, getAllMessageByProject, v.v...)
+        List<Message> list = messageService.getallmessage(projectId); 
+        return ResponseEntity.ok(list);
     }
 }
