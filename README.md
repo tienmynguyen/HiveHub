@@ -46,7 +46,7 @@ spring.jpa.hibernate.ddl-auto=update
 
 ```bash
 cd BE
-cd workshedule
+cd workschedule
 mvn spring-boot:run
 ```
 https://remix.ethereum.org/#lang=en&optimize&runs=200&evmVersion&version=soljson-v0.8.31+commit.fd3a2265.js
@@ -59,7 +59,7 @@ BE/workshedule/sevice/BlockchainService.java
 1. **Install dependencies and start Expo**:
 
 ```bash
-cd ../FE
+cd FE
 npm start
 ```
 

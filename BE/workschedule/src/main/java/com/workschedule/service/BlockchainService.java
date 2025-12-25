@@ -32,14 +32,14 @@ public class BlockchainService {
     private final long CHAIN_ID = 1337;
 
     // 1. PRIVATE KEY ADMIN (Ví số 1 trong Ganache - Người trả tiền)
-    private final String PRIVATE_KEY = "your_admin_private_key_here";
+    private final String PRIVATE_KEY = "0x835e7e6e5db72a3128265fbe4916733bd10c74ac921721c08eca49eb4e12623d";
 
     // 2. ĐỊA CHỈ CONTRACT QUẢN LÝ TASK (Contract cũ chứa hàm approveTask)
-    private final String TASK_CONTRACT_ADDRESS = "your_task_contract_address_here";
+    private final String TASK_CONTRACT_ADDRESS = "0x903F5C2cEf4615af5d6078EE3981a63E7112616E";
 
     // 3. ĐỊA CHỈ CONTRACT TOKEN (Contract HiveToken - Mới deploy trên Remix)
     // ??? BẠN CẦN ĐIỀN ĐỊA CHỈ TOKEN VÀO ĐÂY ???
-    private final String TOKEN_CONTRACT_ADDRESS = "your_token_contract_address_here";
+    private final String TOKEN_CONTRACT_ADDRESS = "0x156831905514C8dCC3148dB1faeAAD0a37243717";
 
 
     // --- HÀM 1: GHI BLOCKCHAIN (Proof of Work) ---
@@ -78,7 +78,7 @@ public class BlockchainService {
         }
     }
 
-    // --- HÀM 2: GỬI TOKEN THƯỞNG (Hàm bạn đang thiếu) ---
+    // --- HÀM 2: GỬI TOKEN THƯỞNG
    public String sendTokenReward(String employeeWallet, int amount) {
         try {
             System.out.println("--- [2/2] Gửi " + amount + " Token tới: " + employeeWallet + " ---");
@@ -90,7 +90,6 @@ public class BlockchainService {
                     "transfer",
                     Arrays.asList(
                             new Address(employeeWallet),
-                            // SỬA DÒNG NÀY: Dùng Uint256 thay vì Uint
                             new Uint256(BigInteger.valueOf(amount)) 
                     ),
                     Collections.emptyList()

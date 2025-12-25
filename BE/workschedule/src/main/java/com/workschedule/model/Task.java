@@ -32,7 +32,7 @@ public class Task {
     // --- CÁC MỐI QUAN HỆ (RELATIONSHIPS) ---
 
     @OneToMany(mappedBy = "task")
-    @JsonIgnore
+    
     private List<User_Task> userTaskList;
 
     @ManyToOne(fetch = FetchType.EAGER)

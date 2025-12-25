@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, SafeAreaView, Dimensions, ActivityIndicator, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, SafeAreaView, Dimensions, ActivityIndicator, StatusBar, RefreshControl } from 'react-native';
 import { useIsFocused } from "@react-navigation/native";
 import Icon from 'react-native-vector-icons/FontAwesome5'; 
 import Config from "./config.json";
@@ -9,31 +9,17 @@ import CarouselCustom from "../components/CarouselCustom";
 const { width } = Dimensions.get('window');
 const DEFAULT_AVATAR = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
-// --- DỮ LIỆU GIẢ ĐỂ TEST GIAO DIỆN ---
-const MOCK_PROJECTS = [1, 2, 3]; 
-const MOCK_TASKS = [1, 2, 3, 4, 5]; 
-const MOCK_TODAY_TASKS = [
-    { 
-        task_id: 101, 
-        taskName: "Họp team sáng", 
-        taskStatus: "DOING", 
-        project: { projectName: "Dự án Mobile App" } 
-    },
-    { 
-        task_id: 102, 
-        taskName: "Gửi báo cáo", 
-        taskStatus: "TODO", 
-        project: { projectName: "Marketing" } 
-    }
-];
-
 export default function Home({ navigation }) {
     const { userData } = useContext(AuthContext);
     const today = new Date();
-    const [tasks, setTasks] = useState([]);
-    const [project, setProject] = useState([]);
-    const [todaytask, setTodaytask] = useState([]);
+    
+    // State dữ liệu
+    const [tasks, setTasks] = useState([]); // Tổng task CỦA USER
+    const [project, setProject] = useState([]); // Dự án User tham gia
+    const [todaytask, setTodaytask] = useState([]); // Task hôm nay CỦA USER
+    
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false); // Kéo xuống để refresh
     const isFocused = useIsFocused();
 
     const dataImg = [
@@ -49,41 +35,40 @@ export default function Home({ navigation }) {
     }, [isFocused]);
 
     async function loadAllData() {
+        if (!userData?.user_id) return;
         setLoading(true);
-        if (!userData?.user_id) {
-            useMockData();
-            setLoading(false);
-            return;
-        }
-
         try {
-            const [resProject, resTask, resToday] = await Promise.all([
-                fetch(`${Config.URLAPI}/getprjectbyuserId?userId=${userData.user_id}`),
-                fetch(`${Config.URLAPI}/getalltaskbyuser?userId=${userData.user_id}`),
-                fetch(`${Config.URLAPI}/findtaskbydate?user_id=${userData.user_id}&date=${formatDate(today)}`)
-            ]);
-
-            const dataProject = await resProject.json();
-            const dataTask = await resTask.json();
-            const dataToday = await resToday.json();
-
-            if (Array.isArray(dataProject)) setProject(dataProject); else setProject(MOCK_PROJECTS);
-            if (Array.isArray(dataTask)) setTasks(dataTask); else setTasks(MOCK_TASKS);
-            if (Array.isArray(dataToday)) setTodaytask(dataToday); else setTodaytask(MOCK_TODAY_TASKS);
-
+            await fetchFromApi();
         } catch (error) {
             console.error("Lỗi API Home:", error);
-            useMockData();
         } finally {
             setLoading(false);
         }
     }
 
-    const useMockData = () => {
-        setProject(MOCK_PROJECTS);
-        setTasks(MOCK_TASKS);
-        setTodaytask(MOCK_TODAY_TASKS);
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchFromApi();
+        setRefreshing(false);
     };
+
+    async function fetchFromApi() {
+        // Gọi 3 API song song để lấy dữ liệu cá nhân
+        const [resProject, resTask, resToday] = await Promise.all([
+            fetch(`${Config.URLAPI}/getprjectbyuserId?userId=${userData.user_id}`),
+            fetch(`${Config.URLAPI}/getalltaskbyuser?userId=${userData.user_id}`),
+            fetch(`${Config.URLAPI}/findtaskbydate?user_id=${userData.user_id}&date=${formatDate(today)}`)
+        ]);
+
+        const dataProject = await resProject.json();
+        const dataTask = await resTask.json();
+        const dataToday = await resToday.json();
+
+        // Cập nhật State (Nếu rỗng thì set mảng rỗng, KHÔNG dùng Mock Data)
+        setProject(Array.isArray(dataProject) ? dataProject : []);
+        setTasks(Array.isArray(dataTask) ? dataTask : []);
+        setTodaytask(Array.isArray(dataToday) ? dataToday : []);
+    }
 
     function formatDate(date) {
         const year = date.getFullYear();
@@ -93,12 +78,14 @@ export default function Home({ navigation }) {
     }
 
     const gotoTaskDetail = (item) => {
-        if(item.task_id) navigation.navigate('TaskDetail', { task: item });
+        // Cần truyền projectId để bên Detail biết đường xử lý
+        const pid = item.project ? item.project.projectId : null;
+        if(item.task_id) navigation.navigate('TaskDetail', { task: item, projectId: pid });
     };
 
-    if (loading) {
+    if (loading && !refreshing) {
         return (
-            <View style={{flex:1, justifyContent:'center', alignItems:'center'}}>
+            <View style={{flex:1, justifyContent:'center', alignItems:'center', backgroundColor: '#f8f9fa'}}>
                 <ActivityIndicator size="large" color="#ffab33" />
             </View>
         );
@@ -108,13 +95,17 @@ export default function Home({ navigation }) {
         <View style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
             <SafeAreaView style={{ flex: 1 }}>
                 <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
-                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
-                    
+                <ScrollView 
+                    showsVerticalScrollIndicator={false} 
+                    contentContainerStyle={{ paddingBottom: 20 }}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ffab33']} />}
+                >
+                     
                     {/* --- HEADER --- */}
                     <View style={styles.headerContainer}>
                         <View>
                             <Text style={styles.greetingText}>Xin chào,</Text>
-                            <Text style={styles.usernameText}>{userData?.username || "Bạn mới"}</Text>
+                            <Text style={styles.usernameText}>{userData?.username || "Thành viên"}</Text>
                         </View>
                         <Image
                             source={userData?.imagePath ? { uri: userData.imagePath } : { uri: DEFAULT_AVATAR }}
@@ -124,15 +115,17 @@ export default function Home({ navigation }) {
 
                     {/* --- STATS DASHBOARD --- */}
                     <View style={styles.statsContainer}>
+                        {/* Thẻ Dự án */}
                         <View style={[styles.statCard, { backgroundColor: '#ffab33', flex: 1, marginRight: 10 }]}>
                             <View style={styles.iconCircle}>
                                 <Icon name="project-diagram" size={20} color="#ffab33" />
                             </View>
                             <Text style={styles.statNumber}>{project.length}</Text>
-                            <Text style={styles.statLabel}>Dự án</Text>
+                            <Text style={styles.statLabel}>Dự án tham gia</Text>
                         </View>
 
                         <View style={{ flex: 1, gap: 10 }}>
+                            {/* Thẻ Tổng Task */}
                             <View style={[styles.statCardSmall, { backgroundColor: '#fff' }]}>
                                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                     <View style={[styles.iconCircleSmall, {backgroundColor: '#e8f8f5'}]}>
@@ -140,11 +133,12 @@ export default function Home({ navigation }) {
                                     </View>
                                     <View style={{marginLeft: 10}}>
                                         <Text style={styles.statNumberSmall}>{tasks.length}</Text>
-                                        <Text style={styles.statLabelSmall}>Tổng task</Text>
+                                        <Text style={styles.statLabelSmall}>Việc của tôi</Text>
                                     </View>
                                 </View>
                             </View>
 
+                            {/* Thẻ Việc Hôm nay */}
                             <View style={[styles.statCardSmall, { backgroundColor: '#fff' }]}>
                                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                     <View style={[styles.iconCircleSmall, {backgroundColor: '#fef9e7'}]}>
@@ -152,26 +146,28 @@ export default function Home({ navigation }) {
                                     </View>
                                     <View style={{marginLeft: 10}}>
                                         <Text style={styles.statNumberSmall}>{todaytask.length}</Text>
-                                        <Text style={styles.statLabelSmall}>Hôm nay</Text>
+                                        <Text style={styles.statLabelSmall}>Hạn hôm nay</Text>
                                     </View>
                                 </View>
                             </View>
                         </View>
                     </View>
 
-                    {/* --- TODAY TASKS LIST (ĐÃ CHUYỂN LÊN TRÊN) --- */}
+                    {/* --- TODAY TASKS LIST --- */}
                     <View style={styles.sectionContainer}>
                         <View style={styles.sectionHeader}>
                             <Text style={styles.sectionTitle}>Công việc hôm nay</Text>
-                            <View style={styles.badge}>
-                                <Text style={styles.badgeText}>{todaytask.length}</Text>
-                            </View>
+                            {todaytask.length > 0 && (
+                                <View style={styles.badge}>
+                                    <Text style={styles.badgeText}>{todaytask.length}</Text>
+                                </View>
+                            )}
                         </View>
 
                         {todaytask.length === 0 ? (
                             <View style={styles.emptyState}>
-                                <Icon name="check-circle" size={40} color="#ddd" />
-                                <Text style={styles.emptyText}>Hôm nay bạn rảnh rỗi!</Text>
+                                <Icon name="coffee" size={40} color="#ddd" />
+                                <Text style={styles.emptyText}>Hôm nay bạn không có task nào!</Text>
                             </View>
                         ) : (
                             todaytask.map((item, index) => (
@@ -184,7 +180,7 @@ export default function Home({ navigation }) {
                                     <View style={{flex: 1}}>
                                         <Text style={styles.taskName} numberOfLines={1}>{item.taskName}</Text>
                                         <Text style={styles.projectName} numberOfLines={1}>
-                                            {item.project ? item.project.projectName : "Dự án cá nhân"}
+                                            {item.project ? item.project.projectName : "..."}
                                         </Text>
                                     </View>
                                     <Icon name="chevron-right" size={14} color="#ccc" />
@@ -193,7 +189,7 @@ export default function Home({ navigation }) {
                         )}
                     </View>
 
-                    {/* --- CAROUSEL (KHÁM PHÁ - ĐÃ CHUYỂN XUỐNG DƯỚI) --- */}
+                    {/* --- CAROUSEL --- */}
                     <View style={styles.sectionContainer}>
                         <Text style={styles.sectionTitle}>Khám phá</Text>
                         <View style={styles.carouselWrapper}>
@@ -219,7 +215,7 @@ const styles = StyleSheet.create({
     greetingText: { fontSize: 16, color: '#666' },
     usernameText: { fontSize: 24, fontWeight: 'bold', color: '#333' },
     avatar: { width: 50, height: 50, borderRadius: 25, borderWidth: 1, borderColor: '#ddd' },
-    
+     
     // Stats Styles
     statsContainer: {
         flexDirection: 'row',
