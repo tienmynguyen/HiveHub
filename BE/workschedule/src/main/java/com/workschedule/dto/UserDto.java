@@ -1,8 +1,7 @@
 package com.workschedule.dto;
 
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
@@ -13,11 +12,11 @@ import lombok.*;
 public class UserDto {
 
     @Email(message = "Email không hợp lệ")
-String emaildto;
-    @NotEmpty(message = "Thiếu password")
-    @Min(value = 8, message = "Password phải từ 8 kí tự trở lên")
-String passworddto;
-    @Min(value = 1, message = "userName không được để trống")
+    String emaildto;
+
+    @Size(min = 8, message = "Password phải từ 8 kí tự trở lên")
+    String passworddto;
+
     String userName;
     String imagePath;
     private String description;

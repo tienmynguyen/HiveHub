@@ -3,9 +3,9 @@ import { BackHandler } from 'react-native';
 import 'react-native-gesture-handler'
 import React, { useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import AuthStack from './navigation/AuthStack';
-import MainStack from './navigation/MainContainer';
-import { AuthContext, AuthProvider } from './navigation/context/AuthContext';
+import AuthStack from './src/navigation/AuthStack';
+import MainStack from './src/navigation/MainContainer';
+import { AuthContext, AuthProvider } from './src/features/auth/context/AuthContext';
 import { LogBox } from 'react-native';
 
 // Ignore log notification by message

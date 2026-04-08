@@ -2,11 +2,9 @@ package com.workschedule.controller;
 
 import com.workschedule.Exception.NotFoundException;
 import com.workschedule.dto.UserDto;
-import com.workschedule.model.Project;
-import com.workschedule.model.Task;
-import com.workschedule.model.User_Task;
 import com.workschedule.model.Users;
 import com.workschedule.repository.UsersRepository;
+import com.workschedule.Exception.ResourceNotFoundException;
 import com.workschedule.service.BlockchainService;
 import com.workschedule.service.serviceImpl.UserServiceImpl;
 import jakarta.validation.Valid;
@@ -31,9 +29,18 @@ private BlockchainService blockchainService;
 @PostMapping("/register")
     public ResponseEntity<Users> register(@RequestBody @Valid UserDto userDto
         ,BindingResult bindingResult ) throws Exception {
-//if (bindingResult.hasErrors()){
-//    throw new  Exception("Wrong data");
-//}
+    if (userDto.getEmaildto() == null || userDto.getEmaildto().isBlank()) {
+        throw new ResourceNotFoundException("Thiếu email");
+    }
+    if (userDto.getPassworddto() == null || userDto.getPassworddto().isBlank()) {
+        throw new ResourceNotFoundException("Thiếu password");
+    }
+    if (userDto.getUserName() == null || userDto.getUserName().isBlank()) {
+        throw new ResourceNotFoundException("userName không được để trống");
+    }
+    if (bindingResult.hasErrors()){
+        throw new ResourceNotFoundException(bindingResult.getAllErrors().get(0).getDefaultMessage());
+    }
     return ResponseEntity.ok(userServiceImpl.save(userDto));
 }
 
@@ -41,23 +48,14 @@ private BlockchainService blockchainService;
     public Users login(@RequestBody UserDto userDto) throws NotFoundException {
         return userServiceImpl.logintest(userDto);
     }
-    @GetMapping("/login test")
-    public String logintest(){
-    return "main";
-    }
-
-    @GetMapping("/logintest")
-    public UserDto logintest(@RequestBody UserDto userDto) throws NotFoundException {
-        return userServiceImpl.login(userDto);
-    }
 
     @PostMapping("/updateuser")
     public ResponseEntity<Users> updateuser(@RequestBody @Valid UserDto userDto
             ,BindingResult bindingResult,
               @RequestParam("userId") Long userId) throws Exception {
-//if (bindingResult.hasErrors()){
-//    throw new  Exception("Wrong data");
-//}
+        if (bindingResult.hasErrors()){
+            throw new ResourceNotFoundException(bindingResult.getAllErrors().get(0).getDefaultMessage());
+        }
         return ResponseEntity.ok(userServiceImpl.update(userDto,userId));
     }
 

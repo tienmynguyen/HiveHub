@@ -1,11 +1,8 @@
 package com.workschedule.config;
 
-
 import com.workschedule.repository.UsersRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -19,10 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 @EnableWebSecurity
 public class ApplicationConfig {
-    @Autowired
     private final UsersRepository usersRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Bean
     public UserDetailsService userDetailsService() {
@@ -46,7 +41,8 @@ public class ApplicationConfig {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    public ApplicationConfig(final UsersRepository usersRepository) {
+    public ApplicationConfig(final UsersRepository usersRepository, final PasswordEncoder passwordEncoder) {
         this.usersRepository = usersRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 }
