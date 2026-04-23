@@ -15,7 +15,7 @@ import { endpoints } from '../../../config/endpoints';
 import { hashPassword } from '../utils/hashPassword';
 
 export default function LoginScreen({ navigation }) {
-    const { setIsAuthenticated, setUserData } = useContext(AuthContext);
+    const { applySession } = useContext(AuthContext);
     const [email, setEmail] = useState({ value: '', error: '' });
     const [password, setPassword] = useState({ value: '', error: '' });
 
@@ -37,18 +37,15 @@ export default function LoginScreen({ navigation }) {
         try {
             const hashedPassword = hashPassword(password.value);
             const { data: responseData } = await axios.post(endpoints.auth.login(), {
-                emaildto: email.value,
-                passworddto: hashedPassword,
+                email: email.value,
+                password: hashedPassword,
             });
-            if (responseData.accountNonExpired) {
-                setUserData(responseData);
-                setIsAuthenticated(true);
-                navigation.navigate("MainTabs");
-            } else {
-                alert(responseData.message || 'Login failed');
-            }
+            await applySession(responseData);
+            navigation.navigate("MainTabs");
         } catch (error) {
-            alert(error?.response?.data?.message || 'Login failed');
+            const apiError = error?.response?.data;
+            const message = apiError?.message || apiError?.code || 'Login failed';
+            alert(message);
         }
     }
 

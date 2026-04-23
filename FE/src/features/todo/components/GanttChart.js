@@ -1,312 +1,301 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import { Svg, Rect, Line, Text as SvgText, G, Defs, LinearGradient, Stop } from 'react-native-svg';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { View, ScrollView, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Svg, Rect, Line, Text as SvgText, G } from 'react-native-svg';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import Popup from "./TaskPopup"; // Giữ nguyên component của bạn
+import Popup from './TaskPopup';
 
-// --- CẤU HÌNH KÍCH THƯỚC & MÀU SẮC ---
 const CONFIG = {
-    cellWidth: 60,      // Tăng độ rộng cột để dễ nhìn
-    headerHeight: 60,   // Tăng chiều cao header để chứa cả Thứ và Ngày
-    rowHeight: 50,      // Chiều cao mỗi dòng task
-    barHeight: 30,      // Chiều cao thanh task
-    barRadius: 6,       // Bo góc thanh task
-    colors: {
-        gridBorder: '#E0E0E0',
-        weekendBg: '#F9FAFB',
-        todayBg: '#E8F5E9',
-        todayText: '#2E7D32',
-        textPrimary: '#333333',
-        textSecondary: '#888888',
-        projectColors: {
-            "TODO": '#FFAB91',   // Cam nhạt
-            "DOING": '#90CAF9',  // Xanh dương nhạt
-            "DONE": '#A5D6A7',   // Xanh lá nhạt
-            "ERROR": '#EF9A9A',  // Đỏ nhạt
-        }
-    }
+  labelWidth: 220,
+  cellWidth: 40,
+  headerHeight: 52,
+  rowHeight: 34,
+  barHeight: 18,
+  barRadius: 5,
+  colors: {
+    gridBorder: '#e5e7eb',
+    weekendBg: '#fafafa',
+    todayLine: '#16a34a',
+    textPrimary: '#111827',
+    textSecondary: '#6b7280',
+    sprint: '#6d28d9',
+    story: '#2563eb',
+    subtaskTodo: '#f59e0b',
+    subtaskProgress: '#0ea5e9',
+    subtaskDone: '#16a34a',
+    subtaskOther: '#94a3b8',
+  },
 };
 
-const GanttChart = ({ tasks, currentMonth, setCurrentMonth }) => {
-    const currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
+function toDate(v) {
+  const d = new Date(v || '');
+  return Number.isNaN(d.getTime()) ? null : d;
+}
 
-    const startDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-    const endDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+function startOfDay(d) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
 
-    // Tạo mảng ngày
-    const dateArray = [];
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        dateArray.push(new Date(d));
-    }
+function endOfDay(d) {
+  const x = new Date(d);
+  x.setHours(23, 59, 59, 999);
+  return x;
+}
 
-    // Sắp xếp task
-    tasks.sort((a, b) => new Date(a.timeStart) - new Date(b.timeStart));
+function dayOffset(a, b) {
+  return Math.floor((startOfDay(a).getTime() - startOfDay(b).getTime()) / (1000 * 60 * 60 * 24));
+}
 
-    // Thuật toán sắp xếp dòng (như cũ)
-    const rows = [];
-    tasks.forEach((task) => {
-        let placed = false;
-        for (let i = 0; i < rows.length; i++) {
-            const lastTask = rows[i][rows[i].length - 1];
-            // Thêm một khoảng đệm nhỏ để các task không dính sát nhau
-            if (new Date(task.timeStart) >= new Date(lastTask.timeEnd)) {
-                rows[i].push(task);
-                placed = true;
-                break;
-            }
-        }
-        if (!placed) rows.push([task]);
+function getSubtaskColor(status) {
+  const s = String(status || '').toUpperCase();
+  if (s === 'DONE' || s === 'COMPLETED') return CONFIG.colors.subtaskDone;
+  if (s === 'IN_PROGRESS' || s === 'DOING') return CONFIG.colors.subtaskProgress;
+  if (s === 'TODO') return CONFIG.colors.subtaskTodo;
+  return CONFIG.colors.subtaskOther;
+}
+
+const GanttChart = ({ tasks = [], stories = [], sprints = [], currentMonth, setCurrentMonth }) => {
+  const scrollViewRef = useRef(null);
+  const currentDate = startOfDay(new Date());
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+
+  const rangeStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+  const rangeEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+
+  const dateArray = useMemo(() => {
+    const arr = [];
+    for (let d = new Date(rangeStart); d <= rangeEnd; d.setDate(d.getDate() + 1)) arr.push(new Date(d));
+    return arr;
+  }, [rangeStart, rangeEnd]);
+
+  const rows = useMemo(() => {
+    const sprintSorted = [...sprints].sort((a, b) => {
+      const aDate = toDate(a.timeStart)?.getTime() || 0;
+      const bDate = toDate(b.timeStart)?.getTime() || 0;
+      return aDate - bDate;
     });
+    const allRows = [];
+    sprintSorted.forEach((sprint) => {
+      const sprintStart = toDate(sprint.timeStart) || rangeStart;
+      const sprintEnd = toDate(sprint.timeEnd) || sprintStart;
+      allRows.push({
+        id: `sprint-${sprint.sprint_id}`,
+        type: 'sprint',
+        level: 0,
+        title: sprint.sprintName || `Sprint ${sprint.sprint_id}`,
+        start: sprintStart,
+        end: sprintEnd,
+      });
+      const sprintStories = stories
+        .filter((story) => Number(story.sprint_id) === Number(sprint.sprint_id))
+        .sort((a, b) => Number(a.storyOrder || 0) - Number(b.storyOrder || 0));
 
-    const chartHeight = Math.max(rows.length * CONFIG.rowHeight + 50, 300); // Minimum height
-    const chartWidth = dateArray.length * CONFIG.cellWidth;
-
-    // Tính toán vị trí bar
-    const calculateBar = (task, rowIndex) => {
-        const tStart = new Date(task.timeStart);
-        const tEnd = new Date(task.timeEnd);
-        
-        // Tính toán vị trí chính xác (bao gồm cả giờ phút nếu cần, ở đây tính theo ngày)
-        const diffStart = (tStart - startDate) / (1000 * 60 * 60 * 24);
-        const diffDuration = (tEnd - tStart) / (1000 * 60 * 60 * 24);
-
-        const barX = diffStart * CONFIG.cellWidth;
-        // Đảm bảo độ rộng tối thiểu là 1 phần nhỏ của cell nếu task quá ngắn
-        const barWidth = Math.max(diffDuration * CONFIG.cellWidth, 10); 
-        const barY = rowIndex * CONFIG.rowHeight + (CONFIG.rowHeight - CONFIG.barHeight) / 2;
-
-        return { barWidth, barX, barY };
-    };
-
-    const scrollViewRef = useRef(null);
-
-    // Auto scroll tới ngày hiện tại
-    useEffect(() => {
-        const todayIndex = dateArray.findIndex(date => {
-            const d = new Date(date);
-            d.setHours(0,0,0,0);
-            return d.getTime() === currentDate.getTime();
+      sprintStories.forEach((story) => {
+        const storyTasks = tasks.filter((task) => Number(task.story_id) === Number(story.story_id));
+        const taskStarts = storyTasks.map((x) => toDate(x.timeStart)).filter(Boolean);
+        const taskEnds = storyTasks.map((x) => toDate(x.timeEnd || x.deadline)).filter(Boolean);
+        const storyStart = taskStarts.length ? new Date(Math.min(...taskStarts.map((d) => d.getTime()))) : sprintStart;
+        const storyEnd = taskEnds.length ? new Date(Math.max(...taskEnds.map((d) => d.getTime()))) : sprintEnd;
+        allRows.push({
+          id: `story-${story.story_id}`,
+          type: 'story',
+          level: 1,
+          title: story.storyName || `Story ${story.story_id}`,
+          start: storyStart,
+          end: storyEnd,
+          status: story.storyStatus,
         });
+        storyTasks
+          .sort((a, b) => (toDate(a.timeStart)?.getTime() || 0) - (toDate(b.timeStart)?.getTime() || 0))
+          .forEach((task) => {
+            allRows.push({
+              id: `task-${task.task_id}`,
+              type: 'subtask',
+              level: 2,
+              title: task.taskName || `Subtask ${task.task_id}`,
+              start: toDate(task.timeStart) || storyStart,
+              end: toDate(task.timeEnd || task.deadline) || storyEnd,
+              status: task.taskStatus,
+              task,
+            });
+          });
+      });
+    });
+    return allRows;
+  }, [sprints, stories, tasks, rangeStart, rangeEnd]);
 
-        if (todayIndex !== -1 && scrollViewRef.current) {
-            setTimeout(() => {
-                scrollViewRef.current.scrollTo({
-                    x: todayIndex * CONFIG.cellWidth - CONFIG.cellWidth, // Scroll để ngày hiện tại nằm bên trái một chút
-                    animated: true,
-                });
-            }, 500);
-        }
-    }, [currentMonth]); // Thay đổi dependency để chạy khi đổi tháng
+  const chartHeight = Math.max(rows.length * CONFIG.rowHeight + CONFIG.headerHeight + 8, 220);
+  const chartWidth = CONFIG.labelWidth + dateArray.length * CONFIG.cellWidth;
 
-    const changeMonth = (direction) => {
-        const newMonth = new Date(currentMonth);
-        newMonth.setMonth(newMonth.getMonth() + direction);
-        setCurrentMonth(newMonth);
-    };
+  useEffect(() => {
+    const todayIndex = dateArray.findIndex((d) => startOfDay(d).getTime() === currentDate.getTime());
+    if (todayIndex !== -1 && scrollViewRef.current) {
+      setTimeout(() => {
+        if (!scrollViewRef.current || typeof scrollViewRef.current.scrollTo !== 'function') return;
+        scrollViewRef.current.scrollTo({
+          x: Math.max(CONFIG.labelWidth + todayIndex * CONFIG.cellWidth - 120, 0),
+          animated: true,
+        });
+      }, 350);
+    }
+  }, [currentMonth, dateArray, currentDate]);
 
-    const [popupVisible, setPopupVisible] = useState(false);
-    const [selectedTask, setSelectedTask] = useState(null);
+  function changeMonth(direction) {
+    const next = new Date(currentMonth);
+    next.setMonth(next.getMonth() + direction);
+    setCurrentMonth(next);
+  }
 
-    const togglePopup = (task) => {
-        setSelectedTask(task);
-        setPopupVisible(true);
-    };
+  function barMeta(row) {
+    if (row.type === 'sprint') return { color: CONFIG.colors.sprint, label: 'Sprint' };
+    if (row.type === 'story') return { color: CONFIG.colors.story, label: 'Story' };
+    return { color: getSubtaskColor(row.status), label: 'Subtask' };
+  }
 
-    // Helper: Lấy tên thứ (T2, T3...)
-    const getDayName = (date) => {
-        const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-        return days[date.getDay()];
-    };
+  return (
+    <View style={styles.container}>
+      <View style={styles.headerControl}>
+        <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.navBtn}>
+          <Icon name="chevron-left" size={14} color="#4b5563" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>
+          {currentMonth.toLocaleString('vi-VN', { month: 'long', year: 'numeric' }).toUpperCase()}
+        </Text>
+        <TouchableOpacity onPress={() => changeMonth(1)} style={styles.navBtn}>
+          <Icon name="chevron-right" size={14} color="#4b5563" />
+        </TouchableOpacity>
+      </View>
 
-    return (
-        <View style={styles.container}>
-            {/* --- HEADER ĐIỀU HƯỚNG THÁNG --- */}
-            <View style={styles.headerControl}>
-                <TouchableOpacity onPress={() => changeMonth(-1)} style={styles.navBtn}>
-                    <Icon name="chevron-left" size={16} color="#555" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>
-                    {currentMonth.toLocaleString('vi-VN', { month: 'long', year: 'numeric' }).toUpperCase()}
-                </Text>
-                <TouchableOpacity onPress={() => changeMonth(1)} style={styles.navBtn}>
-                    <Icon name="chevron-right" size={16} color="#555" />
-                </TouchableOpacity>
-            </View>
+      <View style={styles.legendRow}>
+        <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: CONFIG.colors.sprint }]} /><Text style={styles.legendText}>Sprint</Text></View>
+        <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: CONFIG.colors.story }]} /><Text style={styles.legendText}>Story</Text></View>
+        <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: CONFIG.colors.subtaskProgress }]} /><Text style={styles.legendText}>Subtask</Text></View>
+      </View>
 
-            {/* --- BODY BIỂU ĐỒ --- */}
-            <ScrollView horizontal ref={scrollViewRef} style={styles.scrollView} showsHorizontalScrollIndicator={false}>
-                <View>
-                    {/* SVG Canvas chứa cả Header Ngày và Grid */}
-                    <Svg height={chartHeight + CONFIG.headerHeight} width={chartWidth}>
-                        
-                        {/* 1. VẼ NỀN VÀ HEADER (Lớp dưới cùng) */}
-                        {dateArray.map((date, index) => {
-                            const isToday = date.getTime() === currentDate.getTime();
-                            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                            const xPos = index * CONFIG.cellWidth;
+      <ScrollView horizontal ref={scrollViewRef} style={styles.scrollView} showsHorizontalScrollIndicator={false}>
+        <Svg height={chartHeight} width={chartWidth}>
+          <Rect x={0} y={0} width={CONFIG.labelWidth} height={chartHeight} fill="#f8fafc" />
+          <Line x1={CONFIG.labelWidth} y1={0} x2={CONFIG.labelWidth} y2={chartHeight} stroke={CONFIG.colors.gridBorder} />
 
-                            return (
-                                <G key={`grid-${index}`}>
-                                    {/* Nền cột (Weekend hoặc Today) */}
-                                    <Rect
-                                        x={xPos}
-                                        y={0}
-                                        width={CONFIG.cellWidth}
-                                        height={chartHeight + CONFIG.headerHeight}
-                                        fill={isToday ? CONFIG.colors.todayBg : (isWeekend ? CONFIG.colors.weekendBg : 'white')}
-                                    />
-                                    
-                                    {/* Đường kẻ dọc mờ phân chia ngày */}
-                                    <Line
-                                        x1={xPos} y1={CONFIG.headerHeight}
-                                        x2={xPos} y2={chartHeight + CONFIG.headerHeight}
-                                        stroke={CONFIG.colors.gridBorder}
-                                        strokeDasharray="4 2" // Nét đứt nhẹ nhàng
-                                        strokeWidth="1"
-                                    />
+          {dateArray.map((date, idx) => {
+            const x = CONFIG.labelWidth + idx * CONFIG.cellWidth;
+            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+            return (
+              <G key={`date-${idx}`}>
+                <Rect
+                  x={x}
+                  y={0}
+                  width={CONFIG.cellWidth}
+                  height={chartHeight}
+                  fill={isWeekend ? CONFIG.colors.weekendBg : '#fff'}
+                />
+                <Line x1={x} y1={CONFIG.headerHeight} x2={x} y2={chartHeight} stroke={CONFIG.colors.gridBorder} strokeDasharray="3 2" />
+                <SvgText x={x + CONFIG.cellWidth / 2} y={16} fill={CONFIG.colors.textSecondary} fontSize="10" textAnchor="middle">
+                  {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][date.getDay()]}
+                </SvgText>
+                <SvgText x={x + CONFIG.cellWidth / 2} y={32} fill={CONFIG.colors.textPrimary} fontSize="11" fontWeight="700" textAnchor="middle">
+                  {date.getDate()}
+                </SvgText>
+              </G>
+            );
+          })}
 
-                                    {/* Text: Thứ (T2, T3...) */}
-                                    <SvgText
-                                        x={xPos + CONFIG.cellWidth / 2}
-                                        y={25}
-                                        fill={isToday ? CONFIG.colors.todayText : CONFIG.colors.textSecondary}
-                                        fontSize="12"
-                                        fontWeight="bold"
-                                        textAnchor="middle"
-                                    >
-                                        {getDayName(date)}
-                                    </SvgText>
+          <Line x1={0} y1={CONFIG.headerHeight} x2={chartWidth} y2={CONFIG.headerHeight} stroke={CONFIG.colors.gridBorder} />
 
-                                    {/* Text: Ngày (01, 02...) */}
-                                    <SvgText
-                                        x={xPos + CONFIG.cellWidth / 2}
-                                        y={45}
-                                        fill={isToday ? CONFIG.colors.todayText : CONFIG.colors.textPrimary}
-                                        fontSize="14"
-                                        fontWeight={isToday ? "bold" : "normal"}
-                                        textAnchor="middle"
-                                    >
-                                        {date.getDate()}
-                                    </SvgText>
+          {rows.map((row, i) => {
+            const y = CONFIG.headerHeight + i * CONFIG.rowHeight;
+            const barY = y + (CONFIG.rowHeight - CONFIG.barHeight) / 2;
+            const startIdx = dayOffset(row.start, rangeStart);
+            const endIdx = dayOffset(row.end, rangeStart);
+            const barX = CONFIG.labelWidth + startIdx * CONFIG.cellWidth;
+            const barWidth = Math.max((endIdx - startIdx + 1) * CONFIG.cellWidth, 8);
+            const meta = barMeta(row);
 
-                                    {/* Đường kẻ ngang ngăn cách Header và Body */}
-                                    <Line 
-                                        x1={0} y1={CONFIG.headerHeight} 
-                                        x2={chartWidth} y2={CONFIG.headerHeight} 
-                                        stroke="#ddd" 
-                                        strokeWidth="1" 
-                                    />
-                                </G>
-                            );
-                        })}
+            return (
+              <G key={row.id}>
+                <Line x1={0} y1={y + CONFIG.rowHeight} x2={chartWidth} y2={y + CONFIG.rowHeight} stroke="#f1f5f9" />
+                <SvgText
+                  x={12 + row.level * 16}
+                  y={y + 22}
+                  fill={row.type === 'sprint' ? '#111827' : '#334155'}
+                  fontSize={row.type === 'sprint' ? '12' : '11'}
+                  fontWeight={row.type === 'sprint' ? '700' : '500'}
+                >
+                  {row.type === 'sprint' ? '■ ' : row.type === 'story' ? '▸ ' : '• '}
+                  {row.title}
+                </SvgText>
+                <G onPress={row.task ? () => { setSelectedTask(row.task); setPopupVisible(true); } : undefined}>
+                  <Rect
+                    x={barX}
+                    y={barY}
+                    width={barWidth}
+                    height={CONFIG.barHeight}
+                    rx={CONFIG.barRadius}
+                    ry={CONFIG.barRadius}
+                    fill={meta.color}
+                    opacity={row.type === 'subtask' ? 1 : 0.9}
+                  />
+                  {barWidth > 46 ? (
+                    <SvgText x={barX + 6} y={barY + 12} fill="#fff" fontSize="9" fontWeight="700">
+                      {meta.label}
+                    </SvgText>
+                  ) : null}
+                </G>
+              </G>
+            );
+          })}
 
-                        {/* 2. VẼ CÁC THANH TASK (Lớp trên) */}
-                        <G y={CONFIG.headerHeight}> 
-                            {rows.map((row, rowIndex) => (
-                                row.map((task, index) => {
-                                    const { barWidth, barX, barY } = calculateBar(task, rowIndex);
-                                    const color = CONFIG.colors.projectColors[task.taskStatus] || '#999';
-                                    
-                                    // Cắt ngắn text nếu thanh quá ngắn
-                                    const textLimit = Math.floor(barWidth / 8); 
-                                    const displayTitle = task.taskName.length > textLimit 
-                                        ? task.taskName.substring(0, textLimit) + "..." 
-                                        : task.taskName;
+          {(() => {
+            const todayIndex = dayOffset(currentDate, rangeStart);
+            if (todayIndex < 0 || todayIndex >= dateArray.length) return null;
+            const x = CONFIG.labelWidth + todayIndex * CONFIG.cellWidth;
+            return <Line x1={x} y1={CONFIG.headerHeight} x2={x} y2={chartHeight} stroke={CONFIG.colors.todayLine} strokeWidth="2" />;
+          })()}
+        </Svg>
+      </ScrollView>
 
-                                    return (
-                                        <G key={`task-${rowIndex}-${index}`} onPress={() => togglePopup(task)}>
-                                            {/* Thanh Task chính */}
-                                            <Rect
-                                                x={barX}
-                                                y={barY}
-                                                width={barWidth}
-                                                height={CONFIG.barHeight}
-                                                rx={CONFIG.barRadius}
-                                                ry={CONFIG.barRadius}
-                                                fill={color}
-                                                // Hiệu ứng bóng nhẹ (giả lập bằng stroke)
-                                                stroke="rgba(0,0,0,0.05)"
-                                                strokeWidth="2"
-                                            />
-                                            
-                                            {/* Tên Task */}
-                                            <SvgText
-                                                x={barX + 5} // Padding left
-                                                y={barY + CONFIG.barHeight / 2 + 5} // Căn giữa theo chiều dọc
-                                                fill="#FFF"
-                                                fontSize="12"
-                                                fontWeight="600"
-                                                textAnchor="start"
-                                            >
-                                                {displayTitle}
-                                            </SvgText>
-                                        </G>
-                                    );
-                                })
-                            ))}
-                        </G>
-
-                         {/* 3. ĐƯỜNG KẺ INDICATOR HÔM NAY (Nằm trên cùng) */}
-                         {dateArray.map((date, index) => {
-                             if (date.getTime() === currentDate.getTime()) {
-                                 return (
-                                     <Line
-                                        key="today-line"
-                                        x1={index * CONFIG.cellWidth} 
-                                        y1={CONFIG.headerHeight}
-                                        x2={index * CONFIG.cellWidth} 
-                                        y2={chartHeight + CONFIG.headerHeight}
-                                        stroke={CONFIG.colors.todayText}
-                                        strokeWidth="2"
-                                     />
-                                 )
-                             }
-                             return null;
-                         })}
-
-                    </Svg>
-                </View>
-            </ScrollView>
-            
-            {/* Giữ nguyên Popup */}
-            {popupVisible && <Popup task={selectedTask} onClose={() => setPopupVisible(false)} />}
-        </View>
-    );
+      {popupVisible ? <Popup task={selectedTask} onClose={() => setPopupVisible(false)} /> : null}
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    headerControl: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: 12,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-        elevation: 2, // Shadow cho Android
-        zIndex: 10,
-    },
-    headerTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-        marginHorizontal: 20,
-        width: 200,
-        textAlign: 'center',
-    },
-    navBtn: {
-        padding: 8,
-        backgroundColor: '#f5f5f5',
-        borderRadius: 20,
-    },
-    scrollView: {
-        flex: 1,
-    }
+  container: { backgroundColor: '#fff' },
+  headerControl: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  headerTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111827',
+    marginHorizontal: 14,
+    minWidth: 180,
+    textAlign: 'center',
+  },
+  navBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 14,
+  },
+  legendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingBottom: 8,
+    gap: 12,
+  },
+  legendItem: { flexDirection: 'row', alignItems: 'center' },
+  legendDot: { width: 10, height: 10, borderRadius: 5, marginRight: 6 },
+  legendText: { fontSize: 11, color: '#64748b', fontWeight: '600' },
+  scrollView: { maxHeight: 420 },
 });
 
 export default GanttChart;

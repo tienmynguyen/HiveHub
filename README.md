@@ -1,79 +1,65 @@
-# 📱 HiveHub: Group Task Management Mobile Application
+# HiveHub Mobile
 
-HiveHub is a mobile application designed for effective group task management. It enables task delegation, progress tracking, and real-time communication. The project is built using modern technologies including **Spring Boot**, **React Native **, **MySQL**, and a **Socket Server**.
+HiveHub is a Scrum-oriented mobile task management app built with Expo (React Native) and an Express.js backend.
 
----
+## Current Architecture
 
-## 🚀 Features
+- `FE/`: mobile client (Expo + React Native)
+- `backend-express/`: API server (Express + Socket.IO + JWT + JSON file DB)
+- `BE/`: removed (legacy Spring backend no longer used)
 
-- ✅ **Task Management**: Create, update, delete, and assign tasks to team members
-- 💬 **Real-Time Chat**: Communicate instantly within the team
-- 🕓 **Task History**: Track changes and history of tasks
+## Main Features
 
----
+- Project -> Sprint -> Story -> Subtask structure
+- Role-based permissions (Owner/Member)
+- Story and subtask status workflow
+- Owner notifications for member status changes
+- Project member management by email
+- In-project chat with Socket.IO
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-| Component | Technology Used           |
-| --------- | ------------------------- |
-| Frontend  | React Native (Expo)       |
-| Backend   | Spring Boot (Java)        |
-| Database  | MySQL                     |
-| Real-time | Socket Server (WebSocket) |
+- Frontend: React Native (Expo)
+- Backend: Node.js, Express, Socket.IO
+- Auth: JWT access token + refresh token
+- Storage (dev): `backend-express/src/db.json`
 
----
+## Quick Start
 
-## 📦 Installation
-
-### 🔙 Backend
-
-1. **Clone the repository**:
-
-```bash
-git clone https://github.com/tienmynguyen/HiveHub.git
-```
-
-2. **Configure the database** (in `backend/src/main/resources/application.properties`):
-
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/your-database-name
-spring.datasource.username=your-username
-spring.datasource.password=your-password
-spring.jpa.hibernate.ddl-auto=update
-```
-
-3. **Build and run the backend**:
+### 1) Backend (Express)
 
 ```bash
-cd BE
-cd workschedule
-mvn spring-boot:run
+cd backend-express
+npm install
+npm run dev
 ```
-https://remix.ethereum.org/#lang=en&optimize&runs=200&evmVersion&version=soljson-v0.8.31+commit.fd3a2265.js
-BE/workshedule/sevice/BlockchainService.java
 
----
+Default server: `http://localhost:8889`
 
-### 📱 Frontend
-
-1. **Install dependencies and start Expo**:
+### 2) Frontend (Expo)
 
 ```bash
 cd FE
+npm install --legacy-peer-deps
 npm start
 ```
 
-<p align="left">
- <img src="image1.jpg" alt="spring" width="30%"/> 
-  <img src="image2.jpg" alt="spring" width="30%"/> 
-   <img src="image3.jpg" alt="spring" width="30%"/> 
-   </br>
-   <img src="image4.jpg" alt="spring" width="30%"/> 
-  <img src="image5.jpg" alt="spring" width="30%"/> 
-   <img src="image6.jpg" alt="spring" width="30%"/> 
-   </p>
+If needed, set API URL in `FE/src/config/config.json` to your backend IP/port.
 
-## 📬 Contact
+## Backend Structure
 
-- 📧 Email: mytom2401@gmail.com
+`backend-express/src` is organized by responsibility:
+
+- `config/`: environment configuration
+- `data/`: db read/write utilities
+- `middlewares/`: request context, auth parsing, error handling, not found
+- `routes/`: feature-based route modules
+- `services/`: shared business logic helpers
+- `app.js`: app composition
+- `server.js`: HTTP + Socket.IO bootstrap
+
+## Notes
+
+- This repo currently targets local/dev workflow.
+- `db.json` is for development data only.
 

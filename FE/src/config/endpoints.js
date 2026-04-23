@@ -4,12 +4,13 @@ const BASE_URL = Config.URLAPI;
 
 export const endpoints = {
     auth: {
-        login: () => `${BASE_URL}/login`,
-        register: () => `${BASE_URL}/register`,
+        login: () => `${BASE_URL}/auth/login`,
+        register: () => `${BASE_URL}/auth/register`,
+        refresh: () => `${BASE_URL}/auth/refresh`,
+        logout: () => `${BASE_URL}/auth/logout`,
     },
     user: {
         update: (userId) => `${BASE_URL}/updateuser?userId=${userId}`,
-        getBalance: (walletAddress) => `${BASE_URL}/getbalance?walletAddress=${walletAddress}`,
     },
     notes: {
         getAllByUser: (userId) => `${BASE_URL}/getallnotebyuser?userId=${userId}`,
@@ -25,6 +26,26 @@ export const endpoints = {
         getUsers: (projectId) => `${BASE_URL}/getalluserbyprojectId?projectId=${projectId}`,
         getTasks: (projectId) => `${BASE_URL}/gettaskbyprojectid?projectid=${projectId}`,
         getRole: (projectId, userId) => `${BASE_URL}/findroleinuspr?projectId=${projectId}&userId=${userId}`,
+        getSprints: (projectId) => `${BASE_URL}/getsprintbyprojectid?projectId=${projectId}`,
+        createSprint: (projectId) => `${BASE_URL}/addsprint?projectId=${projectId}`,
+        updateSprint: (sprintId, userId) => `${BASE_URL}/updatesprint?sprintId=${sprintId}&userId=${userId}`,
+        deleteSprint: (sprintId, userId) => `${BASE_URL}/deletesprint?sprintId=${sprintId}&userId=${userId}`,
+        getEpics: (projectId) => `${BASE_URL}/getepicbyprojectid?projectId=${projectId}`,
+        createEpic: (projectId) => `${BASE_URL}/addepic?projectId=${projectId}`,
+        getStories: (projectId, sprintId, epicId) => {
+            const params = new URLSearchParams({ projectId: String(projectId) });
+            if (sprintId) params.append('sprintId', String(sprintId));
+            if (epicId) params.append('epicId', String(epicId));
+            return `${BASE_URL}/getstorybyprojectid?${params.toString()}`;
+        },
+        createStory: (projectId, sprintId, epicId) => {
+            const params = new URLSearchParams({ projectId: String(projectId) });
+            if (sprintId) params.append('sprintId', String(sprintId));
+            if (epicId) params.append('epicId', String(epicId));
+            return `${BASE_URL}/addstory?${params.toString()}`;
+        },
+        addMemberByEmail: (projectId, ownerId) =>
+            `${BASE_URL}/addmemberbyemail?projectId=${projectId}&ownerId=${ownerId}`,
     },
     tasks: {
         getByUser: (userId) => `${BASE_URL}/getalltaskbyuser?userId=${userId}`,
@@ -32,20 +53,28 @@ export const endpoints = {
         create: (projectId) => `${BASE_URL}/addtask?projectId=${projectId}`,
         addUser: (taskId, userId) => `${BASE_URL}/addusertask?taskId=${taskId}&userId=${userId}`,
         getUsers: (taskId) => `${BASE_URL}/getalluserbytaskId?taskId=${taskId}`,
-        update: (taskId) => `${BASE_URL}/updatetask?taskId=${taskId}`,
+        update: (taskId, userId) => `${BASE_URL}/updatetask?taskId=${taskId}&userId=${userId}`,
         approve: () => `${BASE_URL}/approvetask`,
         reject: (taskId, adminId, reason) =>
             `${BASE_URL}/rejecttask?taskId=${taskId}&adminId=${adminId}&reason=${encodeURIComponent(reason)}`,
         postComment: (taskId, userId) => `${BASE_URL}/postcomment?taskId=${taskId}&userId=${userId}`,
         getComments: (taskId) => `${BASE_URL}/getallcommentbyTask?taskId=${taskId}`,
+        getByStory: (storyId) => `${BASE_URL}/getsubtaskbystoryid?storyId=${storyId}`,
+    },
+    stories: {
+        getById: (storyId) => `${BASE_URL}/getstorybyid?storyId=${storyId}`,
+        update: (storyId, userId) => `${BASE_URL}/updatestory?storyId=${storyId}&userId=${userId}`,
+        getComments: (storyId) => `${BASE_URL}/getallcommentbystory?storyId=${storyId}`,
+        postComment: (storyId, userId) => `${BASE_URL}/poststorycomment?storyId=${storyId}&userId=${userId}`,
+    },
+    notifications: {
+        getForOwner: (projectId, userId) => `${BASE_URL}/notifications?projectId=${projectId}&userId=${userId}`,
+        markRead: (notificationId, userId) => `${BASE_URL}/notifications/read?notificationId=${notificationId}&userId=${userId}`,
     },
     chat: {
         socket: () => `${BASE_URL}/ws`,
         getMessages: (projectId) => `${BASE_URL}/chat/getallmessage?projectId=${projectId}`,
         addMessage: () => `${BASE_URL}/chat/addmessage`,
-    },
-    wallet: {
-        transferToken: () => `${BASE_URL}/transfertoken`,
     },
 };
 

@@ -11,10 +11,10 @@ import Note from '../features/notes/screens/Note';
 import Project from '../features/todo/screens/Project';
 import Chat from '../features/chat/screens/Chat';
 import Plan from '../features/todo/screens/Plan';
+import StoryDetail from '../features/todo/screens/StoryDetail';
 import TaskDetail from '../features/todo/screens/TaskDetail';
 import AddTask from '../features/todo/screens/AddTask';
 import AddProject from '../features/todo/screens/AddProject';
-import TransferToken from '../features/wallet/screens/TransferToken';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -43,9 +43,6 @@ function MainTabs() {
                         case 'Project':
                             iconName = focused ? 'list' : 'list-outline';
                             break;
-                        case 'TransferToken':
-                            iconName = focused ? 'swap-horizontal' : 'swap-horizontal-outline';
-                            break;
                     }
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
@@ -63,7 +60,6 @@ function MainTabs() {
             <Tab.Screen name="Calendar" component={Calendar} />
             <Tab.Screen name="Project" component={Project} />
             <Tab.Screen name="Note" component={Note} />
-             <Tab.Screen name="TransferToken" component={TransferToken} />
             <Tab.Screen name="Profile" component={Profile} />
            
         </Tab.Navigator>
@@ -76,6 +72,7 @@ export default function MainStack() {
             <Stack.Screen name="MainTabs" component={MainTabs} />
             <Stack.Screen name="Chat" component={Chat} />
             <Stack.Screen name="Plan" component={Plan} />
+            <Stack.Screen name="StoryDetail" component={StoryDetail} />
             <Stack.Screen name="TaskDetail" component={TaskDetail} />
             <Stack.Screen name="AddTask" component={AddTask} />
             <Stack.Screen name="AddProject" component={AddProject} />

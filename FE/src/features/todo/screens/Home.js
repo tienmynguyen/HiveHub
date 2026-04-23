@@ -38,9 +38,9 @@ export default function Home({ navigation }) {
     const isFocused = useIsFocused();
 
     const dataImg = [
-        { image: require('./images/phonebee.png') },
-        { image: require('./images/granttbee.png') },
-        { image: require('./images/multiphonebee.png') },
+        { image: require('../../../../navigation/screens/images/phonebee.png') },
+        { image: require('../../../../navigation/screens/images/granttbee.png') },
+        { image: require('../../../../navigation/screens/images/multiphonebee.png') },
     ];
 
     useEffect(() => {

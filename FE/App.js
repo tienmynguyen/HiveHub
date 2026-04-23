@@ -57,7 +57,11 @@ if (typeof BackHandler.removeEventListener !== 'function') {
     };
 }
 function AppNavigator() {
-    const { isAuthenticated } = useContext(AuthContext);
+    const { isAuthenticated, bootstrapped } = useContext(AuthContext);
+
+    if (!bootstrapped) {
+        return null;
+    }
 
     return (
         <NavigationContainer>

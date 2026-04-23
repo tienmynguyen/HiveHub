@@ -104,7 +104,7 @@ export default function Project({ navigation }) {
             onPress={() => gotoChat(item.project_id, item.projectName, item.projectDescription)}
         >
             <View style={styles.iconContainer}>
-                <Image source={require("./images/group.png")} style={styles.projectIcon} />
+                <Image source={require("../../../../navigation/screens/images/group.png")} style={styles.projectIcon} />
             </View>
             <View style={styles.contentContainer}>
                 <Text style={styles.projectTitle} numberOfLines={1}>{item.projectName}</Text>
@@ -149,7 +149,7 @@ export default function Project({ navigation }) {
                         style={{flex: 1}}
                         ListEmptyComponent={
                             <View style={{ alignItems: 'center', marginTop: 50, opacity: 0.6 }}>
-                                <Image source={require("./images/sleepbee.png")} style={{width: 100, height: 100, marginBottom: 10}} resizeMode="contain"/>
+                                <Image source={require("../../../../navigation/screens/images/sleepbee.png")} style={{width: 100, height: 100, marginBottom: 10}} resizeMode="contain"/>
                                 <Text style={{fontSize: 16, color: '#888'}}>Bạn chưa có dự án nào</Text>
                             </View>
                         }

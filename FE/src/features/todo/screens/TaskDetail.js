@@ -15,8 +15,7 @@ export default function PlanDetail({ navigation, route }) {
     const { userData } = useContext(AuthContext);
 
     // --- HELPER: LOGIC KHỞI TẠO ---
-    // Nếu đã có TxHash hoặc đã Approved -> Coi như là COMPLETED
-    const isAlreadyApproved = (task.txHash && task.txHash.length > 5) || task.taskStatus === 'COMPLETED';
+    const isAlreadyApproved = task.taskStatus === 'COMPLETED';
     
     // --- STATE ---
     const [isModalVisible, setModalVisible] = useState(false); 
@@ -24,9 +23,7 @@ export default function PlanDetail({ navigation, route }) {
     
     const [commentList, setCommentList] = useState(task.commentList || []);
     
-    // SỬA 1: State Status mặc định sẽ là 'COMPLETED' nếu đã có Hash
     const [status, setStatus] = useState(isAlreadyApproved ? 'COMPLETED' : task.taskStatus);
-    const [currentTxHash, setCurrentTxHash] = useState(task.txHash || null); 
 
     const [users, setUsers] = useState([]);
     const [comment, setComment] = useState(''); 
@@ -40,13 +37,6 @@ export default function PlanDetail({ navigation, route }) {
         fetchComments();
         checkRole();
     }, []);
-
-    // SỬA 2: Theo dõi Hash, nếu có Hash -> Ép trạng thái thành COMPLETED
-    useEffect(() => {
-        if (currentTxHash) {
-            setStatus('COMPLETED');
-        }
-    }, [currentTxHash]);
 
     // --- API HELPER ---
     async function checkRole() {
@@ -81,7 +71,7 @@ export default function PlanDetail({ navigation, route }) {
     // --- CÁC HÀM GỌI API ---
     async function apiUpdateTask(data) {
         try {
-            const res = await axios.post(endpoints.tasks.update(task.task_id), data);
+            const res = await axios.post(endpoints.tasks.update(task.task_id, userData.user_id), data);
             return res.data;
         } catch (error) { return null; }
     }
@@ -149,27 +139,22 @@ export default function PlanDetail({ navigation, route }) {
         const currentRole = Number(role); 
         const isOwner = currentRole === 3;
         
-        // Chấp nhận cả 'DONE' và 'COMPLETED' nếu là Owner duyệt
-        const isBlockchainAction = (newStatus === 'COMPLETED' || newStatus === 'DONE');
+        const isApproveAction = (newStatus === 'COMPLETED' || newStatus === 'DONE');
 
         setTimeout(async () => {
             try {
                 let updatedTask = null;
-                let isBlockchainSuccess = false;
+                let isApprovedSuccess = false;
 
-                if (isOwner && isBlockchainAction) {
-                    // --- CASE 1: DUYỆT BLOCKCHAIN ---
+                if (isOwner && isApproveAction) {
                     const res = await apiApproveTask();
                     
-                    if (res && res.txHash) {
-                        // Backend trả về gì không quan trọng, Frontend tự quyết là COMPLETED
-                        updatedTask = { taskStatus: 'COMPLETED', txHash: res.txHash }; 
+                    if (res && res.taskStatus === 'COMPLETED') {
+                        updatedTask = { taskStatus: 'COMPLETED' }; 
+                        setStatus('COMPLETED');
+                        isApprovedSuccess = true;
                         
-                        setCurrentTxHash(res.txHash); 
-                        setStatus('COMPLETED'); // <--- QUAN TRỌNG: Ép trạng thái UI
-                        isBlockchainSuccess = true;
-                        
-                        Alert.alert("Thành công! 🎉", `Đã duyệt và ghi lên Blockchain.\nTxHash: ${res.txHash}`);
+                        Alert.alert("Thành công! 🎉", "Đã duyệt công việc.");
                     } else {
                         Alert.alert("Lỗi", res?.message || "Không thể duyệt bài. Vui lòng thử lại.");
                     }
@@ -179,7 +164,6 @@ export default function PlanDetail({ navigation, route }) {
                     updatedTask = await apiRejectTask(reason);
                     if (updatedTask) {
                         setStatus('REJECTED'); 
-                        setCurrentTxHash(null); 
                     }
 
                 } else {
@@ -195,13 +179,11 @@ export default function PlanDetail({ navigation, route }) {
                     let prefix = `[TRẠNG THÁI: ${newStatus}]`;
                     
                     // Nếu duyệt thành công thì ghi đè prefix cho đẹp
-                    if (isBlockchainSuccess) prefix = `✅ OWNER ĐÃ DUYỆT (BLOCKCHAIN VERIFIED)`;
+                    if (isApprovedSuccess) prefix = `✅ OWNER ĐÃ DUYỆT`;
                     else if (newStatus === 'REJECTED') prefix = `❌ OWNER ĐÃ TỪ CHỐI`;
 
                     let finalComment = prefix;
                     if (reason && reason.trim() !== "") finalComment += `: ${reason}`;
-                    if (updatedTask.txHash) finalComment += `\nTx: ${updatedTask.txHash}`;
-
                     await apiPostComment(finalComment);
                     fetchComments();
                 }
@@ -222,11 +204,9 @@ export default function PlanDetail({ navigation, route }) {
         }
     };
 
-    // SỬA 3: Logic hiển thị màu sắc
     const getStatusStyle = (st) => {
-        // Nếu đang có Hash (vừa duyệt xong hoặc load từ DB) -> Trả về style COMPLETED
-        if (currentTxHash || st === 'COMPLETED') {
-            return { bg: '#d5f5e3', color: '#27ae60', label: 'Approved (On-Chain)' };
+        if (st === 'COMPLETED') {
+            return { bg: '#d5f5e3', color: '#27ae60', label: 'Approved' };
         }
 
         switch (st) {
@@ -267,22 +247,14 @@ export default function PlanDetail({ navigation, route }) {
                         </View>
                         <Text style={styles.description}>{task.description || "Không có mô tả."}</Text>
 
-                        {/* HIỂN THỊ TX HASH NẾU CÓ */}
-                        {currentTxHash && (
-                             <TouchableOpacity style={styles.blockchainBox} onPress={() => Alert.alert("Blockchain Receipt", currentTxHash)}>
-                                <Icon name="link" size={12} color="#27ae60" />
-                                <Text style={styles.blockchainText}>On-Chain Verified: {currentTxHash.substring(0, 15)}...</Text>
-                             </TouchableOpacity>
-                        )}
-
-                        {/* OWNER ACTIONS: Chỉ hiện khi là Owner VÀ (Chưa có hash HOẶC chưa Reject) */}
-                        {Number(role) === 3 && !currentTxHash && status !== 'REJECTED' && (
+                        {/* OWNER ACTIONS */}
+                        {Number(role) === 3 && status !== 'COMPLETED' && status !== 'REJECTED' && (
                             <View style={styles.ownerActionBlock}>
                                 <Text style={styles.ownerLabel}>Xác nhận của Owner:</Text>
                                 <View style={styles.ownerBtnRow}>
                                     <TouchableOpacity style={[styles.ownerBtn, {backgroundColor: '#d5f5e3', borderColor: '#2ecc71'}]} onPress={() => handleOwnerAction('COMPLETED')}>
                                         <Icon name="check" size={14} color="#27ae60" />
-                                        <Text style={{color: '#27ae60', fontWeight: 'bold', marginLeft: 5}}>Duyệt & Ghi Block</Text>
+                                        <Text style={{color: '#27ae60', fontWeight: 'bold', marginLeft: 5}}>Duyệt</Text>
                                     </TouchableOpacity>
                                     
                                     <TouchableOpacity style={[styles.ownerBtn, {backgroundColor: '#fadbd8', borderColor: '#c0392b'}]} onPress={() => handleOwnerAction('REJECTED')}>
@@ -416,7 +388,7 @@ export default function PlanDetail({ navigation, route }) {
                     </Text>
                     
                     <Text style={styles.dialogSub}>
-                        {pendingStatus === 'COMPLETED' ? 'Duyệt bài và ghi nhận lên Blockchain.' : `Bạn đang chuyển sang ${pendingStatus}.`}
+                        {pendingStatus === 'COMPLETED' ? 'Duyệt công việc.' : `Bạn đang chuyển sang ${pendingStatus}.`}
                         {'\n'}Nhập ghi chú (nếu có):
                     </Text>
                     
@@ -460,10 +432,6 @@ const styles = StyleSheet.create({
     statusText: { fontWeight: 'bold', fontSize: 12 },
     description: { color: '#666', fontSize: 15, lineHeight: 22 },
     
-    // Blockchain Box
-    blockchainBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e8f8f5', padding: 8, borderRadius: 6, marginTop: 10, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#d5f5e3' },
-    blockchainText: { color: '#27ae60', fontSize: 11, fontWeight: 'bold', marginLeft: 6 },
-
     // Owner Actions
     ownerActionBlock: { marginTop: 15, borderTopWidth: 1, borderTopColor: '#eee', paddingTop: 10 },
     ownerLabel: { fontSize: 12, fontWeight: 'bold', color: '#555', marginBottom: 8, fontStyle: 'italic' },

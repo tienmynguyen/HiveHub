@@ -1,0 +1,472 @@
+{
+  "users": [
+    {
+      "user_id": 1,
+      "email": "mytom@gmail.com",
+      "username": "My",
+      "password": "$2b$10$nkBGtEfSvOZNjRT2Q7ZPQub85hfBm3RZqbZB81fTofkDWwSvghBDS",
+      "imagePath": null,
+      "description": "Product owner",
+      "walletAddress": ""
+    },
+    {
+      "user_id": 2,
+      "email": "abc@gmail.com",
+      "username": "Abc",
+      "password": "$2b$10$Y6amz4KzF5KuFZ3/EHIWS.9fiNu6fw7eNLtVy0atjKW7Fw8iTRagO",
+      "imagePath": null,
+      "description": "Frontend member",
+      "walletAddress": ""
+    }
+  ],
+  "projects": [
+    {
+      "project_id": "P-31113758",
+      "projectName": "ABC",
+      "projectDescription": "Abajdmsnsbb",
+      "projectowner": 1,
+      "timeStart": "2026-04-23T07:58:14.968Z",
+      "timeEnd": "2027-02-11T07:57:38.000Z"
+    },
+    {
+      "project_id": "P-31457173",
+      "projectName": "Abca",
+      "projectDescription": "Ậgav",
+      "projectowner": 1,
+      "timeStart": "2026-04-23T08:04:11.135Z",
+      "timeEnd": "2026-04-27T08:04:06.000Z"
+    },
+    {
+      "project_id": "P-32457576",
+      "projectName": "HiveHub Mobile Scrum",
+      "projectDescription": "Mock data chi tiet cho user 1 (Owner) va user 2 (Member).",
+      "projectowner": 1,
+      "timeStart": "2026-04-22T00:00:00.000Z",
+      "timeEnd": "2026-05-20T23:59:59.000Z"
+    }
+  ],
+  "userProjects": [
+    {
+      "userProjectId": "4a5ca292-90ee-46de-acb8-14ff4ffd9116",
+      "projectId": "P-31113758",
+      "userId": 1,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "4d76d632-2a21-4e18-b308-e990595add50",
+      "projectId": "P-31457173",
+      "userId": 1,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "1ff09eaa-6b5c-4054-8d0c-a2efa9f9e827",
+      "projectId": "P-32457576",
+      "userId": 1,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "1293029c-469c-42fe-97f5-cac4c09d4a3a",
+      "projectId": "P-32457576",
+      "userId": 2,
+      "roleId": 1
+    }
+  ],
+  "sprints": [
+    {
+      "sprint_id": 1,
+      "project_id": "P-31113758",
+      "sprintName": "Backlog Sprint",
+      "sprintGoal": "Default sprint",
+      "timeStart": "2026-04-23T07:58:14.968Z",
+      "timeEnd": "2027-02-11T07:57:38.000Z",
+      "isDefault": true
+    },
+    {
+      "sprint_id": 2,
+      "project_id": "P-32457576",
+      "sprintName": "Sprint 1 - Foundation",
+      "sprintGoal": "Hoan thien auth, project setup, role permissions.",
+      "sprintStatus": "DONE",
+      "timeStart": "2026-04-22T00:00:00.000Z",
+      "timeEnd": "2026-04-30T23:59:59.000Z",
+      "isDefault": false
+    },
+    {
+      "sprint_id": 3,
+      "project_id": "P-32457576",
+      "sprintName": "Sprint 2 - Planning UX",
+      "sprintGoal": "Xay dung plan screen, story detail, notification owner.",
+      "sprintStatus": "IN_PROGRESS",
+      "timeStart": "2026-05-01T00:00:00.000Z",
+      "timeEnd": "2026-05-10T23:59:59.000Z",
+      "isDefault": false
+    },
+    {
+      "sprint_id": 4,
+      "project_id": "P-32457576",
+      "sprintName": "Sprint 3 - Stabilization",
+      "sprintGoal": "Toi uu ganttchart va bo sung test.",
+      "sprintStatus": "TODO",
+      "timeStart": "2026-05-11T00:00:00.000Z",
+      "timeEnd": "2026-05-20T23:59:59.000Z",
+      "isDefault": false
+    },
+    {
+      "sprint_id": 5,
+      "project_id": "P-32457576",
+      "sprintName": "Backlog Sprint",
+      "sprintGoal": "Default sprint for migrated tasks",
+      "sprintStatus": "TODO",
+      "isDefault": true,
+      "timeStart": "2026-04-22T00:00:00.000Z",
+      "timeEnd": "2026-05-20T23:59:59.000Z"
+    }
+  ],
+  "epics": [
+    {
+      "epic_id": 1,
+      "project_id": "P-32457576",
+      "epicName": "Authentication & Security",
+      "description": "JWT, refresh token, role permission."
+    },
+    {
+      "epic_id": 2,
+      "project_id": "P-32457576",
+      "epicName": "Scrum Planning",
+      "description": "Sprint, story, subtask, plan page."
+    },
+    {
+      "epic_id": 3,
+      "project_id": "P-32457576",
+      "epicName": "Notification & Member Management",
+      "description": "Owner notifications and add-member flow."
+    }
+  ],
+  "stories": [
+    {
+      "story_id": 1,
+      "project_id": "P-31113758",
+      "sprint_id": 1,
+      "epic_id": null,
+      "storyName": "General Story",
+      "description": "Default story for migrated tasks",
+      "storyStatus": "TODO",
+      "isDefault": true
+    },
+    {
+      "story_id": 2,
+      "project_id": "P-32457576",
+      "sprint_id": 2,
+      "epic_id": 1,
+      "storyName": "Implement login/register with hash",
+      "description": "Hoan thien auth va luu session tren app.",
+      "storyStatus": "DONE",
+      "storyOrder": 1,
+      "assignee_user_id": 2,
+      "isDefault": false
+    },
+    {
+      "story_id": 3,
+      "project_id": "P-32457576",
+      "sprint_id": 2,
+      "epic_id": 1,
+      "storyName": "Role-based permission in backend",
+      "description": "Chi owner duoc edit/create sprint, story, subtask.",
+      "storyStatus": "DONE",
+      "storyOrder": 2,
+      "assignee_user_id": 1,
+      "isDefault": false
+    },
+    {
+      "story_id": 4,
+      "project_id": "P-32457576",
+      "sprint_id": 3,
+      "epic_id": 2,
+      "storyName": "Plan screen with hierarchical gantt",
+      "description": "Hien thi sprint -> story -> subtask theo timeline.",
+      "storyStatus": "IN_PROGRESS",
+      "storyOrder": 1,
+      "assignee_user_id": 2,
+      "isDefault": false
+    },
+    {
+      "story_id": 5,
+      "project_id": "P-32457576",
+      "sprint_id": 3,
+      "epic_id": 3,
+      "storyName": "Owner notifications and add member",
+      "description": "Them chuong thong bao va them thanh vien qua email.",
+      "storyStatus": "TODO",
+      "storyOrder": 2,
+      "assignee_user_id": 1,
+      "isDefault": false
+    },
+    {
+      "story_id": 6,
+      "project_id": "P-32457576",
+      "sprint_id": 5,
+      "epic_id": null,
+      "storyName": "General Story",
+      "description": "Default story for migrated tasks",
+      "storyStatus": "TODO",
+      "isDefault": true
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": 1,
+      "project_id": "P-31113758",
+      "sprint_id": 1,
+      "epic_id": null,
+      "story_id": 1,
+      "taskName": "anhsjb",
+      "description": "Hsisnshh",
+      "taskStatus": "TODO",
+      "timeStart": "2026-04-23T07:58:42.180Z",
+      "timeEnd": "2026-04-26T07:57:38.000Z",
+      "deadline": "2026-04-29T07:57:38.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 2,
+      "project_id": "P-32457576",
+      "sprint_id": 2,
+      "epic_id": 1,
+      "story_id": 2,
+      "taskName": "Build login form + API integration",
+      "description": "Member lam UI login va goi endpoint auth/login.",
+      "taskStatus": "COMPLETED",
+      "timeStart": "2026-04-22T08:00:00.000Z",
+      "timeEnd": "2026-04-24T17:00:00.000Z",
+      "deadline": "2026-04-24T17:00:00.000Z",
+      "is_approved": true,
+      "txHash": null
+    },
+    {
+      "task_id": 3,
+      "project_id": "P-32457576",
+      "sprint_id": 2,
+      "epic_id": 1,
+      "story_id": 2,
+      "taskName": "Hash password before submit",
+      "description": "Su dung SHA-256 cho login/register payload.",
+      "taskStatus": "DONE",
+      "timeStart": "2026-04-23T08:00:00.000Z",
+      "timeEnd": "2026-04-25T17:30:00.000Z",
+      "deadline": "2026-04-25T23:00:00.000Z",
+      "is_approved": true,
+      "txHash": null
+    },
+    {
+      "task_id": 4,
+      "project_id": "P-32457576",
+      "sprint_id": 2,
+      "epic_id": 1,
+      "story_id": 3,
+      "taskName": "Protect add/update sprint endpoints",
+      "description": "Chi owner co quyen chinh sua sprint.",
+      "taskStatus": "DONE",
+      "timeStart": "2026-04-24T08:30:00.000Z",
+      "timeEnd": "2026-04-26T18:00:00.000Z",
+      "deadline": "2026-04-26T20:00:00.000Z",
+      "is_approved": true,
+      "txHash": null
+    },
+    {
+      "task_id": 5,
+      "project_id": "P-32457576",
+      "sprint_id": 3,
+      "epic_id": 2,
+      "story_id": 4,
+      "taskName": "Refactor gantt to hierarchy layout",
+      "description": "Sprint, story, subtask tren cung mot timeline.",
+      "taskStatus": "IN_PROGRESS",
+      "timeStart": "2026-05-02T08:30:00.000Z",
+      "timeEnd": "2026-05-06T18:00:00.000Z",
+      "deadline": "2026-05-06T22:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 6,
+      "project_id": "P-32457576",
+      "sprint_id": 3,
+      "epic_id": 2,
+      "story_id": 4,
+      "taskName": "Add status color legend",
+      "description": "Them legend cho sprint/story/subtask statuses.",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-05T08:30:00.000Z",
+      "timeEnd": "2026-05-07T17:00:00.000Z",
+      "deadline": "2026-05-07T21:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 7,
+      "project_id": "P-32457576",
+      "sprint_id": 3,
+      "epic_id": 3,
+      "story_id": 5,
+      "taskName": "Notification bell modal for owner",
+      "description": "Hien thi thay doi story/subtask cho owner.",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-06T08:30:00.000Z",
+      "timeEnd": "2026-05-08T17:30:00.000Z",
+      "deadline": "2026-05-08T21:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 8,
+      "project_id": "P-32457576",
+      "sprint_id": 3,
+      "epic_id": 3,
+      "story_id": 5,
+      "taskName": "Add member by email flow",
+      "description": "Validate email and link member to project.",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-07T08:30:00.000Z",
+      "timeEnd": "2026-05-09T17:30:00.000Z",
+      "deadline": "2026-05-09T21:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    }
+  ],
+  "userTasks": [
+    {
+      "id": "f81970d7-8db5-450a-9526-6b09217a6e4d",
+      "taskId": 1,
+      "userId": 1
+    },
+    {
+      "id": "a73c7245-29c6-4e3e-9afb-94f03646a051",
+      "taskId": 2,
+      "userId": 2
+    },
+    {
+      "id": "6b871fb8-cd76-4e84-b1ee-a33a6c122381",
+      "taskId": 3,
+      "userId": 2
+    },
+    {
+      "id": "ab0a0264-e27b-486d-9f88-7b79f5f642cb",
+      "taskId": 4,
+      "userId": 1
+    },
+    {
+      "id": "5f4f3ec8-2980-4986-b671-f3e3866bcf97",
+      "taskId": 5,
+      "userId": 2
+    },
+    {
+      "id": "d714f06b-8fba-4dc9-a312-3a0e8cf17a4e",
+      "taskId": 6,
+      "userId": 2
+    },
+    {
+      "id": "4f9c9c2d-c620-4fb8-b3fd-4c8f4a55b2db",
+      "taskId": 7,
+      "userId": 1
+    },
+    {
+      "id": "c4f3cd14-3df8-4f4f-9152-caf931e5e448",
+      "taskId": 8,
+      "userId": 1
+    }
+  ],
+  "notes": [],
+  "comments": [
+    {
+      "comment_id": 1,
+      "taskId": 2,
+      "userId": 1,
+      "commmentContent": "✅ OWNER DA DUYET TASK LOGIN FORM",
+      "date": "2026-04-24T18:00:00.000Z"
+    },
+    {
+      "comment_id": 2,
+      "taskId": 5,
+      "userId": 2,
+      "commmentContent": "Dang gap van de align timeline tren man nho.",
+      "date": "2026-05-04T10:15:00.000Z"
+    },
+    {
+      "comment_id": 3,
+      "taskId": 5,
+      "userId": 1,
+      "commmentContent": "Uu tien fix label width de doc de hon.",
+      "date": "2026-05-04T11:30:00.000Z"
+    }
+  ],
+  "storyComments": [
+    {
+      "comment_id": 1,
+      "storyId": 4,
+      "userId": 1,
+      "commmentContent": "Story nay can demo duoc ca sprint/story/subtask trong gantt.",
+      "date": "2026-05-03T09:00:00.000Z"
+    },
+    {
+      "comment_id": 2,
+      "storyId": 4,
+      "userId": 2,
+      "commmentContent": "Da xong phan row hierarchy, dang toi uu mau sac.",
+      "date": "2026-05-04T14:20:00.000Z"
+    },
+    {
+      "comment_id": 3,
+      "storyId": 5,
+      "userId": 1,
+      "commmentContent": "Bo sung nut add member o top-right Plan.",
+      "date": "2026-05-06T08:10:00.000Z"
+    }
+  ],
+  "notifications": [
+    {
+      "notification_id": 1,
+      "projectId": "P-32457576",
+      "ownerUserId": 1,
+      "actorUserId": 2,
+      "type": "STORY_STATUS_CHANGED",
+      "message": "Story \"Plan screen with hierarchical gantt\" changed to IN_PROGRESS",
+      "read": true,
+      "createdAt": "2026-05-03T08:40:00.000Z"
+    },
+    {
+      "notification_id": 2,
+      "projectId": "P-32457576",
+      "ownerUserId": 1,
+      "actorUserId": 2,
+      "type": "SUBTASK_STATUS_CHANGED",
+      "message": "Subtask \"Refactor gantt to hierarchy layout\" changed to IN_PROGRESS",
+      "read": true,
+      "createdAt": "2026-05-03T09:10:00.000Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "m-1",
+      "projectId": "P-32457576",
+      "senderId": 1,
+      "content": "Chot sprint 2 scope trong hom nay nhe.",
+      "createdAt": "2026-05-02T07:30:00.000Z"
+    },
+    {
+      "id": "m-2",
+      "projectId": "P-32457576",
+      "senderId": 2,
+      "content": "Ok anh, em se push ban dau truoc 5h.",
+      "createdAt": "2026-05-02T07:35:00.000Z"
+    }
+  ],
+  "refreshTokens": [
+    {
+      "token": "9193d0bc-aa2d-4a51-b989-a4e56dd38993e51cdafa3fe2491c982c8f2a17c3c97b",
+      "userId": 1,
+      "expiresAt": 1777547826293
+    }
+  ],
+  "wallets": {}
+}

@@ -1,9 +1,6 @@
-import React, { useContext, useState, useEffect, useCallback } from 'react';
-// Thêm RefreshControl vào import
-import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, TextInput, ScrollView, SafeAreaView, Dimensions, ActivityIndicator, StatusBar, Platform, RefreshControl } from 'react-native';
+import React, { useContext, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, TextInput, ScrollView, SafeAreaView, Dimensions, ActivityIndicator, StatusBar, RefreshControl } from 'react-native';
 import { AuthContext } from '../../auth/context/AuthContext';
-// Thêm useFocusEffect để tự load lại khi vào màn hình
-import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/FontAwesome5'; 
 import Modal from 'react-native-modal';
@@ -21,9 +18,6 @@ export default function Profile({ navigation }) {
     const [description, setDescription] = useState('');
     const [editname, setEditname] = useState('');
     const [editemail, setEditemail] = useState('');
-    const [editWallet, setEditWallet] = useState(''); 
-    
-    const [balance, setBalance] = useState('0');
     const [loading, setLoading] = useState(false);
     // State cho việc kéo xuống refresh
     const [refreshing, setRefreshing] = useState(false);
@@ -35,42 +29,14 @@ export default function Profile({ navigation }) {
             setDescription(userData.description || "");
             setEditname(userData.username || "User");
             setEditemail(userData.email || "email@example.com");
-            setEditWallet(userData.walletAddress || ""); 
         }
     }, [userData]);
-
-    // --- LOGIC MỚI: TỰ ĐỘNG LOAD SỐ DƯ KHI MÀN HÌNH ĐƯỢC MỞ ---
-    useFocusEffect(
-        useCallback(() => {
-            if (userData && userData.walletAddress) {
-                // Gọi hàm lấy số dư mỗi khi vào màn hình Profile
-                fetchBalance(userData.walletAddress);
-            }
-        }, [userData])
-    );
-
-    // Hàm lấy số dư từ Backend
-    const fetchBalance = async (wallet) => {
-        try {
-            // console.log("Đang cập nhật số dư...");
-            const { data } = await axios.get(endpoints.user.getBalance(wallet));
-            if (data.balance) {
-                setBalance(data.balance);
-            }
-        } catch (error) {
-            console.log("Lỗi lấy số dư:", error);
-        }
-    };
 
     // Hàm xử lý kéo xuống để refresh
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
-        if (userData && userData.walletAddress) {
-            fetchBalance(userData.walletAddress).then(() => setRefreshing(false));
-        } else {
-            setTimeout(() => setRefreshing(false), 1000);
-        }
-    }, [userData]);
+        setTimeout(() => setRefreshing(false), 600);
+    }, []);
 
     async function postJSON(data) {
         if (!userData?.user_id) return;
@@ -78,11 +44,6 @@ export default function Profile({ navigation }) {
         try {
             await axios.post(endpoints.user.update(userData.user_id), data);
             Alert.alert("Thành công", "Đã lưu thông tin!");
-            
-            // Nếu update ví mới -> Load lại số dư ngay lập tức
-            if (data.walletAddress) {
-                fetchBalance(data.walletAddress);
-            }
         } catch (error) {
             Alert.alert("Lỗi", "Không thể cập nhật");
         } finally {
@@ -129,10 +90,9 @@ export default function Profile({ navigation }) {
     const handleSaveInfo = async () => {
         const newInfo = {
             userName: editname,
-            emaildto: editemail,
+            email: editemail,
             description: description,
             imagePath: picture,
-            walletAddress: editWallet 
         };
         await postJSON(newInfo);
         setModalVisible(false);
@@ -166,29 +126,6 @@ export default function Profile({ navigation }) {
                         </View>
                         <Text style={styles.username}>{editname}</Text>
                         <Text style={styles.email}>{editemail}</Text>
-                    </View>
-
-                    {/* --- WALLET & BALANCE CARD --- */}
-                    <View style={styles.balanceCard}>
-                        <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'flex-start'}}>
-                            <View>
-                                <Text style={styles.balanceLabel}>Số dư Token</Text>
-                                <View style={{flexDirection: 'row', alignItems: 'flex-end'}}>
-                                    <Text style={styles.balanceValue}>{balance}</Text>
-                                    <Text style={styles.balanceSymbol}> HIVE</Text>
-                                </View>
-                            </View>
-                            <View style={styles.coinIcon}>
-                                <Icon name="coins" size={24} color="#fff" />
-                            </View>
-                        </View>
-                        
-                        <View style={styles.walletRow}>
-                            <Icon name="wallet" size={12} color="rgba(255,255,255,0.8)" style={{marginRight: 5}}/>
-                            <Text style={styles.walletAddressText} numberOfLines={1} ellipsizeMode="middle">
-                                {editWallet ? editWallet : "Chưa liên kết ví"}
-                            </Text>
-                        </View>
                     </View>
 
                     {/* Info Section */}
@@ -237,14 +174,6 @@ export default function Profile({ navigation }) {
                         </View>
 
                         <View style={styles.inputGroup}>
-                            <Text style={styles.inputLabel}>Địa chỉ Ví (Metamask/Ganache)</Text>
-                            <View style={{flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9f9f9', borderRadius: 12, borderWidth: 1, borderColor: '#eee'}}>
-                                <TextInput style={[styles.input, {flex: 1, borderWidth: 0, backgroundColor: 'transparent'}]} value={editWallet} onChangeText={setEditWallet} placeholder="0x..." autoCapitalize="none" />
-                                <Icon name="wallet" size={16} color="#ccc" style={{marginRight: 15}} />
-                            </View>
-                        </View>
-
-                        <View style={styles.inputGroup}>
                             <Text style={styles.inputLabel}>Giới thiệu</Text>
                             <TextInput style={[styles.input, {height: 80, textAlignVertical: 'top'}]} value={description} onChangeText={setDescription} multiline />
                         </View>
@@ -268,24 +197,6 @@ const styles = StyleSheet.create({
     username: { fontSize: 24, fontWeight: 'bold', color: '#333', marginBottom: 5 },
     email: { fontSize: 14, color: '#666' },
     
-    balanceCard: {
-        backgroundColor: '#2ecc71',
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 20,
-        elevation: 5,
-        shadowColor: "#2ecc71",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-    },
-    balanceLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: '600', marginBottom: 5 },
-    balanceValue: { color: '#fff', fontSize: 32, fontWeight: 'bold' },
-    balanceSymbol: { color: '#fff', fontSize: 16, fontWeight: '600', marginBottom: 6 },
-    coinIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
-    walletRow: { flexDirection: 'row', alignItems: 'center', marginTop: 15, backgroundColor: 'rgba(0,0,0,0.1)', padding: 8, borderRadius: 8 },
-    walletAddressText: { color: '#fff', fontSize: 12, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', flex: 1 },
-
     sectionCard: { backgroundColor: '#fff', borderRadius: 16, padding: 20, marginBottom: 20, elevation: 2 },
     sectionTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
     sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginLeft: 10 },

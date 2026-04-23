@@ -32,12 +32,12 @@ export default function RegisterScreen({ navigation }) {
 
         const hashedPassword = hashPassword(password.value);
         axios.post(endpoints.auth.register(), {
-                emaildto: email.value,
-                passworddto: hashedPassword,
+                email: email.value,
+                password: hashedPassword,
                 userName: name.value
             })
             .then(({ data: responseData }) => {
-                if (responseData.email == email.value) {
+                if (responseData.email === email.value) {
 
                     alert( 'Registration sussces');
                     navigation.navigate('Login');
@@ -46,8 +46,11 @@ export default function RegisterScreen({ navigation }) {
                 }
             })
             .catch((error) => {
-                console.error('Error:', error);
-                alert('Something went wrong. Please try again.');
+                const apiError = error?.response?.data;
+                const fallbackMessage = error?.message === 'Network Error'
+                    ? 'Cannot reach backend. Please check URLAPI and backend server.'
+                    : 'Something went wrong. Please try again.';
+                alert(apiError?.message || apiError?.code || fallbackMessage);
             });
     };
 
