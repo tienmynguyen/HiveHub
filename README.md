@@ -1,32 +1,33 @@
 # HiveHub Mobile
 
-HiveHub is a Scrum-oriented mobile task management app built with Expo (React Native) and an Express.js backend.
+HiveHub is a Scrum-oriented mobile app for team collaboration, built with Expo (React Native) and an Express backend.
 
-## Current Architecture
+## Project Layout
 
-- `FE/`: mobile client (Expo + React Native)
-- `backend-express/`: API server (Express + Socket.IO + JWT + JSON file DB)
-- `BE/`: removed (legacy Spring backend no longer used)
+- `FE/`: mobile client
+- `backend-express/`: API server, chat socket, auth, and data store
+- Legacy Spring backend has been removed
 
-## Main Features
+## Core Functionality
 
-- Project -> Sprint -> Story -> Subtask structure
-- Role-based permissions (Owner/Member)
-- Story and subtask status workflow
-- Owner notifications for member status changes
+- Scrum hierarchy: Project -> Sprint -> Story -> Subtask
+- Role permissions: Owner and Member
+- Story/Subtask status updates with owner notifications
 - Project member management by email
-- In-project chat with Socket.IO
+- In-project realtime chat
 
-## Tech Stack
+## Technology
 
-- Frontend: React Native (Expo)
-- Backend: Node.js, Express, Socket.IO
-- Auth: JWT access token + refresh token
-- Storage (dev): `backend-express/src/db.json`
+- Frontend: React Native + Expo
+- Backend: Node.js + Express + Socket.IO
+- Authentication: JWT access token + refresh token
+- Database: MongoDB Atlas (with local JSON snapshot fallback)
 
-## Quick Start
+## Setup
 
-### 1) Backend (Express)
+### 1) Backend (`backend-express`)
+
+Install dependencies and run:
 
 ```bash
 cd backend-express
@@ -34,9 +35,27 @@ npm install
 npm run dev
 ```
 
-Default server: `http://localhost:8889`
+Server default: `http://localhost:8889`
 
-### 2) Frontend (Expo)
+Create `.env` from `.env.example` and configure at least:
+
+```env
+PORT=8889
+JWT_SECRET=ChangeMeToA32CharSecretKeyForJwt
+JWT_ACCESS_EXP_MS=900000
+JWT_REFRESH_EXP_MS=604800000
+
+MONGODB_URI=
+MONGODB_DB_NAME=hivehub
+MONGODB_COLLECTION=app_state
+MONGODB_DOCUMENT_ID=hivehub_main
+```
+
+Behavior:
+- If `MONGODB_URI` is set: backend syncs app data snapshot to MongoDB Atlas
+- If `MONGODB_URI` is empty: backend uses local `src/db.json`
+
+### 2) Frontend (`FE`)
 
 ```bash
 cd FE
@@ -44,22 +63,22 @@ npm install --legacy-peer-deps
 npm start
 ```
 
-If needed, set API URL in `FE/src/config/config.json` to your backend IP/port.
+Update backend API URL in `FE/src/config/config.json` if needed.
 
-## Backend Structure
+## Backend Module Structure
 
-`backend-express/src` is organized by responsibility:
+`backend-express/src`:
 
-- `config/`: environment configuration
-- `data/`: db read/write utilities
-- `middlewares/`: request context, auth parsing, error handling, not found
-- `routes/`: feature-based route modules
+- `config/`: env and Mongo bootstrap
+- `data/`: read/write abstraction and persistence sync
+- `middlewares/`: request context, optional auth, not found, error handler
+- `routes/`: grouped API endpoints by domain
 - `services/`: shared business logic helpers
-- `app.js`: app composition
+- `app.js`: express app composition
 - `server.js`: HTTP + Socket.IO bootstrap
 
-## Notes
+## Development Notes
 
-- This repo currently targets local/dev workflow.
-- `db.json` is for development data only.
+- Main runtime data source is `backend-express/src/db.json`
+- When MongoDB is configured, data is mirrored to Atlas for persistence
 
