@@ -5,7 +5,6 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import Popup from './TaskPopup';
 
 const CONFIG = {
-  labelWidth: 220,
   cellWidth: 40,
   headerHeight: 52,
   rowHeight: 34,
@@ -45,6 +44,14 @@ function endOfDay(d) {
 
 function dayOffset(a, b) {
   return Math.floor((startOfDay(a).getTime() - startOfDay(b).getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function intersectsRange(start, end, rangeStart, rangeEnd) {
+  const s = startOfDay(start).getTime();
+  const e = endOfDay(end).getTime();
+  const rs = startOfDay(rangeStart).getTime();
+  const re = endOfDay(rangeEnd).getTime();
+  return e >= rs && s <= re;
 }
 
 function getSubtaskColor(status) {
@@ -126,8 +133,12 @@ const GanttChart = ({ tasks = [], stories = [], sprints = [], currentMonth, setC
     return allRows;
   }, [sprints, stories, tasks, rangeStart, rangeEnd]);
 
-  const chartHeight = Math.max(rows.length * CONFIG.rowHeight + CONFIG.headerHeight + 8, 220);
-  const chartWidth = CONFIG.labelWidth + dateArray.length * CONFIG.cellWidth;
+  const renderedRows = useMemo(
+    () => rows.filter((row) => intersectsRange(row.start, row.end, rangeStart, rangeEnd)),
+    [rows, rangeStart, rangeEnd],
+  );
+  const chartHeight = Math.max(renderedRows.length * CONFIG.rowHeight + CONFIG.headerHeight + 8, 220);
+  const timelineWidth = dateArray.length * CONFIG.cellWidth;
 
   useEffect(() => {
     const todayIndex = dateArray.findIndex((d) => startOfDay(d).getTime() === currentDate.getTime());
@@ -135,7 +146,7 @@ const GanttChart = ({ tasks = [], stories = [], sprints = [], currentMonth, setC
       setTimeout(() => {
         if (!scrollViewRef.current || typeof scrollViewRef.current.scrollTo !== 'function') return;
         scrollViewRef.current.scrollTo({
-          x: Math.max(CONFIG.labelWidth + todayIndex * CONFIG.cellWidth - 120, 0),
+          x: Math.max(todayIndex * CONFIG.cellWidth - 120, 0),
           animated: true,
         });
       }, 350);
@@ -152,6 +163,14 @@ const GanttChart = ({ tasks = [], stories = [], sprints = [], currentMonth, setC
     if (row.type === 'sprint') return { color: CONFIG.colors.sprint, label: 'Sprint' };
     if (row.type === 'story') return { color: CONFIG.colors.story, label: 'Story' };
     return { color: getSubtaskColor(row.status), label: 'Subtask' };
+  }
+
+  function fitTextOnBar(text, barWidth) {
+    const raw = String(text || '');
+    const maxChars = Math.max(3, Math.floor((barWidth - 10) / 6));
+    if (raw.length <= maxChars) return raw;
+    if (maxChars <= 3) return '...';
+    return `${raw.slice(0, maxChars - 3)}...`;
   }
 
   return (
@@ -174,87 +193,109 @@ const GanttChart = ({ tasks = [], stories = [], sprints = [], currentMonth, setC
         <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: CONFIG.colors.subtaskProgress }]} /><Text style={styles.legendText}>Subtask</Text></View>
       </View>
 
-      <ScrollView horizontal ref={scrollViewRef} style={styles.scrollView} showsHorizontalScrollIndicator={false}>
-        <Svg height={chartHeight} width={chartWidth}>
-          <Rect x={0} y={0} width={CONFIG.labelWidth} height={chartHeight} fill="#f8fafc" />
-          <Line x1={CONFIG.labelWidth} y1={0} x2={CONFIG.labelWidth} y2={chartHeight} stroke={CONFIG.colors.gridBorder} />
-
-          {dateArray.map((date, idx) => {
-            const x = CONFIG.labelWidth + idx * CONFIG.cellWidth;
-            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-            return (
-              <G key={`date-${idx}`}>
-                <Rect
-                  x={x}
-                  y={0}
-                  width={CONFIG.cellWidth}
-                  height={chartHeight}
-                  fill={isWeekend ? CONFIG.colors.weekendBg : '#fff'}
-                />
-                <Line x1={x} y1={CONFIG.headerHeight} x2={x} y2={chartHeight} stroke={CONFIG.colors.gridBorder} strokeDasharray="3 2" />
-                <SvgText x={x + CONFIG.cellWidth / 2} y={16} fill={CONFIG.colors.textSecondary} fontSize="10" textAnchor="middle">
-                  {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][date.getDay()]}
-                </SvgText>
-                <SvgText x={x + CONFIG.cellWidth / 2} y={32} fill={CONFIG.colors.textPrimary} fontSize="11" fontWeight="700" textAnchor="middle">
-                  {date.getDate()}
-                </SvgText>
-              </G>
-            );
-          })}
-
-          <Line x1={0} y1={CONFIG.headerHeight} x2={chartWidth} y2={CONFIG.headerHeight} stroke={CONFIG.colors.gridBorder} />
-
-          {rows.map((row, i) => {
-            const y = CONFIG.headerHeight + i * CONFIG.rowHeight;
-            const barY = y + (CONFIG.rowHeight - CONFIG.barHeight) / 2;
-            const startIdx = dayOffset(row.start, rangeStart);
-            const endIdx = dayOffset(row.end, rangeStart);
-            const barX = CONFIG.labelWidth + startIdx * CONFIG.cellWidth;
-            const barWidth = Math.max((endIdx - startIdx + 1) * CONFIG.cellWidth, 8);
-            const meta = barMeta(row);
-
-            return (
-              <G key={row.id}>
-                <Line x1={0} y1={y + CONFIG.rowHeight} x2={chartWidth} y2={y + CONFIG.rowHeight} stroke="#f1f5f9" />
-                <SvgText
-                  x={12 + row.level * 16}
-                  y={y + 22}
-                  fill={row.type === 'sprint' ? '#111827' : '#334155'}
-                  fontSize={row.type === 'sprint' ? '12' : '11'}
-                  fontWeight={row.type === 'sprint' ? '700' : '500'}
-                >
-                  {row.type === 'sprint' ? '■ ' : row.type === 'story' ? '▸ ' : '• '}
-                  {row.title}
-                </SvgText>
-                <G onPress={row.task ? () => { setSelectedTask(row.task); setPopupVisible(true); } : undefined}>
-                  <Rect
-                    x={barX}
-                    y={barY}
-                    width={barWidth}
-                    height={CONFIG.barHeight}
-                    rx={CONFIG.barRadius}
-                    ry={CONFIG.barRadius}
-                    fill={meta.color}
-                    opacity={row.type === 'subtask' ? 1 : 0.9}
-                  />
-                  {barWidth > 46 ? (
-                    <SvgText x={barX + 6} y={barY + 12} fill="#fff" fontSize="9" fontWeight="700">
-                      {meta.label}
+      <View style={styles.chartViewport}>
+        <ScrollView
+          horizontal
+          ref={scrollViewRef}
+          nestedScrollEnabled
+          showsHorizontalScrollIndicator
+          contentContainerStyle={styles.horizontalScrollContent}
+        >
+          <View>
+            <Svg height={CONFIG.headerHeight} width={timelineWidth}>
+              {dateArray.map((date, idx) => {
+                const x = idx * CONFIG.cellWidth;
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                return (
+                  <G key={`date-head-${idx}`}>
+                    <Rect
+                      x={x}
+                      y={0}
+                      width={CONFIG.cellWidth}
+                      height={CONFIG.headerHeight}
+                      fill={isWeekend ? CONFIG.colors.weekendBg : '#fff'}
+                    />
+                    <SvgText x={x + CONFIG.cellWidth / 2} y={16} fill={CONFIG.colors.textSecondary} fontSize="10" textAnchor="middle">
+                      {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][date.getDay()]}
                     </SvgText>
-                  ) : null}
-                </G>
-              </G>
-            );
-          })}
+                    <SvgText x={x + CONFIG.cellWidth / 2} y={32} fill={CONFIG.colors.textPrimary} fontSize="11" fontWeight="700" textAnchor="middle">
+                      {date.getDate()}
+                    </SvgText>
+                  </G>
+                );
+              })}
+              <Line x1={0} y1={CONFIG.headerHeight - 1} x2={timelineWidth} y2={CONFIG.headerHeight - 1} stroke={CONFIG.colors.gridBorder} />
+            </Svg>
 
-          {(() => {
-            const todayIndex = dayOffset(currentDate, rangeStart);
-            if (todayIndex < 0 || todayIndex >= dateArray.length) return null;
-            const x = CONFIG.labelWidth + todayIndex * CONFIG.cellWidth;
-            return <Line x1={x} y1={CONFIG.headerHeight} x2={x} y2={chartHeight} stroke={CONFIG.colors.todayLine} strokeWidth="2" />;
-          })()}
-        </Svg>
-      </ScrollView>
+            <ScrollView
+              style={styles.verticalScroll}
+              nestedScrollEnabled
+              showsVerticalScrollIndicator
+              scrollEventThrottle={16}
+            >
+              <Svg height={chartHeight - CONFIG.headerHeight} width={timelineWidth}>
+                {dateArray.map((date, idx) => {
+                  const x = idx * CONFIG.cellWidth;
+                  const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                  return (
+                    <G key={`date-body-${idx}`}>
+                      <Rect
+                        x={x}
+                        y={0}
+                        width={CONFIG.cellWidth}
+                        height={chartHeight - CONFIG.headerHeight}
+                        fill={isWeekend ? CONFIG.colors.weekendBg : '#fff'}
+                      />
+                      <Line x1={x} y1={0} x2={x} y2={chartHeight - CONFIG.headerHeight} stroke={CONFIG.colors.gridBorder} strokeDasharray="3 2" />
+                    </G>
+                  );
+                })}
+
+                {renderedRows.map((row, i) => {
+                  const y = i * CONFIG.rowHeight;
+                  const barY = y + (CONFIG.rowHeight - CONFIG.barHeight) / 2;
+                  const startIdx = dayOffset(row.start, rangeStart);
+                  const endIdx = dayOffset(row.end, rangeStart);
+                  const barX = startIdx * CONFIG.cellWidth;
+                  const barWidth = Math.max((endIdx - startIdx + 1) * CONFIG.cellWidth, 14);
+                  const meta = barMeta(row);
+                  const shownText = fitTextOnBar(row.title, barWidth);
+
+                  return (
+                    <G key={`bar-${row.id}`}>
+                      <Line x1={0} y1={y + CONFIG.rowHeight} x2={timelineWidth} y2={y + CONFIG.rowHeight} stroke="#f1f5f9" />
+                      <G onPress={row.task ? () => { setSelectedTask(row.task); setPopupVisible(true); } : undefined}>
+                        <Rect
+                          x={barX}
+                          y={barY}
+                          width={barWidth}
+                          height={CONFIG.barHeight}
+                          rx={CONFIG.barRadius}
+                          ry={CONFIG.barRadius}
+                          fill={meta.color}
+                          opacity={row.type === 'subtask' ? 1 : 0.9}
+                        />
+                        {barWidth > 20 ? (
+                          <SvgText x={barX + 6} y={barY + 12} fill="#fff" fontSize="9" fontWeight="700">
+                            {shownText}
+                          </SvgText>
+                        ) : null}
+                      </G>
+                    </G>
+                  );
+                })}
+
+                {(() => {
+                  const todayIndex = dayOffset(currentDate, rangeStart);
+                  if (todayIndex < 0 || todayIndex >= dateArray.length) return null;
+                  const x = todayIndex * CONFIG.cellWidth;
+                  return <Line x1={x} y1={0} x2={x} y2={chartHeight - CONFIG.headerHeight} stroke={CONFIG.colors.todayLine} strokeWidth="2" />;
+                })()}
+              </Svg>
+            </ScrollView>
+          </View>
+        </ScrollView>
+      </View>
 
       {popupVisible ? <Popup task={selectedTask} onClose={() => setPopupVisible(false)} /> : null}
     </View>
@@ -295,7 +336,14 @@ const styles = StyleSheet.create({
   legendItem: { flexDirection: 'row', alignItems: 'center' },
   legendDot: { width: 10, height: 10, borderRadius: 5, marginRight: 6 },
   legendText: { fontSize: 11, color: '#64748b', fontWeight: '600' },
-  scrollView: { maxHeight: 420 },
+  chartViewport: {
+    maxHeight: 520,
+    minHeight: 280,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  verticalScroll: { maxHeight: 520 - CONFIG.headerHeight },
+  horizontalScrollContent: { paddingBottom: 6 },
 });
 
 export default GanttChart;

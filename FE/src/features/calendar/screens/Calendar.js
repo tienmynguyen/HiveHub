@@ -24,6 +24,72 @@ function toDayKey(input) {
     return String(input || new Date().toISOString()).slice(0, 10);
 }
 
+function parseAiReminderCommand(commandText, fallbackDay) {
+    const raw = String(commandText || '').trim();
+    if (!raw) return null;
+    const text = raw.toLowerCase();
+    const now = new Date();
+
+    let targetDate = fallbackDay || toDayKey(new Date().toISOString());
+    const isoDateMatch = text.match(/\b(\d{4}-\d{2}-\d{2})\b/);
+    const dmyMatch = text.match(/\b(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?\b/);
+    if (isoDateMatch?.[1]) {
+        targetDate = isoDateMatch[1];
+    } else if (dmyMatch) {
+        const day = Number(dmyMatch[1]);
+        const month = Number(dmyMatch[2]);
+        let year = dmyMatch[3] ? Number(dmyMatch[3]) : now.getFullYear();
+        if (year < 100) year += 2000;
+        targetDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    } else if (text.includes('ngay mai') || text.includes('mai')) {
+        const t = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        targetDate = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+    }
+
+    const hhmmMatch = text.match(/\b(\d{1,2}):(\d{2})\b/);
+    const hMatch = text.match(/\b(\d{1,2})h(?:\s*(\d{1,2}))?\b/);
+    let hour = null;
+    let minute = 0;
+    if (hhmmMatch) {
+        hour = Number(hhmmMatch[1]);
+        minute = Number(hhmmMatch[2]);
+    } else if (hMatch) {
+        hour = Number(hMatch[1]);
+        minute = Number(hMatch[2] || 0);
+    }
+
+    if (hour === null || Number.isNaN(hour) || Number.isNaN(minute)) {
+        return { targetDate, reminderAtIso: null, titleText: raw };
+    }
+
+    if ((text.includes('chieu') || text.includes('chiều') || text.includes('toi') || text.includes('tối') || text.includes('pm')) && hour < 12) {
+        hour += 12;
+    }
+    if ((text.includes('sang') || text.includes('sáng') || text.includes('am')) && hour === 12) {
+        hour = 0;
+    }
+    if (hour > 23 || minute > 59) {
+        return { targetDate, reminderAtIso: null, titleText: raw };
+    }
+
+    const reminderAtIso = new Date(`${targetDate}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`).toISOString();
+    const titleText = raw
+        .replace(/nhắc tôi|nhac toi|remind me|set reminder|create reminder|đặt lịch|dat lich/gi, '')
+        .replace(/\b\d{4}-\d{2}-\d{2}\b/g, '')
+        .replace(/\b\d{1,2}[\/-]\d{1,2}(?:[\/-]\d{2,4})?\b/g, '')
+        .replace(/\b\d{1,2}:\d{2}\b/g, '')
+        .replace(/\b\d{1,2}h(?:\s*\d{1,2})?\b/gi, '')
+        .replace(/\b(vao|vào|luc|lúc|at|ngay mai|mai|chieu|chiều|toi|tối|sang|sáng|pm|am)\b/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+
+    return {
+        targetDate,
+        reminderAtIso,
+        titleText: titleText || 'Nhac viec tu AI',
+    };
+}
+
 export default function Calendar({ navigation }) {
     const { userData } = useContext(AuthContext);
     const [tasks, setTasks] = useState([]);
@@ -45,6 +111,10 @@ export default function Calendar({ navigation }) {
     useEffect(() => {
         Notifications.requestPermissionsAsync().catch(() => null);
     }, []);
+
+    useEffect(() => {
+        syncScheduledReminders(notes).catch(() => null);
+    }, [notes]);
 
     async function fetchData() {
         if (!userData?.user_id) return;
@@ -88,9 +158,26 @@ export default function Calendar({ navigation }) {
             content: {
                 title: note.title || 'Lich nhac viec',
                 body: note.content || 'Ban co mot ghi chu can thuc hien.',
+                data: { noteId: String(note.note_id || '') },
             },
             trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: triggerDate },
         });
+    }
+
+    async function syncScheduledReminders(noteList) {
+        const source = Array.isArray(noteList) ? noteList : [];
+        if (!source.length) return;
+        const pending = await Notifications.getAllScheduledNotificationsAsync();
+        const scheduledByNoteId = new Set(
+            pending
+                .map((item) => String(item?.content?.data?.noteId || ''))
+                .filter(Boolean),
+        );
+        for (const item of source) {
+            const noteId = String(item?.note_id || '');
+            if (!noteId || scheduledByNoteId.has(noteId)) continue;
+            await scheduleReminderIfNeeded(item);
+        }
     }
 
     async function saveNote() {
@@ -130,20 +217,31 @@ export default function Calendar({ navigation }) {
     async function runAiCalendarCommand() {
         const cmd = aiCommand.trim();
         if (!cmd) return;
-        const timeMatch = cmd.match(/(\d{1,2}):(\d{2})/);
-        const dateMatch = cmd.match(/(\d{4}-\d{2}-\d{2})/);
-        const titleText = cmd.replace(/nhắc tôi|nhac toi|remind me|vào|luc|lúc|at/gi, '').trim();
-
-        const targetDate = dateMatch ? dateMatch[1] : selectedDay;
-        const hh = timeMatch ? String(timeMatch[1]).padStart(2, '0') : '';
-        const mm = timeMatch ? String(timeMatch[2]).padStart(2, '0') : '';
-        const reminder = hh && mm ? `${hh}:${mm}` : '';
-        setTitle(titleText || 'Nhac viec tu AI');
-        setContent(`Lenh AI: ${cmd}`);
-        setSelectedDay(targetDate);
-        setReminderTime(reminder);
-        setAddVisible(true);
-        setAiCommand('');
+        const parsed = parseAiReminderCommand(cmd, selectedDay);
+        const targetDate = parsed?.targetDate || selectedDay;
+        const reminderAtIso = parsed?.reminderAtIso || null;
+        const titleText = parsed?.titleText || 'Nhac viec tu AI';
+        if (!reminderAtIso) {
+            Alert.alert('Thieu gio nhac', 'Vui long them gio cu the. Vi du: 15:30 26/4 hoac 3h chieu 26/4.');
+            return;
+        }
+        const payload = {
+            title: titleText,
+            content: cmd,
+            noteDate: `${targetDate}T00:00:00.000Z`,
+            reminderAt: reminderAtIso,
+            date: new Date().toISOString(),
+        };
+        try {
+            const { data } = await axios.post(endpoints.notes.create(userData.user_id), payload);
+            await scheduleReminderIfNeeded(data || payload);
+            setSelectedDay(targetDate);
+            setAiCommand('');
+            fetchData();
+            Alert.alert('Da tao lich', 'Lenh AI da duoc chuyen thanh ghi chu lich.');
+        } catch (_error) {
+            Alert.alert('Loi', 'Khong the tao lich tu lenh AI.');
+        }
     }
 
     const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -170,7 +268,7 @@ export default function Calendar({ navigation }) {
                         <View style={styles.aiBox}>
                             <TextInput
                                 style={styles.aiInput}
-                                placeholder="Lenh AI lich (vd: nhac toi hop 2026-05-01 09:30)"
+                                placeholder="Ra lenh AI de tao lich nhanh (vd: nhac toi hop 2026-05-01 09:30)"
                                 value={aiCommand}
                                 onChangeText={setAiCommand}
                             />

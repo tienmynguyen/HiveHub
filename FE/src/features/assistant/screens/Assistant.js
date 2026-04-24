@@ -1,5 +1,5 @@
 import React, { useContext, useMemo, useState } from 'react';
-import { Alert, FlatList, Modal, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import axios from 'axios';
 import * as Speech from 'expo-speech';
@@ -150,7 +150,15 @@ export default function Assistant({ route }) {
       });
       syncMemoryFromResponse(data);
 
-      const actionableIntents = ['CREATE_PROJECT', 'CREATE_SPRINT', 'CREATE_STORY', 'CREATE_TASK', 'UPDATE_SPRINT_STATUS'];
+      const actionableIntents = [
+        'CREATE_PROJECT',
+        'CREATE_PROJECT_BLUEPRINT',
+        'CREATE_SPRINT',
+        'CREATE_STORY',
+        'CREATE_TASK',
+        'CREATE_CALENDAR_NOTE',
+        'UPDATE_SPRINT_STATUS',
+      ];
       const clarificationActive = Boolean(data?.clarification?.active);
       if (actionableIntents.includes(String(data?.intent || '')) && data?.actionReady && !clarificationActive) {
         // Với lệnh thao tác, không hiển thị câu trả lời kiểu "đã tạo" trước khi execute thành công.
@@ -268,7 +276,12 @@ export default function Assistant({ route }) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
+    >
+      <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>AI Assistant</Text>
         <View style={styles.headerActions}>
@@ -346,7 +359,8 @@ export default function Assistant({ route }) {
       <FlatList
         data={messages}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 12, paddingBottom: 100 }}
+        style={styles.messagesList}
+        contentContainerStyle={{ padding: 12, paddingBottom: 16 }}
         renderItem={({ item }) => (
           <View style={[styles.messageRow, item.role === 'user' ? styles.userRow : styles.aiRow]}>
             <Text style={styles.messageText}>{item.text}</Text>
@@ -406,7 +420,8 @@ export default function Assistant({ route }) {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -436,7 +451,8 @@ const styles = StyleSheet.create({
   userRow: { backgroundColor: '#ffedd5', alignSelf: 'flex-end' },
   aiRow: { backgroundColor: '#fff', alignSelf: 'flex-start', borderWidth: 1, borderColor: '#e5e7eb' },
   messageText: { color: '#1f2937', fontSize: 13, lineHeight: 18 },
-  inputBar: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center', padding: 10, gap: 8 },
+  messagesList: { flex: 1 },
+  inputBar: { backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center', padding: 10, gap: 8 },
   micBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#64748b', alignItems: 'center', justifyContent: 'center' },
   input: { flex: 1, backgroundColor: '#f1f5f9', borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8 },
   sendBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f59e0b', alignItems: 'center', justifyContent: 'center' },

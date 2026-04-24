@@ -11,6 +11,13 @@ function normalizeText(value) {
 function detectIntentFallback(text) {
   const input = normalizeText(text);
   if (
+    (input.includes("tao") || input.includes("create") || input.includes("lap")) &&
+    (input.includes("du an") || input.includes("project")) &&
+    (input.includes("gom") || input.includes("moi sprint") || input.includes("blueprint"))
+  ) {
+    return "CREATE_PROJECT_BLUEPRINT";
+  }
+  if (
     input.includes("tao project") ||
     input.includes("create project") ||
     input.includes("tao du an") ||
@@ -48,6 +55,20 @@ function detectIntentFallback(text) {
     return "CREATE_TASK";
   }
   if (
+    input.includes("dat lich") ||
+    input.includes("len lich") ||
+    input.includes("nhac viec") ||
+    input.includes("dat bao thuc") ||
+    input.includes("dat thong bao") ||
+    input.includes("nhac toi") ||
+    input.includes("tao lich nhac") ||
+    input.includes("create reminder") ||
+    input.includes("set reminder") ||
+    input.includes("schedule reminder")
+  ) {
+    return "CREATE_CALENDAR_NOTE";
+  }
+  if (
     input.includes("doi trang thai sprint") ||
     input.includes("doi trang thai sprint") ||
     input.includes("update sprint status")
@@ -67,6 +88,81 @@ function cleanupEntityName(value) {
     .trim();
 }
 
+function cleanupReminderTitle(value) {
+  return String(value || "")
+    .replace(/^(nhac toi|nhắc tôi|dat lich|đặt lịch|set reminder|create reminder|remind me)\s*/i, "")
+    .replace(/\b\d{4}-\d{2}-\d{2}\b/g, "")
+    .replace(/\b\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?\b/g, "")
+    .replace(/\b\d{1,2}:\d{2}\b/g, "")
+    .replace(/\b\d{1,2}h(?:\d{1,2})?\b/g, "")
+    .replace(/\b(vao|vào|luc|lúc|at)\b/gi, "")
+    .replace(/\b(chieu|chiều|sang|sáng|dem|đêm|pm|am)\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function parseVietnameseReminderDateTime(text) {
+  const raw = String(text || "");
+  const normalized = normalizeText(raw);
+  const now = new Date();
+  const baseDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  let date = null;
+  const dmyMatch = normalized.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/);
+  if (dmyMatch) {
+    const day = Number(dmyMatch[1]);
+    const month = Number(dmyMatch[2]);
+    let year = dmyMatch[3] ? Number(dmyMatch[3]) : now.getFullYear();
+    if (year < 100) year += 2000;
+    const candidate = new Date(year, month - 1, day);
+    if (!Number.isNaN(candidate.getTime())) date = candidate;
+  } else if (normalized.includes("ngay mai") || normalized.includes("mai")) {
+    date = new Date(baseDate);
+    date.setDate(date.getDate() + 1);
+  } else if (normalized.includes("hom nay") || normalized.includes("hôm nay")) {
+    date = new Date(baseDate);
+  }
+
+  const explicitTimeMatch =
+    normalized.match(/\b(\d{1,2})[:h](\d{1,2})?\b/) ||
+    normalized.match(/\b(?:luc|lúc|vao|vào)\s*(\d{1,2})(?:\s*gio|\s*h)?(?:\s*(\d{1,2})\s*phut)?\b/);
+  const timeMatch = explicitTimeMatch;
+  let hour = null;
+  let minute = 0;
+  if (timeMatch) {
+    hour = Number(timeMatch[1]);
+    minute = timeMatch[2] ? Number(timeMatch[2]) : 0;
+  }
+
+  const isAfternoon = /(chieu|chiều|pm)/i.test(raw);
+  const isEvening = /(toi|tối|dem|đêm)/i.test(raw);
+  const isMorning = /(sang|sáng|am)/i.test(raw);
+
+  if (hour !== null) {
+    if ((isAfternoon || isEvening) && hour < 12) hour += 12;
+    if (isMorning && hour === 12) hour = 0;
+    if (hour >= 24 || minute >= 60) return null;
+  }
+
+  if (!date || hour === null) return null;
+
+  const reminderLocal = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    hour,
+    minute,
+    0,
+    0,
+  );
+  if (Number.isNaN(reminderLocal.getTime())) return null;
+
+  return {
+    noteDate: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}T00:00:00.000Z`,
+    reminderAt: reminderLocal.toISOString(),
+  };
+}
+
 function parsePayloadFromCommandText(text) {
   const input = String(text || "");
   const lower = normalizeText(input);
@@ -75,6 +171,8 @@ function parsePayloadFromCommandText(text) {
   const sprintIdMatch = input.match(/sprint\s*#?\s*(\d+)/i);
   const storyIdMatch = input.match(/story\s*#?\s*(\d+)/i);
   const statusMatch = input.match(/(todo|in[_\s-]?progress|done|completed)/i);
+  const dateMatch = input.match(/\b(\d{4}-\d{2}-\d{2})\b/);
+  const timeMatch = input.match(/\b(\d{1,2}):(\d{2})\b/);
 
   let name = "";
   const quoted = input.match(/["“](.+?)["”]/);
@@ -110,11 +208,49 @@ function parsePayloadFromCommandText(text) {
     input.match(
       /(?:tao|tạo|create|lap|lập|them|thêm)\s+(?:mot|một)?\s*(?:du an|dự án|project)\s*(?:ten|name)?\s*(?:la|là)?\s*[:\-]?\s*["“]?([^"”\n,.;]+)/i
     )?.[1] || "";
+  const projectNameByTenPhrase =
+    input.match(/(?:ten|tên)\s+([^\n,.;]+?)(?=\s+(?:muc dich|mục đích|gom|gồm|co|có)\b|[,.]|$)/i)?.[1] || "";
   const descriptionByPhrase =
     input.match(/(?:mo ta|mô tả|description)\s*(?:la|là)?\s*[:\-]?\s*([^\n]+)/i)?.[1] || "";
-  const projectDescription = String(descriptionByPhrase || "")
+  const goalByPhrase =
+    input.match(/(?:muc dich|mục đích)\s*(?:la|là)?\s*[:\-]?\s*([^\n,.;]+)/i)?.[1] || "";
+  const projectDescription = String(descriptionByPhrase || goalByPhrase || "")
     .replace(/["”]+$/g, "")
     .trim();
+  const reminderTitleByPhrase =
+    input.match(/(?:nhac|nhắc|bao thuc|báo thức|remind(?: me)? to|title)\s*(?:toi|tôi)?\s*(?:la|là)?\s*[:\-]?\s*([^\n,.;]+)/i)?.[1] || "";
+  const reminderContentByPhrase =
+    input.match(/(?:noi dung|nội dung|ghi chu|ghi chú|content)\s*(?:la|là)?\s*[:\-]?\s*([^\n]+)/i)?.[1] || "";
+  let reminderAt;
+  if (dateMatch && timeMatch) {
+    const hh = String(timeMatch[1]).padStart(2, "0");
+    const mm = String(timeMatch[2]).padStart(2, "0");
+    const dt = new Date(`${dateMatch[1]}T${hh}:${mm}:00`);
+    if (!Number.isNaN(dt.getTime())) reminderAt = dt.toISOString();
+  }
+  const noteDate = dateMatch?.[1] ? `${dateMatch[1]}T00:00:00.000Z` : undefined;
+  const naturalReminder = parseVietnameseReminderDateTime(input);
+  const sprintCountMatch = lower.match(/(?:gom|co)\s*(\d+)\s*sprint/) || lower.match(/(\d+)\s*sprint/);
+  const storiesPerSprintMatch =
+    lower.match(/moi\s*sprint\s*(?:gom|co)\s*(\d+)\s*story/) ||
+    lower.match(/(\d+)\s*story\s*(?:moi\s*sprint|per sprint)/);
+  const tasksPerStoryMatch =
+    lower.match(/moi\s*story\s*(?:gom|co)\s*(\d+)\s*(?:subtask|task)/) ||
+    lower.match(/(\d+)\s*(?:subtask|task)\s*(?:moi\s*story|per story)/);
+  const durationWeeksMatch = lower.match(/(\d+)\s*tuan/);
+  const blueprintStartMatch = lower.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/);
+  let blueprintStartDate;
+  if (blueprintStartMatch) {
+    const now = new Date();
+    const dd = Number(blueprintStartMatch[1]);
+    const mm = Number(blueprintStartMatch[2]);
+    let yy = blueprintStartMatch[3] ? Number(blueprintStartMatch[3]) : now.getFullYear();
+    if (yy < 100) yy += 2000;
+    const dt = new Date(yy, mm - 1, dd);
+    if (!Number.isNaN(dt.getTime())) {
+      blueprintStartDate = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    }
+  }
 
   return {
     projectId: projectIdMatch ? projectIdMatch[0].toUpperCase() : undefined,
@@ -122,9 +258,23 @@ function parsePayloadFromCommandText(text) {
     storyId: storyIdMatch ? Number(storyIdMatch[1]) : undefined,
     storyName: cleanupEntityName(storyNameByPhrase) || name || undefined,
     taskName: cleanupEntityName(taskNameByPhrase) || name || undefined,
-    projectName: cleanupEntityName(projectNameByCreateVerb) || cleanupEntityName(projectNameByPhrase) || name || undefined,
+    projectName:
+      cleanupEntityName(projectNameByTenPhrase) ||
+      cleanupEntityName(projectNameByCreateVerb) ||
+      cleanupEntityName(projectNameByPhrase) ||
+      name ||
+      undefined,
     sprintName: cleanupEntityName(sprintNameByPhrase) || undefined,
     projectDescription: projectDescription || undefined,
+    noteTitle: cleanupReminderTitle(reminderTitleByPhrase) || cleanupReminderTitle(name) || cleanupReminderTitle(input) || undefined,
+    noteContent: String(reminderContentByPhrase || "").trim() || input.trim() || undefined,
+    noteDate: noteDate || naturalReminder?.noteDate,
+    reminderAt: reminderAt || naturalReminder?.reminderAt,
+    sprintCount: sprintCountMatch ? Number(sprintCountMatch[1]) : undefined,
+    storiesPerSprint: storiesPerSprintMatch ? Number(storiesPerSprintMatch[1]) : undefined,
+    tasksPerStory: tasksPerStoryMatch ? Number(tasksPerStoryMatch[1]) : undefined,
+    sprintDurationWeeks: durationWeeksMatch ? Number(durationWeeksMatch[1]) : undefined,
+    startDate: blueprintStartDate,
     sprintStatus: statusMatch
       ? String(statusMatch[1]).replace(/\s|-/g, "_").toUpperCase().replace("COMPLETED", "DONE")
       : undefined,
@@ -132,7 +282,18 @@ function parsePayloadFromCommandText(text) {
 }
 
 function sanitizeIntent(value) {
-  const allowed = ["CREATE_PROJECT", "CREATE_SPRINT", "CREATE_STORY", "CREATE_TASK", "UPDATE_SPRINT_STATUS", "REPORT", "PLANNING", "HELP"];
+  const allowed = [
+    "CREATE_PROJECT",
+    "CREATE_PROJECT_BLUEPRINT",
+    "CREATE_SPRINT",
+    "CREATE_STORY",
+    "CREATE_TASK",
+    "CREATE_CALENDAR_NOTE",
+    "UPDATE_SPRINT_STATUS",
+    "REPORT",
+    "PLANNING",
+    "HELP",
+  ];
   return allowed.includes(String(value || "").toUpperCase()) ? String(value).toUpperCase() : "HELP";
 }
 
@@ -154,6 +315,15 @@ function normalizeAiPayload(payload) {
     sprintName: p.sprintName ? String(p.sprintName).trim() : undefined,
     storyName: p.storyName ? String(p.storyName).trim() : undefined,
     taskName: p.taskName ? String(p.taskName).trim() : undefined,
+    noteTitle: p.noteTitle ? String(p.noteTitle).trim() : undefined,
+    noteContent: p.noteContent ? String(p.noteContent).trim() : undefined,
+    noteDate: p.noteDate ? String(p.noteDate).trim() : undefined,
+    reminderAt: p.reminderAt ? String(p.reminderAt).trim() : undefined,
+    sprintCount: Number.isFinite(Number(p.sprintCount)) ? Number(p.sprintCount) : undefined,
+    storiesPerSprint: Number.isFinite(Number(p.storiesPerSprint)) ? Number(p.storiesPerSprint) : undefined,
+    tasksPerStory: Number.isFinite(Number(p.tasksPerStory)) ? Number(p.tasksPerStory) : undefined,
+    sprintDurationWeeks: Number.isFinite(Number(p.sprintDurationWeeks)) ? Number(p.sprintDurationWeeks) : undefined,
+    startDate: p.startDate ? String(p.startDate).trim() : undefined,
     sprintStatus,
   };
   // Important: remove undefined keys so AI payload does not overwrite fallback payload fields.
@@ -192,7 +362,7 @@ async function parseIntentWithAI(commandText, parserContext = {}) {
   const systemPrompt = [
     "You are an intent parser for HiveHub app.",
     "Return ONLY one JSON object. No markdown. No explanation.",
-    'Schema: {"intent":"CREATE_PROJECT|CREATE_SPRINT|CREATE_STORY|CREATE_TASK|UPDATE_SPRINT_STATUS|REPORT|PLANNING|HELP","payload":{"projectId?":"P-...","projectName?":"...","sprintName?":"...","storyName?":"...","taskName?":"...","sprintId?":1,"storyId?":1,"sprintStatus?":"TODO|IN_PROGRESS|DONE"},"confidence":0.0}',
+    'Schema: {"intent":"CREATE_PROJECT|CREATE_PROJECT_BLUEPRINT|CREATE_SPRINT|CREATE_STORY|CREATE_TASK|CREATE_CALENDAR_NOTE|UPDATE_SPRINT_STATUS|REPORT|PLANNING|HELP","payload":{"projectId?":"P-...","projectName?":"...","projectDescription?":"...","sprintName?":"...","storyName?":"...","taskName?":"...","sprintId?":1,"storyId?":1,"sprintStatus?":"TODO|IN_PROGRESS|DONE","noteTitle?":"...","noteContent?":"...","noteDate?":"ISO","reminderAt?":"ISO","sprintCount?":4,"storiesPerSprint?":2,"tasksPerStory?":2,"sprintDurationWeeks?":1,"startDate?":"YYYY-MM-DD"},"confidence":0.0}',
     "Use confidence from 0 to 1.",
     "If command says current/this project, use memory.projectId if available.",
     "Prefer projectId from projectHints when project name in command loosely matches.",
@@ -276,6 +446,17 @@ function buildActionDraft({ intent, payload }) {
         projectName: payload.projectName || payload.storyName || payload.taskName || "New Project",
         projectDescription: payload.projectDescription || "",
       };
+    case "CREATE_PROJECT_BLUEPRINT":
+      return {
+        type: "CREATE_PROJECT_BLUEPRINT",
+        projectName: payload.projectName || "New Project",
+        projectDescription: payload.projectDescription || "",
+        sprintCount: Number(payload.sprintCount || 0),
+        storiesPerSprint: Number(payload.storiesPerSprint || 0),
+        tasksPerStory: Number(payload.tasksPerStory || 0),
+        sprintDurationWeeks: Number(payload.sprintDurationWeeks || 1),
+        startDate: payload.startDate || null,
+      };
     case "CREATE_SPRINT":
       return {
         type: "CREATE_SPRINT",
@@ -301,6 +482,14 @@ function buildActionDraft({ intent, payload }) {
         taskName: payload.taskName || "New Task",
         description: payload.description || "",
         taskStatus: payload.taskStatus || "TODO",
+      };
+    case "CREATE_CALENDAR_NOTE":
+      return {
+        type: "CREATE_CALENDAR_NOTE",
+        noteTitle: payload.noteTitle || "Nhac viec",
+        noteContent: payload.noteContent || "",
+        noteDate: payload.noteDate || new Date().toISOString(),
+        reminderAt: payload.reminderAt,
       };
     case "UPDATE_SPRINT_STATUS":
       return {
@@ -335,6 +524,20 @@ function validateActionDraft(action) {
       missing.push("projectDescription");
     }
   }
+  if (action.type === "CREATE_PROJECT_BLUEPRINT") {
+    const normalizedName = String(action.projectName || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+    if (!normalizedName || normalizedName === "new project") missing.push("projectName");
+    if (!String(action.projectDescription || "").trim()) missing.push("projectDescription");
+    if (!Number.isFinite(action.sprintCount) || action.sprintCount < 1) missing.push("sprintCount");
+    if (!Number.isFinite(action.storiesPerSprint) || action.storiesPerSprint < 1) missing.push("storiesPerSprint");
+    if (!Number.isFinite(action.tasksPerStory) || action.tasksPerStory < 1) missing.push("tasksPerStory");
+    if (!Number.isFinite(action.sprintDurationWeeks) || action.sprintDurationWeeks < 1) missing.push("sprintDurationWeeks");
+    if (!String(action.startDate || "").trim()) missing.push("startDate");
+  }
   if (action.type === "CREATE_SPRINT") {
     const normalizedSprintName = String(action.sprintName || "")
       .normalize("NFD")
@@ -357,6 +560,10 @@ function validateActionDraft(action) {
     if (!action.sprintId) missing.push("sprintId");
     if (!action.sprintStatus) missing.push("sprintStatus");
   }
+  if (action.type === "CREATE_CALENDAR_NOTE") {
+    if (!String(action.noteTitle || "").trim()) missing.push("noteTitle");
+    if (!action.reminderAt) missing.push("reminderAt");
+  }
   return { valid: missing.length === 0, missing };
 }
 
@@ -373,6 +580,24 @@ function buildGuidedPrompt(intent, missingFields = []) {
       question: parts.length ? `Minh can them ${parts.join(" va ")}.` : "Bạn muốn đặt tên dự án là gì?",
       hint: "Ban co the tra loi: ten du an ...; mo ta ... hoac muc dich ...",
       examples: ['Tạo dự án tên "Website CRM"', 'Lập project Mobile Sprint 3'],
+    };
+  }
+  if (intent === "CREATE_PROJECT_BLUEPRINT") {
+    const parts = [];
+    if (has("projectName")) parts.push("ten du an");
+    if (has("projectDescription")) parts.push("muc dich/mo ta du an");
+    if (has("sprintCount")) parts.push("so sprint");
+    if (has("storiesPerSprint")) parts.push("so story moi sprint");
+    if (has("tasksPerStory")) parts.push("so subtask moi story");
+    if (has("sprintDurationWeeks")) parts.push("thoi luong moi sprint (tuan)");
+    if (has("startDate")) parts.push("ngay bat dau (dd/mm hoac yyyy-mm-dd)");
+    return {
+      title: "Tao du an theo blueprint",
+      question: `Minh can them: ${parts.join(", ")}.`,
+      hint: "Vi du: gom 4 sprint, moi sprint 2 story, moi story 2 subtask, moi sprint 1 tuan tu 26/4.",
+      examples: [
+        "Tao du an ABC, muc dich xay dung app ABC, gom 4 sprint, moi sprint 2 story, moi story 2 subtask, tu 26/4",
+      ],
     };
   }
 
@@ -418,6 +643,20 @@ function buildGuidedPrompt(intent, missingFields = []) {
       question: "Mình cần mã dự án, sprintId và trạng thái (TODO/IN_PROGRESS/DONE).",
       hint: 'Ví dụ: "Đổi sprint 2 của P-32457576 sang DONE".',
       examples: ["Cập nhật sprint 3 P-32457576 sang IN_PROGRESS"],
+    };
+  }
+  if (intent === "CREATE_CALENDAR_NOTE") {
+    const parts = [];
+    if (has("noteTitle")) parts.push("ten lich/nhac viec");
+    if (has("reminderAt")) parts.push("thoi diem nhac (YYYY-MM-DD HH:mm)");
+    return {
+      title: "Tao lich nhac viec",
+      question: `De dat lich, minh can them ${parts.join(" va ")}.`,
+      hint: 'Vi du: "Nhac toi hop voi team luc 2026-05-01 09:30".',
+      examples: [
+        "Dat lich nhac demo san pham 2026-05-02 14:00",
+        "Set reminder nop bao cao vao 2026-05-05 08:30",
+      ],
     };
   }
 

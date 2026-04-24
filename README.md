@@ -82,3 +82,12 @@ Update backend API URL in `FE/src/config/config.json` if needed.
 - Main runtime data source is `backend-express/src/db.json`
 - When MongoDB is configured, data is mirrored to Atlas for persistence
 
+## Screenshots
+
+If your screenshot files are placed at the repository root with names like `image1.jpg`, `image2.jpg`, etc., they will render directly below:
+
+![image1](./image1.jpg)
+![image2](./image2.jpg)
+![image3](./image3.jpg)
+![image4](./image4.jpg)
+

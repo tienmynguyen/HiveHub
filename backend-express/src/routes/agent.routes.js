@@ -27,7 +27,15 @@ const { buildGuideForPrompt, getAgentFunctionList, getAgentUsageGuide } = requir
 
 const router = express.Router();
 
-const ACTION_INTENTS = new Set(["CREATE_PROJECT", "CREATE_SPRINT", "CREATE_STORY", "CREATE_TASK", "UPDATE_SPRINT_STATUS"]);
+const ACTION_INTENTS = new Set([
+  "CREATE_PROJECT",
+  "CREATE_PROJECT_BLUEPRINT",
+  "CREATE_SPRINT",
+  "CREATE_STORY",
+  "CREATE_TASK",
+  "CREATE_CALENDAR_NOTE",
+  "UPDATE_SPRINT_STATUS",
+]);
 
 function shouldUseClarification(intent, validation) {
   return ACTION_INTENTS.has(String(intent || "")) && validation && !validation.valid;
@@ -83,11 +91,11 @@ function inferNameFromShortReply(rawText) {
   const quoted = text.match(/["“](.+?)["”]/);
   if (quoted?.[1]) return quoted[1].trim();
   const direct = text.match(
-    /^(?:ten|tên|name|project name|ten du an|tên dự án|ten project|tên project|sprint name|ten sprint|tên sprint|story name|ten story|tên story|task name|ten task|tên task)\s*(?:la|là)?\s*[:\-]?\s*(.+)$/i
+    /^(?:ten|tên|name|project name|ten du an|tên dự án|ten project|tên project|sprint name|ten sprint|tên sprint|story name|ten story|tên story|task name|ten task|tên task|lich nhac|lịch nhắc|nhac viec|nhắc việc|reminder title)\s*(?:la|là)?\s*[:\-]?\s*(.+)$/i
   );
   if (direct?.[1]) return String(direct[1]).trim();
   return text
-    .replace(/^(ten|tên|name|project name|ten du an|tên dự án|ten project|tên project|sprint name|ten sprint|tên sprint)\s*(la|là)?\s*[:\-]?\s*/i, "")
+    .replace(/^(ten|tên|name|project name|ten du an|tên dự án|ten project|tên project|sprint name|ten sprint|tên sprint|lich nhac|lịch nhắc|nhac viec|nhắc việc|reminder title)\s*(la|là)?\s*[:\-]?\s*/i, "")
     .replace(/^["“]|["”]$/g, "")
     .trim();
 }
@@ -249,6 +257,9 @@ router.post("/agent/chat", async (req, res) => {
         }
         if (pendingMissing.includes("taskName") && isPlaceholderName(parsedPayloadRaw.taskName)) {
           parsedPayloadRaw.taskName = inferred;
+        }
+        if (pendingMissing.includes("noteTitle") && !String(parsedPayloadRaw.noteTitle || "").trim()) {
+          parsedPayloadRaw.noteTitle = inferred;
         }
       }
     }

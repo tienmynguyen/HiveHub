@@ -16,6 +16,70 @@ function executeAction(db, action, userId) {
     return db.projects.some((p) => String(p.project_id) === String(projectId));
   }
 
+  function buildDomainContext(projectName, projectDescription) {
+    const text = `${String(projectName || "")} ${String(projectDescription || "")}`.toLowerCase();
+    if (text.includes("thuong mai") || text.includes("ban hang") || text.includes("shop") || text.includes("e-commerce")) {
+      return {
+        label: "thuong mai dien tu",
+        storySeeds: [
+          "Quan ly danh muc san pham",
+          "Gio hang va dat hang",
+          "Thanh toan va xac nhan don",
+          "Theo doi van chuyen va lich su mua hang",
+          "Danh gia san pham va cham soc khach hang",
+        ],
+        taskSeeds: [
+          "Phan tich yeu cau nghiep vu",
+          "Thiet ke UI/UX cho luong chinh",
+          "Xay dung API va business logic",
+          "Tich hop frontend voi backend",
+          "Viet test va nghiem thu chuc nang",
+        ],
+      };
+    }
+    if (text.includes("chat") || text.includes("mess") || text.includes("social") || text.includes("mang xa hoi")) {
+      return {
+        label: "giao tiep va cong dong",
+        storySeeds: [
+          "Dang ky dang nhap va quan ly tai khoan",
+          "Gui nhan tin nhan theo thoi gian thuc",
+          "Tao nhom va quan ly thanh vien",
+          "Thong bao va nhac den tuong tac",
+          "Bao mat va kiem duyet noi dung",
+        ],
+        taskSeeds: [
+          "Thiet ke schema du lieu",
+          "Xay dung service xu ly su kien",
+          "Toi uu hieu nang truy van",
+          "Dong bo trang thai client server",
+          "Viet test cho cac case quan trong",
+        ],
+      };
+    }
+    return {
+      label: String(projectName || "du an"),
+      storySeeds: [
+        "Khoi tao va dinh nghia pham vi du an",
+        "Xay dung luong nghiep vu cot loi",
+        "Trien khai giao dien va trai nghiem nguoi dung",
+        "Tich hop he thong va dong bo du lieu",
+        "Bao mat, van hanh va toi uu",
+      ],
+      taskSeeds: [
+        "Lam ro yeu cau va tieu chi chap nhan",
+        "Thiet ke giai phap ky thuat",
+        "Trien khai chuc nang chi tiet",
+        "Kiem thu va sua loi",
+        "Tai lieu hoa va ban giao",
+      ],
+    };
+  }
+
+  function pickSeed(items, index) {
+    if (!Array.isArray(items) || !items.length) return "Cong viec";
+    return items[index % items.length];
+  }
+
   if (action.type === "CREATE_PROJECT") {
     const project = {
       project_id: `P-${Date.now().toString().slice(-8)}`,
@@ -33,6 +97,118 @@ function executeAction(db, action, userId) {
       roleId: 3,
     });
     return { ok: true, entity: project };
+  }
+  if (action.type === "CREATE_PROJECT_BLUEPRINT") {
+    const sprintCount = Math.max(1, Number(action.sprintCount || 1));
+    const storiesPerSprint = Math.max(1, Number(action.storiesPerSprint || 1));
+    const tasksPerStory = Math.max(1, Number(action.tasksPerStory || 1));
+    const sprintDurationWeeks = Math.max(1, Number(action.sprintDurationWeeks || 1));
+    const startDate = action.startDate ? new Date(`${action.startDate}T00:00:00`) : new Date();
+    const project = {
+      project_id: `P-${Date.now().toString().slice(-8)}`,
+      projectName: action.projectName,
+      projectDescription: action.projectDescription || "",
+      projectowner: Number(userId),
+      timeStart: startDate.toISOString(),
+      timeEnd: new Date(startDate.getTime() + sprintCount * sprintDurationWeeks * 7 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+    db.projects.push(project);
+    db.userProjects.push({
+      userProjectId: uuidv4(),
+      projectId: String(project.project_id),
+      userId: Number(userId),
+      roleId: 3,
+    });
+
+    const domain = buildDomainContext(action.projectName, action.projectDescription);
+    const createdSprints = [];
+    const createdStories = [];
+    const createdTasks = [];
+    for (let i = 0; i < sprintCount; i += 1) {
+      const sprintStart = new Date(startDate.getTime() + i * sprintDurationWeeks * 7 * 24 * 60 * 60 * 1000);
+      const sprintEnd = new Date(sprintStart.getTime() + sprintDurationWeeks * 7 * 24 * 60 * 60 * 1000);
+      const sprint = {
+        sprint_id: nextNumericId(db.sprints, "sprint_id"),
+        project_id: String(project.project_id),
+        sprintName: `Sprint ${i + 1} - ${pickSeed(domain.storySeeds, i)}`,
+        sprintGoal: `Tap trung phat trien ${pickSeed(domain.storySeeds, i).toLowerCase()} cho ${project.projectName}`,
+        sprintStatus: "TODO",
+        isDefault: false,
+        timeStart: sprintStart.toISOString(),
+        timeEnd: sprintEnd.toISOString(),
+      };
+      db.sprints.push(sprint);
+      createdSprints.push(sprint);
+
+      for (let j = 0; j < storiesPerSprint; j += 1) {
+        const storyTopic = pickSeed(domain.storySeeds, i + j);
+        const story = {
+          story_id: nextNumericId(db.stories, "story_id"),
+          project_id: String(project.project_id),
+          sprint_id: Number(sprint.sprint_id),
+          epic_id: null,
+          storyName: `${storyTopic} cho ${domain.label}`,
+          description: `Story tu dong theo blueprint, thuoc Sprint ${i + 1} cua ${project.projectName}`,
+          storyStatus: "TODO",
+          storyOrder: Number(db.stories.length + 1),
+          assignee_user_id: null,
+          isDefault: false,
+        };
+        db.stories.push(story);
+        createdStories.push(story);
+
+        for (let k = 0; k < tasksPerStory; k += 1) {
+          const taskTopic = pickSeed(domain.taskSeeds, i + j + k);
+          const task = {
+            task_id: db.tasks.length ? Math.max(...db.tasks.map((t) => t.task_id)) + 1 : 1,
+            project_id: String(project.project_id),
+            sprint_id: Number(sprint.sprint_id),
+            epic_id: null,
+            story_id: Number(story.story_id),
+            taskName: `${taskTopic} - ${storyTopic.toLowerCase()}`,
+            description: `Subtask ${k + 1} de hoan thanh story: ${story.storyName}`,
+            taskStatus: "TODO",
+            timeStart: sprintStart.toISOString(),
+            timeEnd: sprintEnd.toISOString(),
+            deadline: sprintEnd.toISOString(),
+            is_approved: false,
+            txHash: null,
+          };
+          db.tasks.push(task);
+          createdTasks.push(task);
+        }
+      }
+    }
+
+    return {
+      ok: true,
+      entity: {
+        project_id: project.project_id,
+        projectName: project.projectName,
+        projectDescription: project.projectDescription,
+        created: {
+          sprints: createdSprints.length,
+          stories: createdStories.length,
+          tasks: createdTasks.length,
+        },
+      },
+    };
+  }
+  if (action.type === "CREATE_CALENDAR_NOTE") {
+    const noteDate = action.noteDate || action.reminderAt || new Date().toISOString();
+    const reminderAt = action.reminderAt || null;
+    const note = {
+      note_id: db.notes.length ? Math.max(...db.notes.map((n) => n.note_id)) + 1 : 1,
+      userId: Number(userId),
+      title: action.noteTitle || "Nhac viec",
+      content: action.noteContent || "",
+      noteDate,
+      reminderAt,
+      date: new Date().toISOString(),
+      pinned: false,
+    };
+    db.notes.push(note);
+    return { ok: true, entity: note };
   }
 
   if (action.type === "CREATE_SPRINT") {

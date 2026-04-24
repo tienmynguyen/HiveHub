@@ -4,6 +4,8 @@ function canExecuteAction(db, action, userId) {
   const roleOwner = isOwner(db, action.projectId, userId);
   switch (action.type) {
     case "CREATE_PROJECT":
+    case "CREATE_PROJECT_BLUEPRINT":
+    case "CREATE_CALENDAR_NOTE":
       return true;
     case "CREATE_SPRINT":
     case "CREATE_STORY":
@@ -19,6 +21,10 @@ function explainPolicy(action) {
   switch (action.type) {
     case "CREATE_PROJECT":
       return "Mọi user đã đăng nhập đều có thể tạo project.";
+    case "CREATE_PROJECT_BLUEPRINT":
+      return "Mọi user đã đăng nhập đều có thể tạo project theo blueprint.";
+    case "CREATE_CALENDAR_NOTE":
+      return "Mọi user đã đăng nhập đều có thể tạo lịch nhắc cá nhân.";
     case "CREATE_SPRINT":
     case "CREATE_STORY":
     case "CREATE_TASK":

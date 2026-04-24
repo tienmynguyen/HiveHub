@@ -15,6 +15,19 @@ function getAgentFunctionList() {
       ],
     },
     {
+      id: "CREATE_PROJECT_BLUEPRINT",
+      purpose: "Tao du an va dung cau truc sprint/story/subtask tu 1 lenh",
+      required: ["projectName", "projectDescription", "sprintCount", "storiesPerSprint", "tasksPerStory", "sprintDurationWeeks", "startDate"],
+      optional: [],
+      notes: [
+        "Tu dong tao toan bo hierarchy: project -> sprint -> story -> subtask",
+        "Phu hop lenh planning dai va co thong so cau truc ro rang",
+      ],
+      examples: [
+        "Tao du an ABC, muc dich xay dung app ABC, gom 4 sprint moi sprint 1 tuan tu 26/4, moi sprint 2 story, moi story 2 subtask",
+      ],
+    },
+    {
       id: "CREATE_SPRINT",
       purpose: "Tao sprint moi trong project",
       required: ["projectId", "sprintName"],
@@ -66,6 +79,20 @@ function getAgentFunctionList() {
       ],
       examples: [
         "Doi sprint 3 cua P-12345678 sang DONE",
+      ],
+    },
+    {
+      id: "CREATE_CALENDAR_NOTE",
+      purpose: "Tạo lịch nhắc việc cá nhân ở Calendar kèm thời điểm thông báo",
+      required: ["noteTitle", "reminderAt"],
+      optional: ["noteContent", "noteDate"],
+      notes: [
+        "Lịch nhắc được tạo cho đúng user đang đăng nhập",
+        "reminderAt nên ở dạng thời gian cụ thể (ISO hoặc YYYY-MM-DD HH:mm)",
+      ],
+      examples: [
+        "Nhắc tôi họp với team lúc 2026-05-01 09:30",
+        "Đặt báo thức nộp báo cáo vào 2026-05-03 08:00",
       ],
     },
     {
