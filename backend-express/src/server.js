@@ -4,9 +4,20 @@ const env = require("./config/env");
 const createApp = require("./app");
 const { initDataStore } = require("./data/db");
 
+function buildSocketCors() {
+  const raw = String(env.CORS_ORIGINS || "*")
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+  if (!raw.length || raw.includes("*")) {
+    return { origin: true, credentials: true };
+  }
+  return { origin: raw, credentials: true };
+}
+
 const server = http.createServer();
 const io = new Server(server, {
-  cors: { origin: "*" },
+  cors: buildSocketCors(),
 });
 const app = createApp(io);
 server.on("request", (req, res) => {

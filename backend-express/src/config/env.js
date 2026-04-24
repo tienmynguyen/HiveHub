@@ -22,6 +22,7 @@ const env = {
   MONGODB_DB_NAME: process.env.MONGODB_DB_NAME || "hivehub",
   MONGODB_COLLECTION: process.env.MONGODB_COLLECTION || "app_state",
   MONGODB_DOCUMENT_ID: process.env.MONGODB_DOCUMENT_ID || "hivehub_main",
+  CORS_ORIGINS: process.env.CORS_ORIGINS || "*",
 };
 
 module.exports = env;
