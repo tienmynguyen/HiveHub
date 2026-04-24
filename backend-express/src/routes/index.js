@@ -6,6 +6,7 @@ const scrumRoutes = require("./scrum.routes");
 const taskRoutes = require("./task.routes");
 const noteRoutes = require("./note.routes");
 const createChatRoutes = require("./chat.routes");
+const agentRoutes = require("./agent.routes");
 
 function createApiRouter(io) {
   const router = express.Router();
@@ -17,6 +18,7 @@ function createApiRouter(io) {
   router.use(taskRoutes);
   router.use(noteRoutes);
   router.use(createChatRoutes(io));
+  router.use(agentRoutes);
 
   return router;
 }

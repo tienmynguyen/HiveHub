@@ -2,13 +2,14 @@ import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, TextInput, ScrollView, SafeAreaView, Dimensions, ActivityIndicator, StatusBar, RefreshControl } from 'react-native';
 import { AuthContext } from '../../auth/context/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import Icon from 'react-native-vector-icons/FontAwesome5'; 
 import Modal from 'react-native-modal';
 import axios from 'axios';
 import { endpoints } from '../../../config/endpoints';
+import { DEFAULT_AVATAR, getAvatarSource } from '../../../utils/avatar';
 
 const { width } = Dimensions.get('window');
-const DEFAULT_AVATAR = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
 export default function Profile({ navigation }) {
     const { userData, logout } = useContext(AuthContext);
@@ -21,6 +22,14 @@ export default function Profile({ navigation }) {
     const [loading, setLoading] = useState(false);
     // State cho việc kéo xuống refresh
     const [refreshing, setRefreshing] = useState(false);
+
+    function guessMimeType(uri = '') {
+        const lower = String(uri).toLowerCase();
+        if (lower.endsWith('.png')) return 'image/png';
+        if (lower.endsWith('.webp')) return 'image/webp';
+        if (lower.endsWith('.heic')) return 'image/heic';
+        return 'image/jpeg';
+    }
 
     // Load dữ liệu tĩnh (Tên, Email, Avatar)
     useEffect(() => {
@@ -52,39 +61,62 @@ export default function Profile({ navigation }) {
     }
 
     const pickImage = async () => {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permission.granted) {
+            Alert.alert("Thiếu quyền", "Vui lòng cấp quyền truy cập ảnh để cập nhật avatar.");
+            return;
+        }
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [1, 1],
-            quality: 1,
+            quality: 0.8,
+            base64: true,
         });
         if (!result.canceled) {
             const asset = result.assets[0];
+            const mimeType = asset.mimeType || guessMimeType(asset.uri);
+            const base64Data = asset.base64 || (await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.Base64 }).catch(() => null));
             const source = {
                 uri: asset.uri,
-                type: asset.mimeType,
+                type: mimeType,
                 name: asset.fileName ? asset.fileName : `IMG_${Date.now()}.jpg`,
+                base64: base64Data,
             };
-            handleUpdate(source); 
-            setPicture(asset.uri); 
+            handleUpdate(source);
         }
     };
 
-    const handleUpdate = (photo) => {
+    const handleUpdate = async (photo) => {
         setLoading(true);
-        const data = new FormData();
-        data.append('file', photo);
-        data.append('upload_preset', 'HiveHub');
-        data.append('cloud_name', 'dndzoxaym');
-
-        axios.post('https://api.cloudinary.com/v1_1/dndzoxaym/image/upload', data, {
-            headers: { 'Accept': 'application/json', 'Content-Type': 'multipart/form-data' },
-        })
-            .then((res) => {
-                setPicture(res.data.url);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
+        try {
+            const data = new FormData();
+            const mimeType = photo.type || 'image/jpeg';
+            if (!photo.base64) {
+                throw new Error('Không thể đọc dữ liệu ảnh (base64).');
+            }
+            data.append('file', `data:${mimeType};base64,${photo.base64}`);
+            data.append('upload_preset', 'HiveHub');
+            // Use fetch to avoid global axios Authorization header leaking to Cloudinary.
+            const response = await fetch('https://api.cloudinary.com/v1_1/dndzoxaym/image/upload', {
+                method: 'POST',
+                body: data,
+            });
+            const resData = await response.json();
+            if (!response.ok) {
+                throw new Error(resData?.error?.message || 'Cloudinary upload failed');
+            }
+            const uploadedUrl = resData?.secure_url || resData?.url;
+            if (!uploadedUrl) {
+                throw new Error('Upload response missing image URL');
+            }
+            setPicture(uploadedUrl);
+        } catch (error) {
+            const detail = error?.message || 'Không xác định';
+            Alert.alert("Lỗi tải ảnh", `Không thể tải ảnh lên: ${detail}`);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSaveInfo = async () => {
@@ -119,7 +151,7 @@ export default function Profile({ navigation }) {
                     {/* Header */}
                     <View style={styles.profileHeader}>
                         <View style={styles.avatarContainer}>
-                            <Image style={styles.avatar} source={{ uri: picture || DEFAULT_AVATAR }} />
+                            <Image style={styles.avatar} source={getAvatarSource({ imagePath: picture })} />
                             <TouchableOpacity style={styles.editIconBtn} onPress={() => setModalVisible(true)}>
                                 <Icon name="pen" size={14} color="#fff" />
                             </TouchableOpacity>
@@ -164,7 +196,7 @@ export default function Profile({ navigation }) {
                         <Text style={styles.modalTitle}>Cập nhật thông tin</Text>
 
                         <TouchableOpacity style={styles.modalAvatarPicker} onPress={pickImage}>
-                            <Image style={styles.modalAvatar} source={{ uri: picture || DEFAULT_AVATAR }} />
+                            <Image style={styles.modalAvatar} source={getAvatarSource({ imagePath: picture })} />
                             <View style={styles.modalCameraIcon}><Icon name="camera" size={16} color="#fff" /></View>
                         </TouchableOpacity>
 

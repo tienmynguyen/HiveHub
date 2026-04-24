@@ -6,9 +6,9 @@ import { AuthContext } from "../../auth/context/AuthContext";
 import CarouselCustom from "../components/CarouselCustom";
 import axios from 'axios';
 import { endpoints } from '../../../config/endpoints';
+import { getAvatarSource } from '../../../utils/avatar';
 
 const { width } = Dimensions.get('window');
-const DEFAULT_AVATAR = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
 // --- DỮ LIỆU GIẢ ĐỂ TEST GIAO DIỆN ---
 const MOCK_PROJECTS = [1, 2, 3]; 
@@ -117,7 +117,7 @@ export default function Home({ navigation }) {
                             <Text style={styles.usernameText}>{userData?.username || "Bạn mới"}</Text>
                         </View>
                         <Image
-                            source={userData?.imagePath ? { uri: userData.imagePath } : { uri: DEFAULT_AVATAR }}
+                            source={getAvatarSource(userData)}
                             style={styles.avatar}
                         />
                     </View>
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 20,
-        marginTop: 40, 
+        marginTop: 0, 
         marginBottom: 20,
     },
     greetingText: { fontSize: 16, color: '#666' },

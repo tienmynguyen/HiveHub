@@ -19,9 +19,8 @@ import { AuthContext } from "../../auth/context/AuthContext";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios';
 import { endpoints } from '../../../config/endpoints';
+import { getAvatarSource } from '../../../utils/avatar';
 
-// Link ảnh đại diện mặc định (Dùng link online để tránh lỗi thiếu file local)
-const DEFAULT_AVATAR = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
 const Chat = ({ route, navigation }) => {
     const { projectId, projectName } = route.params;
@@ -33,6 +32,7 @@ const Chat = ({ route, navigation }) => {
     const flatListRef = useRef(null);
     const { userData } = useContext(AuthContext);
     const [user, setUser] = useState([]);
+    const userMapRef = useRef({});
 
     useEffect(() => {
         getuser();
@@ -50,6 +50,7 @@ const Chat = ({ route, navigation }) => {
             });
             
         socket.current.on('receiveMessage', newMessage => {
+            if (String(newMessage?.project_id) !== String(projectId)) return;
             setMessages(prevMessages => [...prevMessages, newMessage]);
         });
 
@@ -74,6 +75,10 @@ const Chat = ({ route, navigation }) => {
                 return { ...user, roleName };
             }));
             setUser(usersWithRoles);
+            userMapRef.current = usersWithRoles.reduce((acc, u) => {
+                acc[String(u.user_id)] = u;
+                return acc;
+            }, {});
         } catch (error) {
             console.error(error);
         }
@@ -94,40 +99,37 @@ const Chat = ({ route, navigation }) => {
 
     const sendMessage = () => {
         if (message.trim() === '') return;
+        const liveUser = userMapRef.current[String(userData.user_id)] || userData;
 
         const newMessage = {
             user_id: userData.user_id,
             message: message,
             date: new Date().toISOString(),
             project_id: projectId,
-            users: userData 
+            users: liveUser
         };
 
-        setMessages(prev => [...prev, newMessage]);
         setMessage('');
 
         axios.post(endpoints.chat.addMessage(), newMessage)
-            .then(data => {
-            socket.current.emit('sendMessage', data.data);
-        })
-        .catch(error => console.error(error));
+            .catch(error => console.error(error));
     };
 
     const renderItem = ({ item }) => {
-        const isOwnMessage = item.users?.user_id === userData.user_id;
+        const resolvedUser = userMapRef.current[String(item.user_id)] || item.users || null;
+        const isOwnMessage = Number(item.user_id) === Number(userData.user_id);
         
         return (
             <View style={[styles.messageRow, isOwnMessage ? styles.rowEnd : styles.rowStart]}>
                 {!isOwnMessage && (
                     <Image 
-                        // SỬA LỖI Ở ĐÂY: Dùng DEFAULT_AVATAR nếu không có ảnh
-                        source={{ uri: item.users?.imagePath || DEFAULT_AVATAR }} 
+                        source={getAvatarSource(resolvedUser)} 
                         style={styles.avatarSmall} 
                     />
                 )}
                 
                 <View style={[styles.bubble, isOwnMessage ? styles.bubbleOwn : styles.bubbleOther]}>
-                    {!isOwnMessage && <Text style={styles.senderName}>{item.users?.username}</Text>}
+                    {!isOwnMessage && <Text style={styles.senderName}>{resolvedUser?.username}</Text>}
                     <Text style={[styles.messageText, isOwnMessage ? styles.textOwn : styles.textOther]}>
                         {item.message}
                     </Text>
@@ -220,8 +222,7 @@ const Chat = ({ route, navigation }) => {
                             renderItem={({item}) => (
                                 <View style={styles.userItem}>
                                     <Image 
-                                        // SỬA LỖI Ở ĐÂY: Dùng DEFAULT_AVATAR
-                                        source={{ uri: item.imagePath || DEFAULT_AVATAR }} 
+                                        source={getAvatarSource(item)} 
                                         style={styles.avatarList} 
                                     />
                                     <View>

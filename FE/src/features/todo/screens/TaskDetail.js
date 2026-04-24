@@ -9,6 +9,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import { AuthContext } from "../../auth/context/AuthContext";
 import axios from 'axios';
 import { endpoints } from '../../../config/endpoints';
+import { getAvatarSource } from '../../../utils/avatar';
 
 export default function PlanDetail({ navigation, route }) {
     const { task, projectId } = route.params; 
@@ -297,9 +298,7 @@ export default function PlanDetail({ navigation, route }) {
                         <Text style={styles.sectionHeader}>Người thực hiện ({users.length})</Text>
                         {Array.isArray(users) && users.map((user, index) => (
                             <View key={user.user_id} style={styles.memberRow}>
-                                <View style={[styles.avatar, {backgroundColor: index % 2 === 0 ? '#ffad44' : '#4a90e2'}]}>
-                                    <Text style={styles.avatarText}>{user.username ? user.username.charAt(0).toUpperCase() : "?"}</Text>
-                                </View>
+                                <Image source={getAvatarSource(user)} style={styles.avatarImage} />
                                 <View style={styles.memberInfo}>
                                     <Text style={styles.memberName}>{user.username}</Text>
                                     <Text style={styles.memberEmail}>{user.email}</Text>
@@ -323,9 +322,7 @@ export default function PlanDetail({ navigation, route }) {
                                     return (
                                         <View key={cmt.comment_id || index} style={[styles.commentItem, isMe ? styles.commentItemMe : styles.commentItemOther]}>
                                             {!isMe && (
-                                                <View style={styles.commentAvatar}>
-                                                    <Text style={styles.avatarTextSmall}>{cmt.users?.username?.charAt(0).toUpperCase() || "?"}</Text>
-                                                </View>
+                                                <Image source={getAvatarSource(cmt.users)} style={styles.commentAvatarImage} />
                                             )}
                                             <View style={[styles.commentBubble, isMe ? styles.bubbleMe : styles.bubbleOther]}>
                                                 {!isMe && <Text style={styles.commentUser}>{cmt.users?.username}</Text>}
@@ -421,7 +418,7 @@ export default function PlanDetail({ navigation, route }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f5f5f5' },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 40, paddingBottom: 15, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 0, paddingBottom: 15, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
     backButton: { padding: 10 },
     headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
     scrollContent: { padding: 15, paddingBottom: 30 },
@@ -447,8 +444,7 @@ const styles = StyleSheet.create({
     deadlineContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff8ec', padding: 10, borderRadius: 8 },
     deadlineText: { color: '#ffad44', fontWeight: 'bold', marginLeft: 10 },
     memberRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#f9f9f9' },
-    avatar: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-    avatarText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+    avatarImage: { width: 40, height: 40, borderRadius: 20, marginRight: 12, backgroundColor: '#eee' },
     memberInfo: { flex: 1 },
     memberName: { fontSize: 15, fontWeight: '600', color: '#333' },
     memberEmail: { fontSize: 13, color: '#888' },
@@ -477,8 +473,7 @@ const styles = StyleSheet.create({
     commentItem: { flexDirection: 'row', marginBottom: 15, alignItems: 'flex-end' },
     commentItemMe: { justifyContent: 'flex-end' },
     commentItemOther: { justifyContent: 'flex-start' },
-    commentAvatar: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#ccc', justifyContent: 'center', alignItems: 'center', marginRight: 8 },
-    avatarTextSmall: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+    commentAvatarImage: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#ccc', marginRight: 8 },
     commentBubble: { maxWidth: '80%', padding: 10, borderRadius: 12 },
     bubbleMe: { backgroundColor: '#ffad44', borderBottomRightRadius: 2 },
     bubbleOther: { backgroundColor: '#fff', borderBottomLeftRadius: 2, borderWidth: 1, borderColor: '#eee' },

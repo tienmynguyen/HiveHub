@@ -7,6 +7,7 @@ import axios from 'axios';
 import GanttChart from '../components/GanttChart';
 import { endpoints } from '../../../config/endpoints';
 import { AuthContext } from '../../auth/context/AuthContext';
+import { getAvatarSource } from '../../../utils/avatar';
 
 function formatDate(isoString) {
     if (!isoString) return '--/--';
@@ -41,7 +42,6 @@ function getSprintStatusUi(status) {
     }
 }
 
-const DEFAULT_AVATAR = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
 export default function Plan({ navigation, route }) {
     const { projectId, projectName } = route.params || {};
@@ -411,7 +411,7 @@ export default function Plan({ navigation, route }) {
                                                     </View>
                                                     <View style={styles.assigneeWrap}>
                                                         <Image
-                                                            source={assignee?.imagePath ? { uri: assignee.imagePath } : { uri: DEFAULT_AVATAR }}
+                                                            source={getAvatarSource(assignee)}
                                                             style={styles.avatar}
                                                         />
                                                     </View>
@@ -568,7 +568,7 @@ export default function Plan({ navigation, route }) {
                                 <View style={styles.memberRow}>
                                     <View style={styles.memberLeft}>
                                         <Image
-                                            source={item?.imagePath ? { uri: item.imagePath } : { uri: DEFAULT_AVATAR }}
+                                            source={getAvatarSource(item)}
                                             style={styles.memberAvatar}
                                         />
                                         <View>
@@ -592,7 +592,7 @@ export default function Plan({ navigation, route }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f7f8fa' },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingTop: 36, paddingBottom: 8 },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, paddingTop: 0, paddingBottom: 8 },
     headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     iconBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
     notiBadge: { position: 'absolute', top: -2, right: -2, backgroundColor: '#ef4444', borderRadius: 10, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },

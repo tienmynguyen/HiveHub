@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import { Svg, Rect, Line, Text as SvgText, G, Defs, LinearGradient, Stop } from 'react-native-svg';
+import { Svg, Rect, Line, Text as SvgText, G } from 'react-native-svg';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Popup from "../../todo/components/TaskPopup";
 
@@ -27,30 +27,58 @@ const CONFIG = {
     }
 };
 
+function parseDate(value) {
+    const date = new Date(value || '');
+    if (Number.isNaN(date.getTime())) return null;
+    return date;
+}
+
+function getTaskStart(task) {
+    return parseDate(task?.timeStart) || parseDate(task?.startDate) || parseDate(task?.createdAt) || new Date();
+}
+
+function getTaskEnd(task, fallbackStart) {
+    return parseDate(task?.timeEnd) || parseDate(task?.deadline) || parseDate(task?.endDate) || fallbackStart;
+}
+
 const GanttChart = ({ tasks, currentMonth, setCurrentMonth }) => {
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
 
-    const startDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-    const endDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+    const startDate = useMemo(() => new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1), [currentMonth]);
+    const endDate = useMemo(() => new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0), [currentMonth]);
 
     // Tạo mảng ngày
-    const dateArray = [];
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        dateArray.push(new Date(d));
-    }
+    const dateArray = useMemo(() => {
+        const arr = [];
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            arr.push(new Date(d));
+        }
+        return arr;
+    }, [startDate, endDate]);
 
-    // Sắp xếp task
-    tasks.sort((a, b) => new Date(a.timeStart) - new Date(b.timeStart));
+    const normalizedTasks = useMemo(() => {
+        return (Array.isArray(tasks) ? tasks : [])
+            .map((task) => {
+                const start = getTaskStart(task);
+                const end = getTaskEnd(task, start);
+                return {
+                    ...task,
+                    _start: start,
+                    _end: end < start ? start : end,
+                };
+            })
+            .sort((a, b) => a._start - b._start);
+    }, [tasks]);
 
     // Thuật toán sắp xếp dòng (như cũ)
     const rows = [];
-    tasks.forEach((task) => {
+    normalizedTasks.forEach((task) => {
         let placed = false;
         for (let i = 0; i < rows.length; i++) {
             const lastTask = rows[i][rows[i].length - 1];
             // Thêm một khoảng đệm nhỏ để các task không dính sát nhau
-            if (new Date(task.timeStart) >= new Date(lastTask.timeEnd)) {
+            if (task._start >= lastTask._end) {
                 rows[i].push(task);
                 placed = true;
                 break;
@@ -64,8 +92,8 @@ const GanttChart = ({ tasks, currentMonth, setCurrentMonth }) => {
 
     // Tính toán vị trí bar
     const calculateBar = (task, rowIndex) => {
-        const tStart = new Date(task.timeStart);
-        const tEnd = new Date(task.timeEnd);
+        const tStart = task._start;
+        const tEnd = task._end;
         
         // Tính toán vị trí chính xác (bao gồm cả giờ phút nếu cần, ở đây tính theo ngày)
         const diffStart = (tStart - startDate) / (1000 * 60 * 60 * 24);
@@ -209,10 +237,11 @@ const GanttChart = ({ tasks, currentMonth, setCurrentMonth }) => {
                                     const color = CONFIG.colors.projectColors[task.taskStatus] || '#999';
                                     
                                     // Cắt ngắn text nếu thanh quá ngắn
-                                    const textLimit = Math.floor(barWidth / 8); 
-                                    const displayTitle = task.taskName.length > textLimit 
-                                        ? task.taskName.substring(0, textLimit) + "..." 
-                                        : task.taskName;
+                                    const taskTitle = task.taskName || task.name || `Task ${task.task_id || ''}`;
+                                    const textLimit = Math.floor(barWidth / 8);
+                                    const displayTitle = taskTitle.length > textLimit
+                                        ? taskTitle.substring(0, textLimit) + "..."
+                                        : taskTitle;
 
                                     return (
                                         <G key={`task-${rowIndex}-${index}`} onPress={() => togglePopup(task)}>
@@ -277,7 +306,7 @@ const GanttChart = ({ tasks, currentMonth, setCurrentMonth }) => {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        minHeight: 340,
         backgroundColor: '#fff',
     },
     headerControl: {

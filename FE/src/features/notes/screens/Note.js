@@ -1,245 +1,239 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, StyleSheet, TextInput, Image, Dimensions, SafeAreaView, ActivityIndicator, StatusBar } from 'react-native';
-import Icon from "react-native-vector-icons/FontAwesome5"; 
-import { AuthContext } from '../../auth/context/AuthContext';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
+import { Alert, FlatList, Modal, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Calendar } from 'react-native-calendars';
+import Icon from 'react-native-vector-icons/FontAwesome5';
+import * as Notifications from 'expo-notifications';
 import axios from 'axios';
+import { AuthContext } from '../../auth/context/AuthContext';
 import { endpoints } from '../../../config/endpoints';
 
-const { width } = Dimensions.get('window');
-const NOTE_WIDTH = (width - 40) / 2; 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
-// --- DỮ LIỆU GIẢ ĐỂ TEST (Đảm bảo giao diện luôn hiện) ---
-const MOCK_NOTES = [
-    { note_id: 1, title: "Ý tưởng Project", content: "Làm app quản lý công việc bằng React Native...", date: new Date().toISOString(), pinned: true },
-    { note_id: 2, title: "Mua sắm", content: "Sữa, Trứng, Bánh mì, Cafe...", date: new Date().toISOString(), pinned: false },
-    { note_id: 3, title: "Học từ vựng", content: "Review 50 từ vựng N3...", date: new Date().toISOString(), pinned: false },
-];
-
-const NOTE_COLORS = ['#fff', '#fef9e7', '#e8f8f5', '#fdedec', '#f4f6f7'];
-// Ảnh online để tránh lỗi thiếu file local
-const EMPTY_IMAGE = 'https://cdn-icons-png.flaticon.com/512/7486/7486744.png';
+function toDayKey(input) {
+  return String(input || new Date().toISOString()).slice(0, 10);
+}
 
 export default function Note() {
-    const [notes, setNotes] = useState([]);
-    const [selectedNote, setSelectedNote] = useState(null);
-    const [modalVisible, setModalVisible] = useState(false);
-    const [addNoteModalVisible, setAddNoteModalVisible] = useState(false);
-    const [newTitle, setNewTitle] = useState('');
-    const [newDescription, setNewDescription] = useState('');
-    const [loading, setLoading] = useState(false);
-    const { userData } = useContext(AuthContext);
+  const { userData } = useContext(AuthContext);
+  const [notes, setNotes] = useState([]);
+  const [selectedDay, setSelectedDay] = useState(toDayKey(new Date().toISOString()));
+  const [addVisible, setAddVisible] = useState(false);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [reminderTime, setReminderTime] = useState('');
+  const [aiCommand, setAiCommand] = useState('');
 
-    // --- LOGIC API ---
-    const getAllNotes = async () => {
-        setLoading(true);
-        try {
-            // Kiểm tra user
-            if (!userData?.user_id) {
-                setNotes(MOCK_NOTES); // Không có user thì hiện data giả
-                setLoading(false);
-                return;
-            }
-
-            const { data } = await axios.get(endpoints.notes.getAllByUser(userData.user_id));
-            
-            if (Array.isArray(data) && data.length > 0) {
-                const sortedNotes = data.sort((a, b) => {
-                    if (a.pinned === b.pinned) return new Date(b.date) - new Date(a.date);
-                    return a.pinned ? -1 : 1;
-                });
-                setNotes(sortedNotes);
-            } else {
-                setNotes([]); // Nếu API trả về rỗng thì để rỗng (sẽ hiện màn hình Empty)
-                // setNotes(MOCK_NOTES); // Bật dòng này nếu muốn test giao diện khi API rỗng
-            }
-        } catch (error) {
-            console.error("Error fetching notes:", error);
-            setNotes(MOCK_NOTES); // Lỗi mạng thì hiện data giả
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    async function deleteJSON(noteId) {
-        try {
-            await axios.delete(endpoints.notes.remove(noteId));
-            getAllNotes();
-            setModalVisible(false);
-        } catch (error) { console.error(error); }
-    };
-
-    async function postJSON(data) {
-        try {
-            const res = await axios.post(endpoints.notes.create(userData.user_id), data);
-            return res.data;
-        } catch (error) { return null; }
+  async function loadNotes() {
+    if (!userData?.user_id) return;
+    try {
+      const { data } = await axios.get(endpoints.notes.getAllByUser(userData.user_id));
+      setNotes(Array.isArray(data) ? data : []);
+    } catch (_error) {
+      setNotes([]);
     }
+  }
 
-    useEffect(() => {
-        getAllNotes();
-    }, []);
+  useEffect(() => {
+    loadNotes();
+    Notifications.requestPermissionsAsync().catch(() => null);
+  }, []);
 
-    // --- HANDLERS ---
-    const handleLongPress = (item) => { setSelectedNote(item); setModalVisible(true); };
-    function formatDate(isoString) {
-        if(!isoString) return "--/--";
-        const date = new Date(isoString);
-        return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+  const notesByDay = useMemo(() => {
+    const map = {};
+    notes.forEach((item) => {
+      const key = toDayKey(item.noteDate || item.date);
+      if (!map[key]) map[key] = [];
+      map[key].push(item);
+    });
+    return map;
+  }, [notes]);
+
+  const markedDates = useMemo(() => {
+    const markers = {};
+    Object.keys(notesByDay).forEach((key) => {
+      markers[key] = { marked: true, dotColor: '#f59e0b' };
+    });
+    markers[selectedDay] = { ...(markers[selectedDay] || {}), selected: true, selectedColor: '#f59e0b' };
+    return markers;
+  }, [notesByDay, selectedDay]);
+
+  async function scheduleReminderIfNeeded(note) {
+    if (!note.reminderAt) return;
+    const triggerDate = new Date(note.reminderAt);
+    if (Number.isNaN(triggerDate.getTime()) || triggerDate.getTime() <= Date.now()) return;
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: note.title || 'Lịch nhắc việc',
+        body: note.content || 'Bạn có một ghi chú cần thực hiện.',
+      },
+      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: triggerDate },
+    });
+  }
+
+  async function saveNote() {
+    if (!title.trim() && !content.trim()) return;
+    const reminderAtIso =
+      reminderTime.trim().length > 0
+        ? new Date(`${selectedDay}T${reminderTime.trim()}:00`).toISOString()
+        : null;
+    const payload = {
+      title: title.trim(),
+      content: content.trim(),
+      noteDate: `${selectedDay}T00:00:00.000Z`,
+      reminderAt: reminderAtIso,
+      date: new Date().toISOString(),
+    };
+    try {
+      const { data } = await axios.post(endpoints.notes.create(userData.user_id), payload);
+      await scheduleReminderIfNeeded(data || payload);
+      setAddVisible(false);
+      setTitle('');
+      setContent('');
+      setReminderTime('');
+      loadNotes();
+    } catch (_error) {
+      Alert.alert('Lỗi', 'Không thể lưu ghi chú lịch.');
     }
-    const pinNote = () => {
-        const updatedNotes = notes.map(n => n.note_id === selectedNote.note_id ? { ...n, pinned: !n.pinned } : n);
-        setNotes(updatedNotes.sort((a, b) => (a.pinned === b.pinned ? 0 : a.pinned ? -1 : 1)));
-        setModalVisible(false);
-    };
-    const deleteNote = () => { if (selectedNote) deleteJSON(selectedNote.note_id); };
-    const saveNewNote = async () => {
-        if (!newTitle.trim() && !newDescription.trim()) return;
-        const newNote = { title: newTitle, content: newDescription, date: new Date().toISOString() };
-        await postJSON(newNote);
-        getAllNotes(); 
-        setNewTitle(''); setNewDescription(''); setAddNoteModalVisible(false);
-    };
+  }
 
-    // --- RENDER ITEM ---
-    const renderNote = ({ item, index }) => {
-        const bgColor = NOTE_COLORS[index % NOTE_COLORS.length];
-        return (
-            <TouchableOpacity activeOpacity={0.8} onLongPress={() => handleLongPress(item)} style={[styles.noteCard, { backgroundColor: bgColor }]}>
-                <View style={styles.noteHeader}>
-                    <Text style={styles.noteTitle} numberOfLines={1}>{item.title || "Không tiêu đề"}</Text>
-                    {item.pinned && <Icon name="thumbtack" size={12} color="#ffab33" solid />}
-                </View>
-                <Text style={styles.noteContent} numberOfLines={5}>{item.content || "..."}</Text>
-                <Text style={styles.noteDate}>{formatDate(item.date)}</Text>
+  async function deleteNote(noteId) {
+    try {
+      await axios.delete(endpoints.notes.remove(noteId));
+      loadNotes();
+    } catch (_error) {
+      Alert.alert('Lỗi', 'Không thể xoá ghi chú.');
+    }
+  }
+
+  async function runAiCalendarCommand() {
+    const cmd = aiCommand.trim();
+    if (!cmd) return;
+    const timeMatch = cmd.match(/(\d{1,2}):(\d{2})/);
+    const dateMatch = cmd.match(/(\d{4}-\d{2}-\d{2})/);
+    const titleText = cmd.replace(/nhắc tôi|nhac toi|remind me|vào|luc|lúc|at/gi, '').trim();
+
+    const targetDate = dateMatch ? dateMatch[1] : selectedDay;
+    const hh = timeMatch ? String(timeMatch[1]).padStart(2, '0') : '';
+    const mm = timeMatch ? String(timeMatch[2]).padStart(2, '0') : '';
+    const reminder = hh && mm ? `${hh}:${mm}` : '';
+    setTitle(titleText || 'Nhắc việc từ AI');
+    setContent(`Lệnh AI: ${cmd}`);
+    setSelectedDay(targetDate);
+    setReminderTime(reminder);
+    setAddVisible(true);
+    setAiCommand('');
+    Alert.alert('AI', 'Đã phân tích lệnh. Bạn xác nhận và bấm Lưu để thực thi.');
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Lịch & Ghi chú</Text>
+      </View>
+
+      <Calendar
+        markedDates={markedDates}
+        onDayPress={(day) => setSelectedDay(day.dateString)}
+        theme={{
+          selectedDayBackgroundColor: '#f59e0b',
+          todayTextColor: '#b45309',
+        }}
+      />
+
+      <View style={styles.aiBox}>
+        <TextInput
+          style={styles.aiInput}
+          placeholder="Lệnh AI lịch (vd: nhắc tôi họp 2026-05-01 09:30)"
+          value={aiCommand}
+          onChangeText={setAiCommand}
+        />
+        <TouchableOpacity style={styles.aiBtn} onPress={runAiCalendarCommand}>
+          <Icon name="robot" size={14} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.dayHeader}>
+        <Text style={styles.dayText}>Ngày {selectedDay}</Text>
+        <TouchableOpacity style={styles.addBtn} onPress={() => setAddVisible(true)}>
+          <Icon name="plus" size={14} color="#fff" />
+          <Text style={styles.addText}>Thêm</Text>
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        data={notesByDay[selectedDay] || []}
+        keyExtractor={(item) => String(item.note_id)}
+        contentContainerStyle={{ padding: 12, paddingBottom: 40 }}
+        ListEmptyComponent={<Text style={styles.empty}>Chưa có ghi chú cho ngày này.</Text>}
+        renderItem={({ item }) => (
+          <View style={styles.noteRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.noteTitle}>{item.title || 'Không tiêu đề'}</Text>
+              <Text style={styles.noteContent}>{item.content || '-'}</Text>
+              {item.reminderAt ? <Text style={styles.noteMeta}>Nhắc lúc: {new Date(item.reminderAt).toLocaleString()}</Text> : null}
+            </View>
+            <TouchableOpacity style={styles.deleteBtn} onPress={() => deleteNote(item.note_id)}>
+              <Icon name="trash" size={12} color="#ef4444" />
             </TouchableOpacity>
-        );
-    };
+          </View>
+        )}
+      />
 
-    return (
-        <View style={{ flex: 1, backgroundColor: '#f8f9fa' }}>
-            <SafeAreaView style={{ flex: 1 }}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Ghi chú</Text>
-                    <TouchableOpacity style={styles.searchBtn}>
-                        <Icon name="search" size={18} color="#333" />
-                    </TouchableOpacity>
-                </View>
-
-                {/* Body */}
-                <View style={styles.container}>
-                    {loading ? (
-                        <ActivityIndicator size="large" color="#ffab33" style={{marginTop: 50}} />
-                    ) : notes.length === 0 ? (
-                        <View style={styles.emptyState}>
-                            <Image source={{ uri: EMPTY_IMAGE }} style={styles.emptyImage} resizeMode="contain" />
-                            <Text style={styles.emptyText}>Chưa có ghi chú nào</Text>
-                            <Text style={styles.emptySubText}>Hãy tạo ghi chú đầu tiên ngay nhé!</Text>
-                        </View>
-                    ) : (
-                        <FlatList
-                            data={notes}
-                            keyExtractor={(item) => item.note_id.toString()}
-                            numColumns={2}
-                            columnWrapperStyle={{ justifyContent: 'space-between' }}
-                            contentContainerStyle={{ paddingBottom: 100, paddingTop: 10 }}
-                            renderItem={renderNote}
-                            showsVerticalScrollIndicator={false}
-                            style={{ flex: 1 }} // QUAN TRỌNG: Giúp list dãn ra
-                        />
-                    )}
-                </View>
-
-                {/* FAB */}
-                <TouchableOpacity style={styles.fab} onPress={() => setAddNoteModalVisible(true)} activeOpacity={0.8}>
-                    <Icon name="plus" size={24} color="#fff" />
-                </TouchableOpacity>
-
-                {/* Option Modal */}
-                <Modal transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)} animationType="fade">
-                    <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalVisible(false)}>
-                        <View style={styles.optionModalContent}>
-                            <Text style={styles.modalHeaderTitle}>Tùy chọn</Text>
-                            <TouchableOpacity onPress={pinNote} style={styles.optionItem}>
-                                <Icon name="thumbtack" size={16} color="#555" style={{width: 30}} />
-                                <Text style={styles.optionText}>{selectedNote?.pinned ? "Bỏ ghim" : "Ghim ghi chú"}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={deleteNote} style={styles.optionItem}>
-                                <Icon name="trash-alt" size={16} color="#e74c3c" style={{width: 30}} />
-                                <Text style={[styles.optionText, {color: '#e74c3c'}]}>Xóa ghi chú</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </TouchableOpacity>
-                </Modal>
-
-                {/* Add Note Modal */}
-                <Modal transparent={true} visible={addNoteModalVisible} onRequestClose={() => setAddNoteModalVisible(false)} animationType="slide">
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.addNoteContainer}>
-                            <View style={styles.addNoteHeader}>
-                                <Text style={styles.addNoteTitle}>Ghi chú mới</Text>
-                                <TouchableOpacity onPress={() => setAddNoteModalVisible(false)}>
-                                    <Icon name="times" size={20} color="#555" />
-                                </TouchableOpacity>
-                            </View>
-                            <TextInput style={styles.titleInput} placeholder="Tiêu đề" value={newTitle} onChangeText={setNewTitle} placeholderTextColor="#999" />
-                            <TextInput style={styles.contentInput} placeholder="Nội dung ghi chú..." value={newDescription} onChangeText={setNewDescription} multiline textAlignVertical="top" placeholderTextColor="#999" />
-                            <TouchableOpacity style={styles.saveButton} onPress={saveNewNote}>
-                                <Text style={styles.saveButtonText}>Lưu ghi chú</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </Modal>
-            </SafeAreaView>
+      <Modal visible={addVisible} transparent animationType="fade" onRequestClose={() => setAddVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Thêm ghi chú ngày {selectedDay}</Text>
+            <TextInput style={styles.input} placeholder="Tiêu đề" value={title} onChangeText={setTitle} />
+            <TextInput style={[styles.input, { height: 80 }]} placeholder="Nội dung" value={content} onChangeText={setContent} multiline />
+            <TextInput style={styles.input} placeholder="Giờ nhắc (HH:mm), ví dụ 09:30" value={reminderTime} onChangeText={setReminderTime} />
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={[styles.btn, styles.cancel]} onPress={() => setAddVisible(false)}>
+                <Text style={styles.cancelText}>Huỷ</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.btn, styles.save]} onPress={saveNote}>
+                <Text style={styles.saveText}>Lưu</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-    );
+      </Modal>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-    header: {
-        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-        paddingHorizontal: 20, paddingTop: 0, paddingBottom: 15,
-        backgroundColor: '#f8f9fa' // Màu nền header trùng màu nền chính
-    },
-    headerTitle: { fontSize: 26, fontWeight: 'bold', color: '#333' },
-    searchBtn: { padding: 10, backgroundColor: '#fff', borderRadius: 20, elevation: 2 },
-    container: { flex: 1, paddingHorizontal: 15 },
-    
-    // Note Card
-    noteCard: {
-        width: NOTE_WIDTH, borderRadius: 16, padding: 15, marginBottom: 15,
-        shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 2,
-    },
-    noteHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-    noteTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', flex: 1, marginRight: 5 },
-    noteContent: { fontSize: 14, color: '#666', lineHeight: 20, marginBottom: 10, minHeight: 40 },
-    noteDate: { fontSize: 11, color: '#999', alignSelf: 'flex-end', fontStyle: 'italic' },
-
-    // Empty State
-    emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 50, opacity: 0.8 },
-    emptyImage: { width: 120, height: 120, marginBottom: 20 },
-    emptyText: { fontSize: 18, fontWeight: 'bold', color: '#555' },
-    emptySubText: { fontSize: 14, color: '#888', marginTop: 5 },
-
-    // FAB
-    fab: {
-        position: 'absolute', bottom: 30, right: 20, width: 56, height: 56, borderRadius: 28, backgroundColor: '#ffab33',
-        justifyContent: 'center', alignItems: 'center', elevation: 5, shadowColor: "#ffab33", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 4,
-    },
-
-    // Option Modal
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-    optionModalContent: { width: 250, backgroundColor: '#fff', borderRadius: 15, padding: 20, elevation: 5 },
-    modalHeaderTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 15, textAlign: 'center' },
-    optionItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
-    optionText: { fontSize: 16, color: '#333' },
-
-    // Add Note Modal
-    addNoteContainer: { width: width * 0.9, backgroundColor: '#fff', borderRadius: 20, padding: 20, height: '60%', elevation: 10 },
-    addNoteHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-    addNoteTitle: { fontSize: 20, fontWeight: 'bold', color: '#333' },
-    titleInput: { fontSize: 18, fontWeight: 'bold', borderBottomWidth: 1, borderBottomColor: '#eee', paddingVertical: 10, marginBottom: 15, color: '#333' },
-    contentInput: { flex: 1, fontSize: 16, color: '#333', lineHeight: 24, textAlignVertical: 'top' },
-    saveButton: { backgroundColor: '#ffab33', paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginTop: 15 },
-    saveButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  container: { flex: 1, backgroundColor: '#f8fafc' },
+  header: { paddingTop: 36, paddingHorizontal: 14, paddingBottom: 8 },
+  title: { fontSize: 22, fontWeight: '700', color: '#1f2937' },
+  aiBox: { flexDirection: 'row', paddingHorizontal: 12, marginTop: 8, gap: 8 },
+  aiInput: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8 },
+  aiBtn: { width: 38, borderRadius: 10, backgroundColor: '#0ea5e9', alignItems: 'center', justifyContent: 'center' },
+  dayHeader: { marginTop: 10, paddingHorizontal: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  dayText: { color: '#334155', fontWeight: '700' },
+  addBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f59e0b', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
+  addText: { color: '#fff', fontWeight: '700', marginLeft: 6 },
+  empty: { color: '#94a3b8', textAlign: 'center', marginTop: 16 },
+  noteRow: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 10, padding: 10, marginBottom: 8, borderWidth: 1, borderColor: '#f1f5f9' },
+  noteTitle: { color: '#111827', fontSize: 14, fontWeight: '700' },
+  noteContent: { color: '#475569', fontSize: 12, marginTop: 4 },
+  noteMeta: { color: '#0369a1', fontSize: 11, marginTop: 6 },
+  deleteBtn: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fee2e2', marginLeft: 8 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center', padding: 16 },
+  modalCard: { width: '100%', maxWidth: 380, borderRadius: 12, backgroundColor: '#fff', padding: 14 },
+  modalTitle: { fontSize: 16, fontWeight: '700', color: '#0f172a', marginBottom: 10 },
+  input: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8, marginBottom: 8, backgroundColor: '#f8fafc' },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 4 },
+  btn: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginLeft: 8 },
+  cancel: { backgroundColor: '#e2e8f0' },
+  save: { backgroundColor: '#f59e0b' },
+  cancelText: { color: '#334155', fontWeight: '600' },
+  saveText: { color: '#fff', fontWeight: '700' },
 });

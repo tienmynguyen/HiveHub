@@ -18,6 +18,8 @@ router.post("/addnote", (req, res) => {
     userId,
     title: body.title || "",
     content: body.content || "",
+    noteDate: body.noteDate || body.date || new Date().toISOString(),
+    reminderAt: body.reminderAt || null,
     date: body.date || new Date().toISOString(),
     pinned: Boolean(body.pinned),
   };

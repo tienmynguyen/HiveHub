@@ -7,7 +7,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Home from '../features/todo/screens/Home';
 import Profile from '../features/profile/screens/Profile';
 import Calendar from '../features/calendar/screens/Calendar';
-import Note from '../features/notes/screens/Note';
+import Assistant from '../features/assistant/screens/Assistant';
 import Project from '../features/todo/screens/Project';
 import Chat from '../features/chat/screens/Chat';
 import Plan from '../features/todo/screens/Plan';
@@ -37,11 +37,11 @@ function MainTabs() {
                         case 'Calendar':
                             iconName = focused ? 'calendar' : 'calendar-outline';
                             break;
-                        case 'Note':
-                            iconName = focused ? 'book' : 'book-outline';
-                            break;
                         case 'Project':
                             iconName = focused ? 'list' : 'list-outline';
+                            break;
+                        case 'Assistant':
+                            iconName = focused ? 'chatbubble-ellipses' : 'chatbubble-ellipses-outline';
                             break;
                     }
                     return <Ionicons name={iconName} size={size} color={color} />;
@@ -59,7 +59,7 @@ function MainTabs() {
             <Tab.Screen name="Home" component={Home} />
             <Tab.Screen name="Calendar" component={Calendar} />
             <Tab.Screen name="Project" component={Project} />
-            <Tab.Screen name="Note" component={Note} />
+            <Tab.Screen name="Assistant" component={Assistant} />
             <Tab.Screen name="Profile" component={Profile} />
            
         </Tab.Navigator>

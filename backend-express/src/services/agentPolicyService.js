@@ -1,0 +1,35 @@
+const { isOwner } = require("./projectAccess");
+
+function canExecuteAction(db, action, userId) {
+  const roleOwner = isOwner(db, action.projectId, userId);
+  switch (action.type) {
+    case "CREATE_PROJECT":
+      return true;
+    case "CREATE_SPRINT":
+    case "CREATE_STORY":
+    case "CREATE_TASK":
+    case "UPDATE_SPRINT_STATUS":
+      return roleOwner;
+    default:
+      return false;
+  }
+}
+
+function explainPolicy(action) {
+  switch (action.type) {
+    case "CREATE_PROJECT":
+      return "Mọi user đã đăng nhập đều có thể tạo project.";
+    case "CREATE_SPRINT":
+    case "CREATE_STORY":
+    case "CREATE_TASK":
+    case "UPDATE_SPRINT_STATUS":
+      return "Chỉ Owner của project mới được phép thực hiện thao tác này.";
+    default:
+      return "Không xác định quyền cho thao tác.";
+  }
+}
+
+module.exports = {
+  canExecuteAction,
+  explainPolicy,
+};

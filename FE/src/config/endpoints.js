@@ -76,5 +76,12 @@ export const endpoints = {
         getMessages: (projectId) => `${BASE_URL}/chat/getallmessage?projectId=${projectId}`,
         addMessage: () => `${BASE_URL}/chat/addmessage`,
     },
+    agent: {
+        chat: () => `${BASE_URL}/agent/chat`,
+        plan: () => `${BASE_URL}/agent/plan`,
+        report: () => `${BASE_URL}/agent/report`,
+        preview: () => `${BASE_URL}/agent/commands/preview`,
+        execute: () => `${BASE_URL}/agent/commands/execute`,
+    },
 };
 

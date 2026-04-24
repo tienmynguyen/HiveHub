@@ -1,9 +1,10 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, TextInput, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, TextInput, Alert, Modal, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import axios from 'axios';
 import { AuthContext } from '../../auth/context/AuthContext';
 import { endpoints } from '../../../config/endpoints';
+import { getAvatarSource } from '../../../utils/avatar';
 
 function formatDate(isoString) {
   if (!isoString) return '--';
@@ -169,8 +170,11 @@ export default function StoryDetail({ navigation, route }) {
           {comments.length === 0 ? <Text style={styles.emptyText}>Chưa có comment</Text> : null}
           {comments.map((cmt, idx) => (
             <View key={cmt.comment_id || idx} style={styles.commentRow}>
-              <Text style={styles.commentAuthor}>{cmt?.users?.username || 'User'}</Text>
-              <Text style={styles.commentText}>{cmt.commmentContent}</Text>
+              <Image source={getAvatarSource(cmt?.users)} style={styles.commentAvatar} />
+              <View style={styles.commentBody}>
+                <Text style={styles.commentAuthor}>{cmt?.users?.username || 'User'}</Text>
+                <Text style={styles.commentText}>{cmt.commmentContent}</Text>
+              </View>
             </View>
           ))}
           <View style={styles.commentInputRow}>
@@ -220,7 +224,7 @@ export default function StoryDetail({ navigation, route }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f6f7fb' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 36, paddingBottom: 12, backgroundColor: '#fff' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 0, paddingBottom: 12, backgroundColor: '#fff' },
   backBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f1f1' },
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#333' },
   content: { padding: 14, paddingBottom: 30 },
@@ -241,7 +245,9 @@ const styles = StyleSheet.create({
   taskTextWrap: { flex: 1, marginRight: 8 },
   taskTitle: { fontWeight: '600', color: '#2e3440', fontSize: 13 },
   taskSub: { color: '#888', fontSize: 11, marginTop: 4 },
-  commentRow: { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f1f2f4' },
+  commentRow: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f1f2f4' },
+  commentAvatar: { width: 28, height: 28, borderRadius: 14, marginRight: 8, backgroundColor: '#e5e7eb' },
+  commentBody: { flex: 1 },
   commentAuthor: { fontSize: 12, fontWeight: '700', color: '#444' },
   commentText: { fontSize: 13, color: '#555', marginTop: 2 },
   commentInputRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },

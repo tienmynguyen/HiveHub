@@ -9,7 +9,13 @@ const io = new Server(server, {
   cors: { origin: "*" },
 });
 const app = createApp(io);
-server.on("request", app);
+server.on("request", (req, res) => {
+  // Let socket.io own its transport endpoint to avoid double-handling.
+  if (req.url && req.url.startsWith("/socket.io")) {
+    return;
+  }
+  return app(req, res);
+});
 
 // Socket namespace compatible with FE: io(`${URLAPI}/ws`)
 io.of("/ws").on("connection", (socket) => {
