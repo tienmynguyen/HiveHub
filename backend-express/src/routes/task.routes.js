@@ -1,7 +1,10 @@
 const express = require("express");
 const { v4: uuidv4 } = require("uuid");
 const { readDb, writeDb, ensureScrumSchema } = require("../data/db");
-const { isOwner, ensureDefaultStoryForProject, createOwnerNotification } = require("../services/projectAccess");
+const env = require("../config/env");
+const { canManageProject, ensureDefaultStoryForProject, createOwnerNotification } = require("../services/projectAccess");
+const { recordTaskApprovalOnChain } = require("../services/blockchainAuditService");
+const { isEnabled: isOnchainEnabled, submitTaskApprovalOnChain } = require("../services/onchainApprovalService");
 
 const router = express.Router();
 
@@ -12,8 +15,8 @@ router.post("/addtask", (req, res) => {
   const body = req.body || {};
   const db = readDb();
   ensureScrumSchema(db);
-  if (!isOwner(db, projectId, ownerId)) {
-    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner can create subtask" });
+  if (!canManageProject(db, projectId, ownerId)) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or management can create subtask" });
   }
   const fallback = ensureDefaultStoryForProject(db, projectId);
   const storyId = Number(body.storyId || storyIdFromQuery || fallback.story.story_id);
@@ -96,12 +99,12 @@ router.post("/updatetask", (req, res) => {
   const db = readDb();
   const task = db.tasks.find((t) => t.task_id === taskId);
   if (!task) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Task not found" });
-  const owner = isOwner(db, task.project_id, userId);
+  const manager = canManageProject(db, task.project_id, userId);
   const assigned = db.userTasks.some((x) => Number(x.taskId) === Number(taskId) && Number(x.userId) === Number(userId));
-  if (!owner && !assigned) {
+  if (!manager && !assigned) {
     return res.status(403).json({ code: "FORBIDDEN", message: "Not allowed to update this subtask" });
   }
-  if (!owner) {
+  if (!manager) {
     if (body.taskStatus !== undefined) task.taskStatus = body.taskStatus;
     createOwnerNotification(
       db,
@@ -117,15 +120,90 @@ router.post("/updatetask", (req, res) => {
   return res.json(task);
 });
 
-router.post("/approvetask", (req, res) => {
+router.post("/approvetask", async (req, res) => {
   const taskId = Number(req.body.taskId);
+  const approverId = Number(req.body.adminId || req.body.userId || 0);
   const db = readDb();
+  ensureScrumSchema(db);
   const task = db.tasks.find((t) => t.task_id === taskId);
   if (!task) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Task not found" });
-  task.taskStatus = "COMPLETED";
+  if (!canManageProject(db, task.project_id, approverId)) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or management can approve subtask" });
+  }
+
+  let chainRecord = null;
+  const approvalPayload = {
+    taskId: task.task_id,
+    projectId: task.project_id,
+    approverUserId: approverId,
+    approvedStatus: "APPROVED",
+    note: String(req.body.note || ""),
+  };
+  try {
+    if (isOnchainEnabled()) {
+      chainRecord = await submitTaskApprovalOnChain(approvalPayload);
+    } else {
+      chainRecord = { mode: "off" };
+    }
+  } catch (err) {
+    if (env.BLOCKCHAIN_REQUIRED) {
+      return res.status(503).json({
+        code: "BLOCKCHAIN_UNAVAILABLE",
+        message: `Blockchain approval failed: ${err?.message || err}`,
+      });
+    }
+    chainRecord = { mode: "fallback_error", error: err?.message || String(err) };
+  }
+
+  const auditRecord = recordTaskApprovalOnChain(db, approvalPayload);
+  const effectiveTxHash = chainRecord?.txHash || auditRecord.txHash;
+  const effectiveBlockHash = chainRecord?.blockHash || auditRecord.blockHash;
+
+  task.taskStatus = "APPROVED";
   task.is_approved = true;
+  task.approvedBy = approverId;
+  task.approvedAt = new Date().toISOString();
+  task.txHash = effectiveTxHash;
+  task.blockHash = effectiveBlockHash;
+  task.onChainMode = chainRecord?.mode || "local_audit";
+  task.onChainSynced = Boolean(chainRecord?.txHash);
   writeDb(db);
-  return res.json({ taskStatus: task.taskStatus, message: "Approved" });
+  return res.json({
+    taskStatus: task.taskStatus,
+    txHash: effectiveTxHash,
+    blockHash: effectiveBlockHash,
+    onChainMode: task.onChainMode,
+    onChainSynced: task.onChainSynced,
+    message: task.onChainSynced
+      ? "Approved and recorded on blockchain"
+      : "Approved with local audit fallback",
+  });
+});
+
+router.get("/task-approval/:taskId", (req, res) => {
+  const taskId = Number(req.params.taskId || 0);
+  const db = readDb();
+  const task = db.tasks.find((t) => Number(t.task_id) === taskId);
+  if (!task) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Task not found" });
+
+  const txHash = task.txHash || null;
+  const explorerTxUrl =
+    txHash && env.BLOCKCHAIN_EXPLORER_TX_URL
+      ? `${String(env.BLOCKCHAIN_EXPLORER_TX_URL).replace(/\/$/, "")}/${txHash}`
+      : null;
+
+  return res.json({
+    taskId: task.task_id,
+    taskStatus: task.taskStatus,
+    isApproved: Boolean(task.is_approved),
+    approvedBy: task.approvedBy || null,
+    approvedAt: task.approvedAt || null,
+    txHash,
+    blockHash: task.blockHash || null,
+    onChainMode: task.onChainMode || null,
+    onChainSynced: Boolean(task.onChainSynced),
+    explorerTxUrl,
+  });
 });
 
 router.post("/rejecttask", (req, res) => {

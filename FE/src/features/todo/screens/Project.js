@@ -22,6 +22,7 @@ export default function Project({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [joinModalVisible, setJoinModalVisible] = useState(false);
     const [joinProjectCode, setJoinProjectCode] = useState('');
+    const [unreadByProject, setUnreadByProject] = useState({});
     
     const [loading, setLoading] = useState(false);
     const isFocused = useIsFocused();
@@ -39,14 +40,36 @@ export default function Project({ navigation }) {
             
             if (data && data.length > 0) {
                 setTasks(data);
+                await hydrateUnreadStatus(data);
             } else {
                 // Nếu API trả về rỗng, có thể để mảng rỗng hoặc mock data tùy bạn
                 setTasks([]); 
+                setUnreadByProject({});
             }
         } catch (error) {
             console.error("Lỗi lấy danh sách dự án:", error);
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function hydrateUnreadStatus(projects) {
+        try {
+            const entries = await Promise.all(
+                projects.map(async (p) => {
+                    try {
+                        const { data: messages } = await axios.get(endpoints.chat.getMessages(p.project_id));
+                        if (!Array.isArray(messages) || messages.length === 0) return [String(p.project_id), false];
+                        const hasUnread = messages.some((m) => Number(m.user_id) !== Number(userData?.user_id));
+                        return [String(p.project_id), hasUnread];
+                    } catch (_err) {
+                        return [String(p.project_id), false];
+                    }
+                }),
+            );
+            setUnreadByProject(Object.fromEntries(entries));
+        } catch (_err) {
+            setUnreadByProject({});
         }
     }
 
@@ -66,13 +89,7 @@ export default function Project({ navigation }) {
             
             try {
                 await axios.post(joinUrl, {});
-                // BƯỚC 2: Gọi API Update User Project (Set Role)
-                // Logic cũ: roleId=1
-                const roleUrl = endpoints.projects.updateUserRole(joinProjectCode, userData.user_id, 1);
-                
-                await axios.post(roleUrl, {});
-
-                // THÀNH CÔNG
+                // THÀNH CÔNG (joinproject đã gán vai trò Member)
                 Alert.alert('Thành công', 'Tham gia dự án thành công!');
                 setJoinModalVisible(false); // Tắt modal
                 setJoinProjectCode('');     // Xóa mã đã nhập
@@ -89,7 +106,10 @@ export default function Project({ navigation }) {
         }
     };
 
-    const gotoChat = (id, name, des) => navigation.navigate('Chat', { projectId: id, projectName: name, projectDes: des });
+    const gotoChat = (id, name, des) => {
+        setUnreadByProject((prev) => ({ ...prev, [String(id)]: false }));
+        navigation.navigate('Chat', { projectId: id, projectName: name, projectDes: des });
+    };
     const gotoPlan = (id, name) => navigation.navigate('Plan', { projectId: id, projectName: name });
     const gotoAddProject = () => navigation.navigate('AddProject');
 
@@ -101,7 +121,7 @@ export default function Project({ navigation }) {
         <TouchableOpacity 
             activeOpacity={0.9}
             style={styles.cardContainer}
-            onPress={() => gotoChat(item.project_id, item.projectName, item.projectDescription)}
+            onPress={() => gotoPlan(item.project_id, item.projectName)}
         >
             <View style={styles.iconContainer}>
                 <Image source={require("../../../../navigation/screens/images/group.png")} style={styles.projectIcon} />
@@ -112,8 +132,15 @@ export default function Project({ navigation }) {
                     {item.projectDescription || "No description"}
                 </Text>
             </View>
-            <TouchableOpacity style={styles.planButton} onPress={() => gotoPlan(item.project_id, item.projectName)}>
-                <Icon name="list-ul" color={'#ffab33'} size={20} />
+            <TouchableOpacity
+                style={styles.planButton}
+                onPress={(e) => {
+                    e.stopPropagation?.();
+                    gotoChat(item.project_id, item.projectName, item.projectDescription);
+                }}
+            >
+                <Icon name="comments" color={'#ffab33'} size={20} />
+                {unreadByProject[String(item.project_id)] ? <View style={styles.unreadDot} /> : null}
             </TouchableOpacity>
         </TouchableOpacity>
     );
@@ -294,7 +321,18 @@ const styles = StyleSheet.create({
     contentContainer: { flex: 1, justifyContent: 'center' },
     projectTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 4 },
     projectDesc: { fontSize: 13, color: '#888' },
-    planButton: { padding: 10, backgroundColor: '#fff5e6', borderRadius: 10, marginLeft: 10 },
+    planButton: { padding: 10, backgroundColor: '#fff5e6', borderRadius: 10, marginLeft: 10, position: 'relative' },
+    unreadDot: {
+        position: 'absolute',
+        top: 4,
+        right: 4,
+        width: 9,
+        height: 9,
+        borderRadius: 5,
+        backgroundColor: '#ef4444',
+        borderWidth: 1,
+        borderColor: '#fff',
+    },
     
     // Modal styles
     modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.6)' },

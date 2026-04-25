@@ -1,6 +1,6 @@
 const express = require("express");
 const { readDb, writeDb, ensureScrumSchema, nextNumericId } = require("../data/db");
-const { isOwner, createOwnerNotification } = require("../services/projectAccess");
+const { canManageProject, createOwnerNotification } = require("../services/projectAccess");
 
 const router = express.Router();
 
@@ -36,8 +36,8 @@ router.post("/addsprint", (req, res) => {
   const body = req.body || {};
   const db = readDb();
   ensureScrumSchema(db);
-  if (!isOwner(db, projectId, ownerId)) {
-    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner can create sprint" });
+  if (!canManageProject(db, projectId, ownerId)) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or management can create sprint" });
   }
   const sprint = {
     sprint_id: nextNumericId(db.sprints, "sprint_id"),
@@ -69,8 +69,8 @@ router.post("/updatesprint", (req, res) => {
   ensureScrumSchema(db);
   const sprint = db.sprints.find((x) => Number(x.sprint_id) === sprintId);
   if (!sprint) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Sprint not found" });
-  if (!isOwner(db, sprint.project_id, userId)) {
-    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner can update sprint" });
+  if (!canManageProject(db, sprint.project_id, userId)) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or management can update sprint" });
   }
   if (body.sprintName !== undefined) sprint.sprintName = body.sprintName;
   if (body.sprintGoal !== undefined) sprint.sprintGoal = body.sprintGoal;
@@ -88,8 +88,8 @@ router.delete("/deletesprint", (req, res) => {
   ensureScrumSchema(db);
   const sprint = db.sprints.find((x) => Number(x.sprint_id) === sprintId);
   if (!sprint) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Sprint not found" });
-  if (!isOwner(db, sprint.project_id, userId)) {
-    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner can delete sprint" });
+  if (!canManageProject(db, sprint.project_id, userId)) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or management can delete sprint" });
   }
 
   const storyIds = db.stories.filter((x) => Number(x.sprint_id) === sprintId).map((x) => Number(x.story_id));
@@ -139,8 +139,8 @@ router.post("/addstory", (req, res) => {
   const body = req.body || {};
   const db = readDb();
   ensureScrumSchema(db);
-  if (!isOwner(db, projectId, ownerId)) {
-    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner can create story" });
+  if (!canManageProject(db, projectId, ownerId)) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or management can create story" });
   }
 
   const story = {
@@ -175,7 +175,9 @@ router.get("/getstorybyprojectid", (req, res) => {
       assignee = db.users.find((u) => Number(u.user_id) === Number(story.assignee_user_id)) || null;
     }
     const storySubTasks = db.tasks.filter((t) => Number(t.story_id) === Number(story.story_id));
-    const completedCount = storySubTasks.filter((t) => t.taskStatus === "COMPLETED" || t.taskStatus === "DONE").length;
+    const completedCount = storySubTasks.filter(
+      (t) => t.taskStatus === "COMPLETED" || t.taskStatus === "DONE" || t.taskStatus === "APPROVED"
+    ).length;
     return {
       ...story,
       assignee,
@@ -196,7 +198,9 @@ router.get("/getstorybyid", (req, res) => {
     ? db.users.find((u) => Number(u.user_id) === Number(story.assignee_user_id)) || null
     : null;
   const subTasks = db.tasks.filter((t) => Number(t.story_id) === storyId);
-  const completedCount = subTasks.filter((t) => t.taskStatus === "COMPLETED" || t.taskStatus === "DONE").length;
+  const completedCount = subTasks.filter(
+    (t) => t.taskStatus === "COMPLETED" || t.taskStatus === "DONE" || t.taskStatus === "APPROVED"
+  ).length;
   return res.json({
     ...story,
     assignee,
@@ -213,13 +217,13 @@ router.post("/updatestory", (req, res) => {
   ensureScrumSchema(db);
   const story = db.stories.find((x) => Number(x.story_id) === storyId);
   if (!story) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Story not found" });
-  const owner = isOwner(db, story.project_id, userId);
+  const manager = canManageProject(db, story.project_id, userId);
   const assignee = Number(story.assignee_user_id || 0) === Number(userId);
-  if (!owner && !assignee) {
+  if (!manager && !assignee) {
     return res.status(403).json({ code: "FORBIDDEN", message: "Not allowed to update this story" });
   }
 
-  if (!owner) {
+  if (!manager) {
     if (body.storyStatus !== undefined) story.storyStatus = body.storyStatus;
     createOwnerNotification(
       db,

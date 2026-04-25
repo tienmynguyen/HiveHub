@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { 
     View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert, 
     ScrollView, TextInput, Image, KeyboardAvoidingView, Platform, 
-    Keyboard 
+    Keyboard, Linking
 } from 'react-native';
 import Modal from 'react-native-modal';
 import Icon from 'react-native-vector-icons/FontAwesome5'; 
@@ -16,7 +16,7 @@ export default function PlanDetail({ navigation, route }) {
     const { userData } = useContext(AuthContext);
 
     // --- HELPER: LOGIC KHỞI TẠO ---
-    const isAlreadyApproved = task.taskStatus === 'COMPLETED';
+    const isAlreadyApproved = task.taskStatus === 'COMPLETED' || task.taskStatus === 'APPROVED';
     
     // --- STATE ---
     const [isModalVisible, setModalVisible] = useState(false); 
@@ -24,7 +24,7 @@ export default function PlanDetail({ navigation, route }) {
     
     const [commentList, setCommentList] = useState(task.commentList || []);
     
-    const [status, setStatus] = useState(isAlreadyApproved ? 'COMPLETED' : task.taskStatus);
+    const [status, setStatus] = useState(isAlreadyApproved ? 'APPROVED' : task.taskStatus);
 
     const [users, setUsers] = useState([]);
     const [comment, setComment] = useState(''); 
@@ -32,11 +32,13 @@ export default function PlanDetail({ navigation, route }) {
     
     const [pendingStatus, setPendingStatus] = useState(null);
     const [statusReason, setStatusReason] = useState('');
+    const [approvalInfo, setApprovalInfo] = useState(null);
 
     useEffect(() => {
         fetchData();
         fetchComments();
         checkRole();
+        fetchApprovalInfo();
     }, []);
 
     // --- API HELPER ---
@@ -67,6 +69,15 @@ export default function PlanDetail({ navigation, route }) {
             const { data } = await axios.get(endpoints.tasks.getComments(task.task_id));
             if (Array.isArray(data)) setCommentList(data);
         } catch (error) { console.error("Lỗi fetch comments:", error); }
+    }
+
+    async function fetchApprovalInfo() {
+        try {
+            const { data } = await axios.get(endpoints.tasks.getApproval(task.task_id));
+            setApprovalInfo(data || null);
+        } catch (_error) {
+            setApprovalInfo(null);
+        }
     }
 
     // --- CÁC HÀM GỌI API ---
@@ -138,21 +149,21 @@ export default function PlanDetail({ navigation, route }) {
         setCommentModalVisible(false);
 
         const currentRole = Number(role); 
-        const isOwner = currentRole === 3;
+        const isManager = currentRole === 3 || currentRole === 2;
         
-        const isApproveAction = (newStatus === 'COMPLETED' || newStatus === 'DONE');
+        const isApproveAction = (newStatus === 'APPROVED' || newStatus === 'COMPLETED' || newStatus === 'DONE');
 
         setTimeout(async () => {
             try {
                 let updatedTask = null;
                 let isApprovedSuccess = false;
 
-                if (isOwner && isApproveAction) {
+                if (isManager && isApproveAction) {
                     const res = await apiApproveTask();
                     
-                    if (res && res.taskStatus === 'COMPLETED') {
-                        updatedTask = { taskStatus: 'COMPLETED' }; 
-                        setStatus('COMPLETED');
+                    if (res && (res.taskStatus === 'APPROVED' || res.taskStatus === 'COMPLETED')) {
+                        updatedTask = { taskStatus: 'APPROVED' }; 
+                        setStatus('APPROVED');
                         isApprovedSuccess = true;
                         
                         Alert.alert("Thành công! 🎉", "Đã duyệt công việc.");
@@ -160,7 +171,7 @@ export default function PlanDetail({ navigation, route }) {
                         Alert.alert("Lỗi", res?.message || "Không thể duyệt bài. Vui lòng thử lại.");
                     }
 
-                } else if (isOwner && newStatus === 'REJECTED') {
+                } else if (isManager && newStatus === 'REJECTED') {
                     // --- CASE 2: TỪ CHỐI ---
                     updatedTask = await apiRejectTask(reason);
                     if (updatedTask) {
@@ -180,13 +191,14 @@ export default function PlanDetail({ navigation, route }) {
                     let prefix = `[TRẠNG THÁI: ${newStatus}]`;
                     
                     // Nếu duyệt thành công thì ghi đè prefix cho đẹp
-                    if (isApprovedSuccess) prefix = `✅ OWNER ĐÃ DUYỆT`;
-                    else if (newStatus === 'REJECTED') prefix = `❌ OWNER ĐÃ TỪ CHỐI`;
+                    if (isApprovedSuccess) prefix = `✅ MANAGER ĐÃ DUYỆT (ON-CHAIN)`;
+                    else if (newStatus === 'REJECTED') prefix = `❌ MANAGER ĐÃ TỪ CHỐI`;
 
                     let finalComment = prefix;
                     if (reason && reason.trim() !== "") finalComment += `: ${reason}`;
                     await apiPostComment(finalComment);
                     fetchComments();
+                    fetchApprovalInfo();
                 }
 
             } catch (error) {
@@ -206,7 +218,7 @@ export default function PlanDetail({ navigation, route }) {
     };
 
     const getStatusStyle = (st) => {
-        if (st === 'COMPLETED') {
+        if (st === 'COMPLETED' || st === 'APPROVED') {
             return { bg: '#d5f5e3', color: '#27ae60', label: 'Approved' };
         }
 
@@ -247,13 +259,35 @@ export default function PlanDetail({ navigation, route }) {
                             </TouchableOpacity>
                         </View>
                         <Text style={styles.description}>{task.description || "Không có mô tả."}</Text>
+                        {approvalInfo?.txHash ? (
+                            <View style={styles.chainInfoBox}>
+                                <Text style={styles.chainInfoTitle}>Blockchain approval</Text>
+                                <Text style={styles.chainInfoSub} numberOfLines={1}>txHash: {approvalInfo.txHash}</Text>
+                                <TouchableOpacity
+                                    style={styles.chainLinkBtn}
+                                    onPress={() => {
+                                        const url = approvalInfo.explorerTxUrl;
+                                        if (!url) {
+                                            Alert.alert('Thiếu cấu hình', 'Chưa có BLOCKCHAIN_EXPLORER_TX_URL trên backend.');
+                                            return;
+                                        }
+                                        Linking.openURL(url).catch(() => {
+                                            Alert.alert('Lỗi', 'Không thể mở explorer URL.');
+                                        });
+                                    }}
+                                >
+                                    <Icon name="external-link-alt" size={12} color="#2563eb" />
+                                    <Text style={styles.chainLinkText}>Xem trên explorer</Text>
+                                </TouchableOpacity>
+                            </View>
+                        ) : null}
 
                         {/* OWNER ACTIONS */}
-                        {Number(role) === 3 && status !== 'COMPLETED' && status !== 'REJECTED' && (
+                        {(Number(role) === 3 || Number(role) === 2) && status !== 'APPROVED' && status !== 'COMPLETED' && status !== 'REJECTED' && (
                             <View style={styles.ownerActionBlock}>
-                                <Text style={styles.ownerLabel}>Xác nhận của Owner:</Text>
+                                <Text style={styles.ownerLabel}>Xác nhận của Owner / Management:</Text>
                                 <View style={styles.ownerBtnRow}>
-                                    <TouchableOpacity style={[styles.ownerBtn, {backgroundColor: '#d5f5e3', borderColor: '#2ecc71'}]} onPress={() => handleOwnerAction('COMPLETED')}>
+                                    <TouchableOpacity style={[styles.ownerBtn, {backgroundColor: '#d5f5e3', borderColor: '#2ecc71'}]} onPress={() => handleOwnerAction('APPROVED')}>
                                         <Icon name="check" size={14} color="#27ae60" />
                                         <Text style={{color: '#27ae60', fontWeight: 'bold', marginLeft: 5}}>Duyệt</Text>
                                     </TouchableOpacity>
@@ -375,17 +409,17 @@ export default function PlanDetail({ navigation, route }) {
             {/* MODAL 2: NHẬP LÝ DO (REASON) */}
             <Modal isVisible={isCommentModalVisible} style={styles.centerModal} avoidKeyboard={true} useNativeDriver={true}>
                 <View style={styles.dialogCard}>
-                    <Icon name={pendingStatus === 'COMPLETED' ? "check-circle" : (pendingStatus === 'REJECTED' ? "times-circle" : "pen-alt")} 
+                    <Icon name={pendingStatus === 'APPROVED' || pendingStatus === 'COMPLETED' ? "check-circle" : (pendingStatus === 'REJECTED' ? "times-circle" : "pen-alt")} 
                           size={40} 
-                          color={pendingStatus === 'COMPLETED' ? "#27ae60" : (pendingStatus === 'REJECTED' ? "#c0392b" : "#ffad44")} 
+                          color={pendingStatus === 'APPROVED' || pendingStatus === 'COMPLETED' ? "#27ae60" : (pendingStatus === 'REJECTED' ? "#c0392b" : "#ffad44")} 
                           style={{ alignSelf: 'center', marginBottom: 15 }} />
                     
                     <Text style={styles.dialogTitle}>
-                        {pendingStatus === 'COMPLETED' ? "Xác nhận Duyệt" : (pendingStatus === 'REJECTED' ? "Xác nhận Từ chối" : "Cập nhật trạng thái")}
+                        {pendingStatus === 'APPROVED' || pendingStatus === 'COMPLETED' ? "Xác nhận Duyệt" : (pendingStatus === 'REJECTED' ? "Xác nhận Từ chối" : "Cập nhật trạng thái")}
                     </Text>
                     
                     <Text style={styles.dialogSub}>
-                        {pendingStatus === 'COMPLETED' ? 'Duyệt công việc.' : `Bạn đang chuyển sang ${pendingStatus}.`}
+                        {pendingStatus === 'APPROVED' || pendingStatus === 'COMPLETED' ? 'Duyệt công việc và ghi blockchain.' : `Bạn đang chuyển sang ${pendingStatus}.`}
                         {'\n'}Nhập ghi chú (nếu có):
                     </Text>
                     
@@ -428,6 +462,11 @@ const styles = StyleSheet.create({
     statusBadge: { flexDirection: 'row', alignItems: 'center', paddingVertical: 5, paddingHorizontal: 10, borderRadius: 20 },
     statusText: { fontWeight: 'bold', fontSize: 12 },
     description: { color: '#666', fontSize: 15, lineHeight: 22 },
+    chainInfoBox: { marginTop: 12, backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 10, padding: 10 },
+    chainInfoTitle: { color: '#1d4ed8', fontWeight: '700', fontSize: 12 },
+    chainInfoSub: { color: '#1e40af', fontSize: 11, marginTop: 4 },
+    chainLinkBtn: { marginTop: 8, flexDirection: 'row', alignItems: 'center' },
+    chainLinkText: { color: '#2563eb', fontWeight: '700', fontSize: 12, marginLeft: 6 },
     
     // Owner Actions
     ownerActionBlock: { marginTop: 15, borderTopWidth: 1, borderTopColor: '#eee', paddingTop: 10 },

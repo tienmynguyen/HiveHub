@@ -40,7 +40,7 @@ export default function StoryDetail({ navigation, route }) {
 
   const completion = useMemo(() => {
     if (!subTasks.length) return 0;
-    const done = subTasks.filter((x) => x.taskStatus === 'COMPLETED' || x.taskStatus === 'DONE').length;
+    const done = subTasks.filter((x) => x.taskStatus === 'COMPLETED' || x.taskStatus === 'DONE' || x.taskStatus === 'APPROVED').length;
     return Math.round((done * 100) / subTasks.length);
   }, [subTasks]);
   const statusUi = getStoryStatusUi(story?.storyStatus);

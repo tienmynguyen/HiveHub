@@ -56,7 +56,7 @@ function intersectsRange(start, end, rangeStart, rangeEnd) {
 
 function getSubtaskColor(status) {
   const s = String(status || '').toUpperCase();
-  if (s === 'DONE' || s === 'COMPLETED') return CONFIG.colors.subtaskDone;
+  if (s === 'DONE' || s === 'COMPLETED' || s === 'APPROVED') return CONFIG.colors.subtaskDone;
   if (s === 'IN_PROGRESS' || s === 'DOING') return CONFIG.colors.subtaskProgress;
   if (s === 'TODO') return CONFIG.colors.subtaskTodo;
   return CONFIG.colors.subtaskOther;

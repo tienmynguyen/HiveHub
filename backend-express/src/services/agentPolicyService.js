@@ -1,7 +1,7 @@
-const { isOwner } = require("./projectAccess");
+const { canManageProject } = require("./projectAccess");
 
 function canExecuteAction(db, action, userId) {
-  const roleOwner = isOwner(db, action.projectId, userId);
+  const canManage = canManageProject(db, action.projectId, userId);
   switch (action.type) {
     case "CREATE_PROJECT":
     case "CREATE_PROJECT_BLUEPRINT":
@@ -11,7 +11,7 @@ function canExecuteAction(db, action, userId) {
     case "CREATE_STORY":
     case "CREATE_TASK":
     case "UPDATE_SPRINT_STATUS":
-      return roleOwner;
+      return canManage;
     default:
       return false;
   }
@@ -29,7 +29,7 @@ function explainPolicy(action) {
     case "CREATE_STORY":
     case "CREATE_TASK":
     case "UPDATE_SPRINT_STATUS":
-      return "Chỉ Owner của project mới được phép thực hiện thao tác này.";
+      return "Chỉ Owner hoặc Management của project mới được phép thực hiện thao tác này.";
     default:
       return "Không xác định quyền cho thao tác.";
   }

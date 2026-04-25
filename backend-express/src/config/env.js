@@ -23,6 +23,15 @@ const env = {
   MONGODB_COLLECTION: process.env.MONGODB_COLLECTION || "app_state",
   MONGODB_DOCUMENT_ID: process.env.MONGODB_DOCUMENT_ID || "hivehub_main",
   CORS_ORIGINS: process.env.CORS_ORIGINS || "*",
+  BLOCKCHAIN_ENABLED: String(process.env.BLOCKCHAIN_ENABLED || "false").toLowerCase() === "true",
+  BLOCKCHAIN_REQUIRED: String(process.env.BLOCKCHAIN_REQUIRED || "false").toLowerCase() === "true",
+  BLOCKCHAIN_RPC_URL: process.env.BLOCKCHAIN_RPC_URL || "",
+  BLOCKCHAIN_CHAIN_ID: process.env.BLOCKCHAIN_CHAIN_ID ? Number(process.env.BLOCKCHAIN_CHAIN_ID) : undefined,
+  BLOCKCHAIN_PRIVATE_KEY: process.env.BLOCKCHAIN_PRIVATE_KEY || "",
+  BLOCKCHAIN_CONTRACT_ADDRESS: process.env.BLOCKCHAIN_CONTRACT_ADDRESS || "",
+  BLOCKCHAIN_APPROVE_METHOD: process.env.BLOCKCHAIN_APPROVE_METHOD || "approveTask",
+  BLOCKCHAIN_CONFIRMATIONS: Number(process.env.BLOCKCHAIN_CONFIRMATIONS || 1),
+  BLOCKCHAIN_EXPLORER_TX_URL: process.env.BLOCKCHAIN_EXPLORER_TX_URL || "",
 };
 
 module.exports = env;

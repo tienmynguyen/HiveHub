@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, TextInput, ScrollView, SafeAreaView, Dimensions, ActivityIndicator, StatusBar, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, Alert, Image, TouchableOpacity, TextInput, ScrollView, SafeAreaView, Dimensions, ActivityIndicator, StatusBar, RefreshControl, Switch } from 'react-native';
 import { AuthContext } from '../../auth/context/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -20,8 +20,12 @@ export default function Profile({ navigation }) {
     const [editname, setEditname] = useState('');
     const [editemail, setEditemail] = useState('');
     const [loading, setLoading] = useState(false);
+    const [dashboardLoading, setDashboardLoading] = useState(false);
     // State cho việc kéo xuống refresh
     const [refreshing, setRefreshing] = useState(false);
+    const [myProjects, setMyProjects] = useState([]);
+    const [myStats, setMyStats] = useState({ done: 0, overdue: 0, totalTasks: 0, totalProjects: 0 });
+    const [notificationEnabled, setNotificationEnabled] = useState(true);
 
     function guessMimeType(uri = '') {
         const lower = String(uri).toLowerCase();
@@ -38,14 +42,63 @@ export default function Profile({ navigation }) {
             setDescription(userData.description || "");
             setEditname(userData.username || "User");
             setEditemail(userData.email || "email@example.com");
+            loadDashboardData();
         }
     }, [userData]);
 
     // Hàm xử lý kéo xuống để refresh
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
-        setTimeout(() => setRefreshing(false), 600);
+        loadDashboardData().finally(() => setRefreshing(false));
     }, []);
+
+    async function loadDashboardData() {
+        if (!userData?.user_id) return;
+        setDashboardLoading(true);
+        try {
+            const [projectsRes, tasksRes] = await Promise.all([
+                axios.get(endpoints.projects.getByUser(userData.user_id)),
+                axios.get(endpoints.tasks.getByUser(userData.user_id)),
+            ]);
+            const projects = Array.isArray(projectsRes.data) ? projectsRes.data : [];
+            const tasks = Array.isArray(tasksRes.data) ? tasksRes.data : [];
+
+            const roleList = await Promise.all(
+                projects.map(async (p) => {
+                    try {
+                        const { data } = await axios.get(endpoints.projects.getRole(p.project_id, userData.user_id));
+                        return { ...p, roleName: data?.role?.roleName || 'Member' };
+                    } catch (_err) {
+                        return { ...p, roleName: 'Member' };
+                    }
+                }),
+            );
+            setMyProjects(roleList);
+
+            const done = tasks.filter((t) => {
+                const st = String(t.taskStatus || '').toUpperCase();
+                return st === 'DONE' || st === 'COMPLETED' || st === 'APPROVED';
+            }).length;
+            const overdue = tasks.filter((t) => {
+                const st = String(t.taskStatus || '').toUpperCase();
+                if (st === 'DONE' || st === 'COMPLETED' || st === 'APPROVED') return false;
+                const dueRaw = t?.deadline || t?.timeEnd || t?.timeStart;
+                if (!dueRaw) return false;
+                const due = new Date(dueRaw);
+                return !Number.isNaN(due.getTime()) && due.getTime() < Date.now();
+            }).length;
+            setMyStats({
+                done,
+                overdue,
+                totalTasks: tasks.length,
+                totalProjects: projects.length,
+            });
+        } catch (_error) {
+            // silent fail for dashboard cards
+        } finally {
+            setDashboardLoading(false);
+        }
+    }
 
     async function postJSON(data) {
         if (!userData?.user_id) return;
@@ -160,6 +213,35 @@ export default function Profile({ navigation }) {
                         <Text style={styles.email}>{editemail}</Text>
                     </View>
 
+                    <View style={styles.sectionCard}>
+                        <View style={styles.sectionTitleRow}>
+                            <Icon name="chart-line" size={18} color="#ffab33" />
+                            <Text style={styles.sectionTitle}>Thống kê cá nhân</Text>
+                        </View>
+                        {dashboardLoading ? (
+                            <ActivityIndicator color="#ffab33" style={{ marginVertical: 8 }} />
+                        ) : (
+                            <View style={styles.statsGrid}>
+                                <View style={styles.statsBox}>
+                                    <Text style={styles.statsValue}>{myStats.totalProjects}</Text>
+                                    <Text style={styles.statsLabel}>Projects</Text>
+                                </View>
+                                <View style={styles.statsBox}>
+                                    <Text style={styles.statsValue}>{myStats.totalTasks}</Text>
+                                    <Text style={styles.statsLabel}>Tasks</Text>
+                                </View>
+                                <View style={styles.statsBox}>
+                                    <Text style={styles.statsValue}>{myStats.done}</Text>
+                                    <Text style={styles.statsLabel}>Done</Text>
+                                </View>
+                                <View style={styles.statsBox}>
+                                    <Text style={[styles.statsValue, { color: myStats.overdue > 0 ? '#ef4444' : '#0f172a' }]}>{myStats.overdue}</Text>
+                                    <Text style={styles.statsLabel}>Overdue</Text>
+                                </View>
+                            </View>
+                        )}
+                    </View>
+
                     {/* Info Section */}
                     <View style={styles.sectionCard}>
                         <View style={styles.sectionTitleRow}>
@@ -169,6 +251,47 @@ export default function Profile({ navigation }) {
                         <Text style={styles.descriptionText}>
                             {description || "Hãy viết đôi dòng giới thiệu về bản thân bạn..."}
                         </Text>
+                    </View>
+
+                    <View style={styles.sectionCard}>
+                        <View style={styles.sectionTitleRow}>
+                            <Icon name="users" size={18} color="#ffab33" />
+                            <Text style={styles.sectionTitle}>Project & Role</Text>
+                        </View>
+                        {myProjects.length === 0 ? (
+                            <Text style={styles.descriptionText}>Bạn chưa tham gia dự án nào.</Text>
+                        ) : (
+                            myProjects.slice(0, 6).map((project) => (
+                                <View key={String(project.project_id)} style={styles.projectRoleRow}>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.projectRoleName} numberOfLines={1}>{project.projectName}</Text>
+                                        <Text style={styles.projectRoleId} numberOfLines={1}>{project.project_id}</Text>
+                                    </View>
+                                    <View style={styles.roleBadge}>
+                                        <Text style={styles.roleBadgeText}>{project.roleName || 'Member'}</Text>
+                                    </View>
+                                </View>
+                            ))
+                        )}
+                    </View>
+
+                    <View style={styles.sectionCard}>
+                        <View style={styles.sectionTitleRow}>
+                            <Icon name="sliders-h" size={18} color="#ffab33" />
+                            <Text style={styles.sectionTitle}>Settings</Text>
+                        </View>
+                        <View style={styles.settingRow}>
+                            <View style={styles.settingLeft}>
+                                <Icon name="bell" size={16} color="#334155" />
+                                <Text style={styles.settingLabel}>Notification</Text>
+                            </View>
+                            <Switch
+                                value={notificationEnabled}
+                                onValueChange={setNotificationEnabled}
+                                thumbColor={notificationEnabled ? '#fff' : '#f1f5f9'}
+                                trackColor={{ false: '#cbd5e1', true: '#ffab33' }}
+                            />
+                        </View>
                     </View>
 
                     {/* Menu Actions */}
@@ -233,6 +356,43 @@ const styles = StyleSheet.create({
     sectionTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
     sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginLeft: 10 },
     descriptionText: { fontSize: 14, color: '#555', lineHeight: 22, fontStyle: 'italic' },
+    statsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10 },
+    statsBox: {
+        width: '48%',
+        backgroundColor: '#fff5e6',
+        borderRadius: 12,
+        paddingVertical: 12,
+        alignItems: 'center',
+    },
+    statsValue: { fontSize: 22, fontWeight: '800', color: '#0f172a' },
+    statsLabel: { fontSize: 12, color: '#64748b', marginTop: 2, fontWeight: '600' },
+    projectRoleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+        paddingVertical: 10,
+    },
+    projectRoleName: { fontSize: 14, fontWeight: '700', color: '#0f172a' },
+    projectRoleId: { fontSize: 11, color: '#64748b', marginTop: 2 },
+    roleBadge: {
+        backgroundColor: '#fff5e6',
+        borderRadius: 999,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        marginLeft: 8,
+    },
+    roleBadgeText: { color: '#9a3412', fontSize: 11, fontWeight: '700' },
+    settingRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+    },
+    settingLeft: { flexDirection: 'row', alignItems: 'center' },
+    settingLabel: { marginLeft: 10, fontSize: 14, fontWeight: '600', color: '#334155' },
     menuContainer: { backgroundColor: '#fff', borderRadius: 16, padding: 10, marginBottom: 20, elevation: 2 },
     menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
     menuIconBox: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginRight: 15 },

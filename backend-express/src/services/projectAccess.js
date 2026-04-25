@@ -11,9 +11,15 @@ function isOwner(db, projectId, userId) {
   return getUserRoleInProject(db, projectId, userId) === 3;
 }
 
+/** Owner (3) hoặc Management / Leader (2) — được chỉnh sửa cấu trúc dự án, không được xóa thành viên (chỉ Owner). */
+function canManageProject(db, projectId, userId) {
+  const r = getUserRoleInProject(db, projectId, userId);
+  return r === 2 || r === 3;
+}
+
 function roleName(roleId) {
   if (Number(roleId) === 3) return "Owner";
-  if (Number(roleId) === 2) return "Leader";
+  if (Number(roleId) === 2) return "Management";
   return "Member";
 }
 
@@ -92,6 +98,7 @@ function createOwnerNotification(db, projectId, actorUserId, type, message) {
 module.exports = {
   getUserRoleInProject,
   isOwner,
+  canManageProject,
   roleName,
   findUsersByProject,
   ensureDefaultStoryForProject,

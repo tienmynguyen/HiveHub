@@ -1,5 +1,5 @@
 import React, { useContext, useMemo, useState } from 'react';
-import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Modal, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import axios from 'axios';
 import * as Speech from 'expo-speech';
@@ -34,6 +34,12 @@ export default function Assistant({ route }) {
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [pendingClarification, setPendingClarification] = useState(null);
   const [latestGuide, setLatestGuide] = useState(null);
+  const [isAnalyzingIntent, setIsAnalyzingIntent] = useState(false);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [contextProjectId, setContextProjectId] = useState(routeProjectId ? String(routeProjectId) : '');
+  const [contextSprintId, setContextSprintId] = useState(routeSprintId ? String(routeSprintId) : '');
+  const [contextStoryId, setContextStoryId] = useState(routeStoryId ? String(routeStoryId) : '');
+  const [riskyConfirmChecked, setRiskyConfirmChecked] = useState(false);
   const [sessionMemory, setSessionMemory] = useState({
     projectId: routeProjectId,
     sprintId: routeSprintId,
@@ -46,14 +52,16 @@ export default function Assistant({ route }) {
   };
 
   const canSend = useMemo(() => input.trim().length > 0, [input]);
-  const effectiveProjectId = projectIdInput.trim() || sessionMemory.projectId || routeProjectId || '';
+  const effectiveProjectId = contextProjectId.trim() || projectIdInput.trim() || sessionMemory.projectId || routeProjectId || '';
+  const effectiveSprintId = contextSprintId.trim() || sessionMemory.sprintId || routeSprintId || '';
+  const effectiveStoryId = contextStoryId.trim() || sessionMemory.storyId || routeStoryId || '';
 
   function mergeWithContext(payload = {}) {
     return {
       ...payload,
       projectId: payload.projectId || effectiveProjectId || undefined,
-      sprintId: payload.sprintId || sessionMemory.sprintId || routeSprintId || undefined,
-      storyId: payload.storyId || sessionMemory.storyId || routeStoryId || undefined,
+      sprintId: payload.sprintId || effectiveSprintId || undefined,
+      storyId: payload.storyId || effectiveStoryId || undefined,
     };
   }
 
@@ -65,7 +73,29 @@ export default function Assistant({ route }) {
       sprintId: m.sprintId || data?.parsedPayload?.sprintId || prev.sprintId || routeSprintId || null,
       storyId: m.storyId || data?.parsedPayload?.storyId || prev.storyId || routeStoryId || null,
     }));
+    if (m.projectId || data?.parsedPayload?.projectId) setContextProjectId(String(m.projectId || data.parsedPayload.projectId));
+    if (m.sprintId || data?.parsedPayload?.sprintId) setContextSprintId(String(m.sprintId || data.parsedPayload.sprintId));
+    if (m.storyId || data?.parsedPayload?.storyId) setContextStoryId(String(m.storyId || data.parsedPayload.storyId));
   }
+
+  const previewAction = previewResult?.action || {};
+  const previewActionType = String(previewAction?.type || previewResult?.intent || '').toUpperCase();
+  const previewPayload = previewAction?.payload || previewResult?.parsedPayload || {};
+  const requiredFieldsByAction = {
+    CREATE_PROJECT: ['projectName'],
+    CREATE_PROJECT_BLUEPRINT: ['projectName'],
+    CREATE_SPRINT: ['projectId', 'sprintName'],
+    CREATE_STORY: ['projectId', 'storyName'],
+    CREATE_TASK: ['projectId', 'taskName'],
+    UPDATE_SPRINT_STATUS: ['projectId', 'sprintId', 'sprintStatus'],
+    CREATE_CALENDAR_NOTE: ['title'],
+  };
+  const previewMissingRequired = (requiredFieldsByAction[previewActionType] || []).filter((key) => {
+    const value = previewPayload?.[key];
+    return value === undefined || value === null || String(value).trim() === '';
+  });
+  const riskyActionTypes = ['UPDATE_SPRINT_STATUS', 'DELETE_PROJECT', 'REMOVE_MEMBER'];
+  const isRiskyAction = riskyActionTypes.includes(previewActionType);
 
   function pushMessage(role, text) {
     setMessages((prev) => [
@@ -82,6 +112,9 @@ export default function Assistant({ route }) {
     setConfirmModalVisible(false);
     setPendingClarification(null);
     setLatestGuide(null);
+    setIsAnalyzingIntent(false);
+    setIsPreviewLoading(false);
+    setRiskyConfirmChecked(false);
     setSessionMemory({
       projectId: routeProjectId || null,
       sprintId: routeSprintId || null,
@@ -106,11 +139,13 @@ export default function Assistant({ route }) {
     setInput('');
     pushMessage('user', message);
 
+    setIsAnalyzingIntent(true);
     // Missing-field follow-up flow: ask exactly once, then retry preview.
     if (pendingClarification) {
       try {
         const key = `${Date.now()}-${Math.random()}`;
         setIdempotencyKey(key);
+        setIsPreviewLoading(true);
         const previewRes = await axios.post(endpoints.agent.preview(), {
           userId: userData?.user_id,
           intent: pendingClarification.intent,
@@ -140,6 +175,8 @@ export default function Assistant({ route }) {
           speakText(askMsg);
         }
       }
+      setIsPreviewLoading(false);
+      setIsAnalyzingIntent(false);
       return;
     }
 
@@ -165,6 +202,7 @@ export default function Assistant({ route }) {
         try {
           const key = `${Date.now()}-${Math.random()}`;
           setIdempotencyKey(key);
+          setIsPreviewLoading(true);
           const previewRes = await axios.post(endpoints.agent.preview(), {
             userId: userData?.user_id,
             intent: data.intent,
@@ -181,6 +219,8 @@ export default function Assistant({ route }) {
         } catch (previewError) {
           const msg = previewError?.response?.data?.message || 'Không thể tạo preview tự động.';
           pushMessage('assistant', `Lệnh đã được nhận diện nhưng preview thất bại: ${msg}`);
+        } finally {
+          setIsPreviewLoading(false);
         }
       } else if (actionableIntents.includes(String(data?.intent || '')) && (!data?.actionReady || clarificationActive)) {
         const missing = Array.isArray(data?.missingFields) ? data.missingFields.join(', ') : '';
@@ -202,6 +242,8 @@ export default function Assistant({ route }) {
       }
     } catch (error) {
       pushMessage('assistant', 'Không thể gọi AI Agent lúc này.');
+    } finally {
+      setIsAnalyzingIntent(false);
     }
   }
 
@@ -209,6 +251,7 @@ export default function Assistant({ route }) {
     try {
       const key = `${Date.now()}-${Math.random()}`;
       setIdempotencyKey(key);
+      setIsPreviewLoading(true);
       const { data } = await axios.post(endpoints.agent.preview(), {
         userId: userData?.user_id,
         intent,
@@ -222,11 +265,21 @@ export default function Assistant({ route }) {
     } catch (error) {
       const msg = error?.response?.data?.message || 'Không thể tạo preview.';
       Alert.alert('Lỗi preview', msg);
+    } finally {
+      setIsPreviewLoading(false);
     }
   }
 
   async function onExecute() {
     if (!previewResult?.confirmationToken) return;
+    if (previewMissingRequired.length > 0) {
+      Alert.alert('Thiếu dữ liệu', `Preview còn thiếu: ${previewMissingRequired.join(', ')}`);
+      return;
+    }
+    if (isRiskyAction && !riskyConfirmChecked) {
+      Alert.alert('Cần xác nhận', 'Vui lòng tick xác nhận trước khi execute thao tác rủi ro.');
+      return;
+    }
     try {
       const { data } = await axios.post(endpoints.agent.execute(), {
         userId: userData?.user_id,
@@ -240,6 +293,7 @@ export default function Assistant({ route }) {
       setPreviewResult(null);
       setConfirmModalVisible(false);
       setPendingClarification(null);
+      setRiskyConfirmChecked(false);
     } catch (error) {
       const msg = error?.response?.data?.message || 'Không thể thực thi action.';
       Alert.alert('Lỗi execute', msg);
@@ -307,22 +361,22 @@ export default function Assistant({ route }) {
 
       <View style={styles.contextRow}>
         {renderContextPill('Project', effectiveProjectId)}
-        {renderContextPill('Sprint', sessionMemory.sprintId)}
-        {renderContextPill('Story', sessionMemory.storyId)}
+        {renderContextPill('Sprint', effectiveSprintId)}
+        {renderContextPill('Story', effectiveStoryId)}
+      </View>
+
+      <View style={styles.contextPickerCard}>
+        <Text style={styles.contextPickerTitle}>Context Picker</Text>
+        <View style={styles.contextPickerRow}>
+          <TextInput style={styles.contextInput} placeholder="Project ID" value={contextProjectId} onChangeText={setContextProjectId} />
+          <TextInput style={styles.contextInput} placeholder="Sprint ID" value={contextSprintId} onChangeText={setContextSprintId} />
+          <TextInput style={styles.contextInput} placeholder="Story ID" value={contextStoryId} onChangeText={setContextStoryId} />
+        </View>
       </View>
 
       <View style={styles.quickRow}>
-        <TouchableOpacity style={styles.quickBtn} onPress={() => onPreview('CREATE_PROJECT', { projectName: `Project ${Date.now().toString().slice(-4)}` })}>
-          <Text style={styles.quickText}>Preview Create Project</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={styles.quickBtn} onPress={() => setConfirmModalVisible(Boolean(previewResult?.confirmationToken))}>
           <Text style={styles.quickText}>Mở xác nhận execute</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.quickRow}>
-        <TouchableOpacity style={styles.quickBtn} onPress={() => onPreview('CREATE_TASK', mergeWithContext({ taskName: 'Task from AI' }))}>
-          <Text style={styles.quickText}>Preview Create Task</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.quickBtn} onPress={onExecute} disabled={!previewResult?.confirmationToken}>
           <Text style={styles.quickText}>Confirm Execute</Text>
@@ -352,6 +406,41 @@ export default function Assistant({ route }) {
                 <Text key={`ex-${idx}`} style={styles.guideExample}>- {ex}</Text>
               ))}
             </View>
+          ) : null}
+        </View>
+      ) : null}
+
+      {isAnalyzingIntent ? (
+        <View style={styles.intentLoadingBar}>
+          <ActivityIndicator size="small" color="#f59e0b" />
+          <Text style={styles.intentLoadingText}>AI đang phân tích intent...</Text>
+        </View>
+      ) : null}
+
+      {isPreviewLoading ? (
+        <View style={styles.previewCard}>
+          <Text style={styles.previewTitle}>Đang tạo preview...</Text>
+          <View style={styles.skeletonLine} />
+          <View style={[styles.skeletonLine, { width: '85%' }]} />
+          <View style={[styles.skeletonLine, { width: '70%' }]} />
+        </View>
+      ) : previewResult ? (
+        <View style={styles.previewCard}>
+          <Text style={styles.previewTitle}>Preview action</Text>
+          <Text style={styles.previewLabel}>Action</Text>
+          <Text style={styles.previewValue}>{previewActionType || 'N/A'}</Text>
+          <Text style={styles.previewLabel}>Payload</Text>
+          <Text style={styles.previewJson}>{prettyJson(previewPayload)}</Text>
+          {previewMissingRequired.length > 0 ? (
+            <Text style={styles.previewError}>Thiếu field bắt buộc: {previewMissingRequired.join(', ')}</Text>
+          ) : (
+            <Text style={styles.previewOk}>Payload hợp lệ để execute.</Text>
+          )}
+          {previewResult?.policy?.reason ? (
+            <>
+              <Text style={styles.previewLabel}>Policy</Text>
+              <Text style={styles.previewValue}>{previewResult.policy.reason}</Text>
+            </>
           ) : null}
         </View>
       ) : null}
@@ -400,6 +489,18 @@ export default function Assistant({ route }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Xác nhận thao tác AI</Text>
+            {isRiskyAction ? (
+              <View style={styles.riskyBox}>
+                <Text style={styles.riskyTitle}>Cảnh báo: thao tác rủi ro</Text>
+                <Text style={styles.riskyText}>
+                  Action này có thể thay đổi dữ liệu quan trọng. Vui lòng kiểm tra kỹ payload trước khi execute.
+                </Text>
+                <TouchableOpacity style={styles.riskyCheckRow} onPress={() => setRiskyConfirmChecked((v) => !v)}>
+                  <Icon name={riskyConfirmChecked ? 'check-square' : 'square'} size={16} color="#b45309" />
+                  <Text style={styles.riskyCheckText}>Tôi đã kiểm tra và muốn tiếp tục.</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
             {previewResult?.action ? (
               <Text style={styles.modalBody}>{prettyJson(previewResult.action)}</Text>
             ) : (
@@ -412,7 +513,7 @@ export default function Assistant({ route }) {
               <TouchableOpacity
                 style={[styles.modalBtn, styles.executeBtn, !previewResult?.confirmationToken ? { opacity: 0.5 } : null]}
                 onPress={onExecute}
-                disabled={!previewResult?.confirmationToken}
+                disabled={!previewResult?.confirmationToken || (isRiskyAction && !riskyConfirmChecked) || previewMissingRequired.length > 0}
               >
                 <Text style={styles.executeText}>Execute</Text>
               </TouchableOpacity>
@@ -442,11 +543,25 @@ const styles = StyleSheet.create({
   contextRow: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, marginTop: 8, gap: 6 },
   contextPill: { backgroundColor: '#e0f2fe', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   contextPillText: { color: '#075985', fontSize: 11, fontWeight: '600' },
+  contextPickerCard: { marginHorizontal: 12, marginTop: 8, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, padding: 10 },
+  contextPickerTitle: { fontSize: 12, color: '#334155', fontWeight: '700', marginBottom: 8 },
+  contextPickerRow: { flexDirection: 'row', gap: 6 },
+  contextInput: { flex: 1, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 7, fontSize: 12 },
   guideCard: { marginHorizontal: 12, marginTop: 8, backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#fed7aa', borderRadius: 10, padding: 10 },
   guideTitle: { color: '#9a3412', fontSize: 12, fontWeight: '700' },
   guideQuestion: { color: '#7c2d12', marginTop: 4, fontSize: 12, fontWeight: '600' },
   guideHint: { color: '#9a3412', marginTop: 4, fontSize: 11 },
   guideExample: { color: '#b45309', fontSize: 11, marginTop: 2 },
+  intentLoadingBar: { marginHorizontal: 12, marginTop: 8, backgroundColor: '#fffbeb', borderWidth: 1, borderColor: '#fde68a', borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  intentLoadingText: { color: '#92400e', fontSize: 12, fontWeight: '600' },
+  previewCard: { marginHorizontal: 12, marginTop: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, padding: 10 },
+  previewTitle: { color: '#0f172a', fontSize: 13, fontWeight: '700', marginBottom: 6 },
+  previewLabel: { color: '#64748b', fontSize: 11, fontWeight: '700', marginTop: 6 },
+  previewValue: { color: '#1f2937', fontSize: 12, marginTop: 2 },
+  previewJson: { color: '#334155', fontSize: 11, marginTop: 2 },
+  previewError: { color: '#b91c1c', fontSize: 11, marginTop: 8, fontWeight: '700' },
+  previewOk: { color: '#166534', fontSize: 11, marginTop: 8, fontWeight: '700' },
+  skeletonLine: { height: 10, borderRadius: 6, backgroundColor: '#e2e8f0', marginTop: 8, width: '100%' },
   messageRow: { maxWidth: '85%', borderRadius: 12, padding: 10, marginBottom: 8 },
   userRow: { backgroundColor: '#ffedd5', alignSelf: 'flex-end' },
   aiRow: { backgroundColor: '#fff', alignSelf: 'flex-start', borderWidth: 1, borderColor: '#e5e7eb' },
@@ -460,6 +575,11 @@ const styles = StyleSheet.create({
   modalCard: { width: '100%', maxWidth: 380, backgroundColor: '#fff', borderRadius: 12, padding: 14 },
   modalTitle: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 10 },
   modalBody: { color: '#334155', fontSize: 12, lineHeight: 18, maxHeight: 220 },
+  riskyBox: { backgroundColor: '#fffbeb', borderWidth: 1, borderColor: '#fcd34d', borderRadius: 10, padding: 10, marginBottom: 10 },
+  riskyTitle: { color: '#92400e', fontWeight: '700', fontSize: 12 },
+  riskyText: { color: '#b45309', fontSize: 11, marginTop: 4, lineHeight: 16 },
+  riskyCheckRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 8 },
+  riskyCheckText: { color: '#92400e', fontSize: 11, fontWeight: '600', flex: 1 },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 12 },
   modalBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, marginLeft: 8 },
   cancelBtn: { backgroundColor: '#e2e8f0' },

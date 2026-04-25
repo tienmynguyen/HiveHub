@@ -36,6 +36,7 @@ export default function Home({ navigation }) {
     const [todaytask, setTodaytask] = useState([]);
     const [loading, setLoading] = useState(false);
     const isFocused = useIsFocused();
+    const now = new Date();
 
     const dataImg = [
         { image: require('../../../../navigation/screens/images/phonebee.png') },
@@ -67,9 +68,33 @@ export default function Home({ navigation }) {
             const dataTask = resTask.data;
             const dataToday = resToday.data;
 
+            const projectList = Array.isArray(dataProject) ? dataProject : [];
+            const projectMap = projectList.reduce((acc, p) => {
+                acc[String(p.project_id)] = p;
+                return acc;
+            }, {});
+
+            const attachProjectInfo = (task) => {
+                const projectId = task?.project_id != null ? String(task.project_id) : '';
+                const foundProject = projectMap[projectId];
+                if (foundProject) {
+                    return {
+                        ...task,
+                        project: {
+                            project_id: foundProject.project_id,
+                            projectName: foundProject.projectName,
+                        },
+                    };
+                }
+                return {
+                    ...task,
+                    project: task?.project || { projectName: 'Dự án cá nhân' },
+                };
+            };
+
             if (Array.isArray(dataProject)) setProject(dataProject); else setProject(MOCK_PROJECTS);
-            if (Array.isArray(dataTask)) setTasks(dataTask); else setTasks(MOCK_TASKS);
-            if (Array.isArray(dataToday)) setTodaytask(dataToday); else setTodaytask(MOCK_TODAY_TASKS);
+            if (Array.isArray(dataTask)) setTasks(dataTask.map(attachProjectInfo)); else setTasks(MOCK_TASKS);
+            if (Array.isArray(dataToday)) setTodaytask(dataToday.map(attachProjectInfo)); else setTodaytask(MOCK_TODAY_TASKS);
 
         } catch (error) {
             console.error("Lỗi API Home:", error);
@@ -96,6 +121,39 @@ export default function Home({ navigation }) {
         if(item.task_id) navigation.navigate('TaskDetail', { task: item });
     };
 
+    const getTaskStatus = (task) => String(task?.taskStatus || '').toUpperCase();
+    const isDoneTask = (task) => {
+        const status = getTaskStatus(task);
+        return status === 'DONE' || status === 'COMPLETED' || status === 'APPROVED';
+    };
+    const isInProgressTask = (task) => {
+        const status = getTaskStatus(task);
+        return status === 'DOING' || status === 'IN_PROGRESS';
+    };
+    const isOverdueTask = (task) => {
+        const status = getTaskStatus(task);
+        if (status === 'DONE' || status === 'COMPLETED' || status === 'APPROVED') return false;
+        const deadlineRaw = task?.deadline || task?.timeEnd || task?.timeStart;
+        if (!deadlineRaw) return false;
+        const due = new Date(deadlineRaw);
+        if (Number.isNaN(due.getTime())) return false;
+        return due < now;
+    };
+
+    const doneCount = tasks.filter(isDoneTask).length;
+    const inProgressCount = tasks.filter(isInProgressTask).length;
+    const overdueCount = tasks.filter(isOverdueTask).length;
+    const completionPercent = tasks.length > 0 ? Math.round((doneCount / tasks.length) * 100) : 0;
+    const focusTasks = [...tasks]
+        .filter((t) => !isDoneTask(t))
+        .sort((a, b) => {
+            const da = new Date(a?.deadline || a?.timeEnd || a?.timeStart || 0).getTime();
+            const db = new Date(b?.deadline || b?.timeEnd || b?.timeStart || 0).getTime();
+            return da - db;
+        })
+        .slice(0, 3);
+    const continueTask = todaytask.find((t) => !isDoneTask(t)) || focusTasks[0] || null;
+
     if (loading) {
         return (
             <View style={{flex:1, justifyContent:'center', alignItems:'center'}}>
@@ -120,6 +178,21 @@ export default function Home({ navigation }) {
                             source={getAvatarSource(userData)}
                             style={styles.avatar}
                         />
+                    </View>
+
+                    <View style={styles.quickActionRow}>
+                        <TouchableOpacity style={styles.quickActionBtn} onPress={() => navigation.navigate('Project')}>
+                            <Icon name="plus-circle" size={13} color="#ffab33" />
+                            <Text style={styles.quickActionText}>Dự án</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.quickActionBtn} onPress={() => navigation.navigate('Calendar')}>
+                            <Icon name="calendar-alt" size={13} color="#ffab33" />
+                            <Text style={styles.quickActionText}>Lịch</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.quickActionBtn} onPress={() => navigation.navigate('Assistant')}>
+                            <Icon name="robot" size={13} color="#ffab33" />
+                            <Text style={styles.quickActionText}>AI</Text>
+                        </TouchableOpacity>
                     </View>
 
                     {/* --- STATS DASHBOARD --- */}
@@ -159,6 +232,43 @@ export default function Home({ navigation }) {
                         </View>
                     </View>
 
+                    <View style={styles.sectionContainer}>
+                        <View style={styles.summaryCard}>
+                            <View style={styles.summaryHeader}>
+                                <Text style={styles.summaryTitle}>Tổng quan tiến độ</Text>
+                                <Text style={styles.summaryPercent}>{completionPercent}%</Text>
+                            </View>
+                            <View style={styles.progressTrack}>
+                                <View style={[styles.progressFill, { width: `${Math.min(100, completionPercent)}%` }]} />
+                            </View>
+                            <View style={styles.summaryStatsRow}>
+                                <Text style={styles.summaryStatText}>Done: {doneCount}</Text>
+                                <Text style={styles.summaryStatText}>Đang làm: {inProgressCount}</Text>
+                                <Text style={[styles.summaryStatText, overdueCount > 0 && styles.overdueText]}>Quá hạn: {overdueCount}</Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    <View style={styles.sectionContainer}>
+                        <Text style={styles.sectionTitle}>Tiếp tục làm việc</Text>
+                        {continueTask ? (
+                            <TouchableOpacity style={styles.continueCard} onPress={() => gotoTaskDetail(continueTask)}>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.continueTaskName} numberOfLines={1}>{continueTask.taskName}</Text>
+                                    <Text style={styles.projectName} numberOfLines={1}>
+                                        {continueTask.project?.projectName || "Dự án cá nhân"}
+                                    </Text>
+                                </View>
+                                <Icon name="play-circle" size={18} color="#ffab33" />
+                            </TouchableOpacity>
+                        ) : (
+                            <View style={styles.emptyState}>
+                                <Icon name="coffee" size={26} color="#ddd" />
+                                <Text style={styles.emptyText}>Chưa có task để tiếp tục.</Text>
+                            </View>
+                        )}
+                    </View>
+
                     {/* --- TODAY TASKS LIST (ĐÃ CHUYỂN LÊN TRÊN) --- */}
                     <View style={styles.sectionContainer}>
                         <View style={styles.sectionHeader}>
@@ -180,11 +290,46 @@ export default function Home({ navigation }) {
                                     style={styles.taskItem} 
                                     onPress={() => gotoTaskDetail(item)}
                                 >
-                                    <View style={[styles.taskIndicator, { backgroundColor: item.taskStatus === 'DONE' ? '#2ecc71' : '#ffab33' }]} />
+                                    <View
+                                        style={[
+                                            styles.taskIndicator,
+                                            {
+                                                backgroundColor:
+                                                    String(item.taskStatus || '').toUpperCase() === 'DONE' ||
+                                                    String(item.taskStatus || '').toUpperCase() === 'COMPLETED' ||
+                                                    String(item.taskStatus || '').toUpperCase() === 'APPROVED'
+                                                        ? '#2ecc71'
+                                                        : '#ffab33',
+                                            },
+                                        ]}
+                                    />
                                     <View style={{flex: 1}}>
                                         <Text style={styles.taskName} numberOfLines={1}>{item.taskName}</Text>
                                         <Text style={styles.projectName} numberOfLines={1}>
                                             {item.project ? item.project.projectName : "Dự án cá nhân"}
+                                        </Text>
+                                    </View>
+                                    <Icon name="chevron-right" size={14} color="#ccc" />
+                                </TouchableOpacity>
+                            ))
+                        )}
+                    </View>
+
+                    <View style={styles.sectionContainer}>
+                        <Text style={styles.sectionTitle}>Ưu tiên tuần này</Text>
+                        {focusTasks.length === 0 ? (
+                            <View style={styles.emptyState}>
+                                <Icon name="smile" size={26} color="#ddd" />
+                                <Text style={styles.emptyText}>Không có task ưu tiên.</Text>
+                            </View>
+                        ) : (
+                            focusTasks.map((item, idx) => (
+                                <TouchableOpacity key={`${item.task_id || idx}-focus`} style={styles.taskItem} onPress={() => gotoTaskDetail(item)}>
+                                    <View style={[styles.taskIndicator, { backgroundColor: isOverdueTask(item) ? '#e74c3c' : '#ffab33' }]} />
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.taskName} numberOfLines={1}>{item.taskName}</Text>
+                                        <Text style={styles.projectName} numberOfLines={1}>
+                                            {item.project?.projectName || 'Dự án cá nhân'}
                                         </Text>
                                     </View>
                                     <Icon name="chevron-right" size={14} color="#ccc" />
@@ -219,6 +364,20 @@ const styles = StyleSheet.create({
     greetingText: { fontSize: 16, color: '#666' },
     usernameText: { fontSize: 24, fontWeight: 'bold', color: '#333' },
     avatar: { width: 50, height: 50, borderRadius: 25, borderWidth: 1, borderColor: '#ddd' },
+    quickActionRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginBottom: 14 },
+    quickActionBtn: {
+        flex: 1,
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        paddingVertical: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 7,
+        borderWidth: 1,
+        borderColor: '#fbe2b8',
+    },
+    quickActionText: { fontSize: 12, fontWeight: '700', color: '#b96f00' },
     
     // Stats Styles
     statsContainer: {
@@ -253,6 +412,37 @@ const styles = StyleSheet.create({
     sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
     badge: { backgroundColor: '#ffab33', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, marginLeft: 8 },
     badgeText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+    summaryCard: {
+        backgroundColor: '#fff',
+        borderRadius: 15,
+        padding: 14,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+        elevation: 2,
+    },
+    summaryHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+    summaryTitle: { fontSize: 15, fontWeight: '700', color: '#334155' },
+    summaryPercent: { fontSize: 18, fontWeight: '800', color: '#ffab33' },
+    progressTrack: { height: 8, borderRadius: 99, backgroundColor: '#e2e8f0', overflow: 'hidden' },
+    progressFill: { height: 8, borderRadius: 99, backgroundColor: '#ffab33' },
+    summaryStatsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
+    summaryStatText: { fontSize: 12, color: '#64748b', fontWeight: '600' },
+    overdueText: { color: '#e74c3c' },
+    continueCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 15,
+        padding: 15,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    continueTaskName: { fontSize: 16, fontWeight: '700', color: '#1f2937', marginBottom: 4 },
 
     // Carousel
     carouselWrapper: { borderRadius: 15, overflow: 'hidden', backgroundColor: '#fff', elevation: 2, paddingVertical: 10 },

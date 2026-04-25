@@ -21,6 +21,7 @@ const CONFIG = {
             DOING: '#0ea5e9',
             IN_PROGRESS: '#0ea5e9',
             DONE: '#16a34a',
+            APPROVED: '#16a34a',
             ERROR: '#ef4444',
             DEFAULT: '#94a3b8',
         }

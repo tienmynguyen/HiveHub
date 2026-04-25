@@ -1,7 +1,13 @@
 const express = require("express");
 const { v4: uuidv4 } = require("uuid");
-const { readDb, writeDb } = require("../data/db");
-const { roleName, findUsersByProject, isOwner } = require("../services/projectAccess");
+const { readDb, writeDb, ensureScrumSchema } = require("../data/db");
+const {
+  roleName,
+  findUsersByProject,
+  isOwner,
+  canManageProject,
+  getUserRoleInProject,
+} = require("../services/projectAccess");
 
 const router = express.Router();
 
@@ -64,14 +70,55 @@ router.post("/joinproject", (req, res) => {
   return res.json({ projectId, userId });
 });
 
+router.get("/getprojectbyid", (req, res) => {
+  const projectId = String(req.query.projectId || "");
+  const userId = Number(req.query.userId || 0);
+  if (!projectId || !userId) {
+    return res.status(400).json({ code: "VALIDATION_ERROR", message: "Missing projectId or userId" });
+  }
+  const db = readDb();
+  if (getUserRoleInProject(db, projectId, userId) == null) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Not a project member" });
+  }
+  const project = db.projects.find((p) => String(p.project_id) === projectId);
+  if (!project) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Project not found" });
+  return res.json(project);
+});
+
 router.post("/updateuserproject", (req, res) => {
-  const userId = Number(req.query.userId);
+  const targetUserId = Number(req.query.userId);
   const projectId = String(req.query.projectId);
   const roleId = Number(req.query.roleId || 1);
+  const actorId = Number(req.query.actorId || 0);
   const db = readDb();
-  let link = db.userProjects.find((x) => x.projectId === projectId && x.userId === userId);
+  const project = db.projects.find((p) => String(p.project_id) === projectId);
+  if (!project) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Project not found" });
+  if (!actorId) {
+    return res.status(400).json({ code: "VALIDATION_ERROR", message: "Missing actorId" });
+  }
+  if (getUserRoleInProject(db, projectId, actorId) == null) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Actor is not in this project" });
+  }
+
+  const ownerUserId = Number(project.projectowner);
+  if (Number(targetUserId) === ownerUserId && roleId !== 3) {
+    return res.status(400).json({ code: "VALIDATION_ERROR", message: "Cannot change project owner's role" });
+  }
+  if (roleId === 3 && Number(targetUserId) !== ownerUserId) {
+    return res.status(400).json({ code: "VALIDATION_ERROR", message: "Owner role is reserved for project creator" });
+  }
+
+  if (Number(targetUserId) !== Number(actorId)) {
+    if (!isOwner(db, projectId, actorId)) {
+      return res.status(403).json({ code: "FORBIDDEN", message: "Only project owner can change another member's role" });
+    }
+  } else if (roleId === 3 && Number(actorId) !== ownerUserId) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Cannot self-assign Owner" });
+  }
+
+  let link = db.userProjects.find((x) => x.projectId === projectId && Number(x.userId) === Number(targetUserId));
   if (!link) {
-    link = { userProjectId: uuidv4(), projectId, userId, roleId };
+    link = { userProjectId: uuidv4(), projectId, userId: targetUserId, roleId };
     db.userProjects.push(link);
   } else {
     link.roleId = roleId;
@@ -81,6 +128,79 @@ router.post("/updateuserproject", (req, res) => {
     ...link,
     role: { role_id: roleId, roleName: roleName(roleId) },
   });
+});
+
+router.post("/removememberfromproject", (req, res) => {
+  const projectId = String(req.query.projectId || "");
+  const targetUserId = Number(req.query.targetUserId || 0);
+  const actorId = Number(req.query.actorId || 0);
+  if (!projectId || !targetUserId || !actorId) {
+    return res.status(400).json({ code: "VALIDATION_ERROR", message: "Missing projectId, targetUserId, or actorId" });
+  }
+  const db = readDb();
+  const project = db.projects.find((p) => String(p.project_id) === projectId);
+  if (!project) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Project not found" });
+  if (!isOwner(db, projectId, actorId)) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner can remove members" });
+  }
+  if (Number(targetUserId) === Number(project.projectowner)) {
+    return res.status(400).json({ code: "VALIDATION_ERROR", message: "Cannot remove project owner" });
+  }
+  const before = db.userProjects.length;
+  db.userProjects = db.userProjects.filter(
+    (x) => !(String(x.projectId) === projectId && Number(x.userId) === Number(targetUserId))
+  );
+  if (db.userProjects.length === before) {
+    return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Member link not found" });
+  }
+  writeDb(db);
+  return res.json({ ok: true, projectId, removedUserId: targetUserId });
+});
+
+function deleteProjectCascade(db, projectId) {
+  const pid = String(projectId);
+  ensureScrumSchema(db);
+  if (!Array.isArray(db.tasks)) db.tasks = [];
+  if (!Array.isArray(db.userTasks)) db.userTasks = [];
+  if (!Array.isArray(db.comments)) db.comments = [];
+  if (!Array.isArray(db.messages)) db.messages = [];
+  const storyIds = db.stories.filter((s) => String(s.project_id) === pid).map((s) => Number(s.story_id));
+  const taskIds = db.tasks.filter((t) => String(t.project_id) === pid).map((t) => Number(t.task_id));
+  db.userTasks = (db.userTasks || []).filter((x) => !taskIds.includes(Number(x.taskId)));
+  db.comments = (db.comments || []).filter((x) => !taskIds.includes(Number(x.taskId)));
+  db.storyComments = (db.storyComments || []).filter((c) => !storyIds.includes(Number(c.storyId)));
+  db.tasks = db.tasks.filter((t) => String(t.project_id) !== pid);
+  db.stories = db.stories.filter((s) => String(s.project_id) !== pid);
+  db.sprints = db.sprints.filter((s) => String(s.project_id) !== pid);
+  db.epics = (db.epics || []).filter((e) => String(e.project_id) !== pid);
+  db.messages = (db.messages || []).filter((m) => String(m.project_id) !== pid);
+  db.notifications = (db.notifications || []).filter((n) => String(n.projectId) !== pid);
+  db.userProjects = db.userProjects.filter((x) => String(x.projectId) !== pid);
+  db.projects = db.projects.filter((p) => String(p.project_id) !== pid);
+}
+
+router.post("/deleteproject", (req, res) => {
+  const projectId = String(req.query.projectId || "");
+  const actorId = Number(req.query.actorId || 0);
+  const confirmProjectId = String((req.body && req.body.confirmProjectId) || "").trim();
+  if (!projectId || !actorId) {
+    return res.status(400).json({ code: "VALIDATION_ERROR", message: "Missing projectId or actorId" });
+  }
+  if (confirmProjectId !== projectId) {
+    return res.status(400).json({ code: "VALIDATION_ERROR", message: "confirmProjectId must match project id" });
+  }
+  const db = readDb();
+  const project = db.projects.find((p) => String(p.project_id) === projectId);
+  if (!project) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Project not found" });
+  if (!isOwner(db, projectId, actorId)) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner can delete project" });
+  }
+  if (Number(project.projectowner) !== Number(actorId)) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only the project creator can delete this project" });
+  }
+  deleteProjectCascade(db, projectId);
+  writeDb(db);
+  return res.json({ ok: true, deletedProjectId: projectId });
 });
 
 router.get("/findroleinuspr", (req, res) => {
@@ -108,8 +228,8 @@ router.post("/addmemberbyemail", (req, res) => {
   const email = String((req.body?.email || "").trim()).toLowerCase();
   if (!email) return res.status(400).json({ code: "VALIDATION_ERROR", message: "Missing email" });
   const db = readDb();
-  if (!isOwner(db, projectId, ownerId)) {
-    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner can add members" });
+  if (!canManageProject(db, projectId, ownerId)) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or management can add members" });
   }
   const user = db.users.find((u) => String(u.email || "").toLowerCase() === email);
   if (!user) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "User with email not found" });

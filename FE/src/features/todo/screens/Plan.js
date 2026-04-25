@@ -1,5 +1,20 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, TextInput, Alert, Image, Modal, FlatList } from 'react-native';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    View,
+    Text,
+    SafeAreaView,
+    TouchableOpacity,
+    StyleSheet,
+    ScrollView,
+    ActivityIndicator,
+    TextInput,
+    Alert,
+    Image,
+    Modal,
+    Animated,
+    Dimensions,
+    Platform,
+} from 'react-native';
 import { Clipboard } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { useIsFocused } from '@react-navigation/native';
@@ -42,6 +57,13 @@ function getSprintStatusUi(status) {
     }
 }
 
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+
+function mapRoleLabel(roleName) {
+    if (!roleName) return 'Member';
+    if (String(roleName) === 'Leader') return 'Management';
+    return String(roleName);
+}
 
 export default function Plan({ navigation, route }) {
     const { projectId, projectName } = route.params || {};
@@ -69,32 +91,102 @@ export default function Plan({ navigation, route }) {
     const [notificationVisible, setNotificationVisible] = useState(false);
     const [addMemberVisible, setAddMemberVisible] = useState(false);
     const [memberEmailInput, setMemberEmailInput] = useState('');
+    const [projectDetail, setProjectDetail] = useState(null);
+    const [deleteProjectConfirmInput, setDeleteProjectConfirmInput] = useState('');
+    const slideY = useRef(new Animated.Value(-SCREEN_HEIGHT)).current;
+    const [planViewTab, setPlanViewTab] = useState('sprints');
+    const [epics, setEpics] = useState([]);
+    const [newStoryByEpic, setNewStoryByEpic] = useState({});
+    const [newStoryBacklog, setNewStoryBacklog] = useState('');
+    const [epicModalVisible, setEpicModalVisible] = useState(false);
+    const [newEpicName, setNewEpicName] = useState('');
+    const [newEpicDesc, setNewEpicDesc] = useState('');
+    const [expandedEpics, setExpandedEpics] = useState({ __backlog__: true });
+
+    const canEditProject = useMemo(
+        () => myRole === 'Owner' || myRole === 'Management' || myRole === 'Leader',
+        [myRole],
+    );
+
+    const projectCompletion = useMemo(() => {
+        const doneStories = stories.filter((s) => String(s.storyStatus || '').toUpperCase() === 'DONE').length;
+        const doneTasks = tasks.filter((t) => {
+            const st = String(t.taskStatus || '').toUpperCase();
+            return st === 'DONE' || st === 'COMPLETED' || st === 'APPROVED';
+        }).length;
+        if (stories.length > 0) {
+            return {
+                percent: Math.round((doneStories / stories.length) * 100),
+                label: `${doneStories}/${stories.length} story hoàn thành`,
+            };
+        }
+        if (tasks.length > 0) {
+            return {
+                percent: Math.round((doneTasks / tasks.length) * 100),
+                label: `${doneTasks}/${tasks.length} subtask hoàn thành`,
+            };
+        }
+        return { percent: 0, label: 'Chưa có story/subtask' };
+    }, [stories, tasks]);
+
+    const backlogStories = useMemo(
+        () =>
+            stories.filter(
+                (s) => s.epic_id == null || s.epic_id === undefined || String(s.epic_id) === '' || Number(s.epic_id) === 0,
+            ),
+        [stories],
+    );
+
+    const storiesByEpicId = useMemo(() => {
+        const map = {};
+        for (const epic of epics) {
+            map[epic.epic_id] = stories
+                .filter((s) => Number(s.epic_id) === Number(epic.epic_id))
+                .sort((a, b) => Number(a.storyOrder || 0) - Number(b.storyOrder || 0));
+        }
+        return map;
+    }, [epics, stories]);
 
     useEffect(() => {
         if (isFocused) loadData();
     }, [isFocused, projectId, userData?.user_id]);
 
+    useEffect(() => {
+        if (!projectInfoVisible) return;
+        slideY.setValue(-SCREEN_HEIGHT);
+        Animated.spring(slideY, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 70,
+            friction: 12,
+        }).start();
+    }, [projectInfoVisible, slideY]);
+
     async function loadData() {
         if (!projectId || !userData?.user_id) return;
         setLoading(true);
         try {
-            const [taskRes, sprintRes, storyRes, userRes, roleRes] = await Promise.all([
+            const [taskRes, sprintRes, storyRes, epicRes, userRes, roleRes, projectRes] = await Promise.all([
                 axios.get(endpoints.projects.getTasks(projectId)),
                 axios.get(endpoints.projects.getSprints(projectId)),
                 axios.get(endpoints.projects.getStories(projectId)),
+                axios.get(endpoints.projects.getEpics(projectId)),
                 axios.get(endpoints.projects.getUsers(projectId)),
                 axios.get(endpoints.projects.getRole(projectId, userData?.user_id)),
+                axios.get(endpoints.projects.getById(projectId, userData?.user_id)),
             ]);
             setTasks(Array.isArray(taskRes.data) ? taskRes.data : []);
             setSprints(Array.isArray(sprintRes.data) ? sprintRes.data : []);
             setStories(Array.isArray(storyRes.data) ? storyRes.data : []);
+            setEpics(Array.isArray(epicRes.data) ? epicRes.data : []);
             setMyRole(roleRes?.data?.role?.roleName || 'Member');
+            setProjectDetail(projectRes?.data || null);
             const rawUsers = Array.isArray(userRes.data) ? userRes.data : [];
             const usersWithRoles = await Promise.all(
                 rawUsers.map(async (u) => {
                     try {
-                        const { data: roleRes } = await axios.get(endpoints.projects.getRole(projectId, u.user_id));
-                        return { ...u, roleName: roleRes?.role?.roleName || 'Member' };
+                        const { data: r } = await axios.get(endpoints.projects.getRole(projectId, u.user_id));
+                        return { ...u, roleName: r?.role?.roleName || 'Member' };
                     } catch (_err) {
                         return { ...u, roleName: 'Member' };
                     }
@@ -134,8 +226,8 @@ export default function Plan({ navigation, route }) {
     }
 
     async function createStory(sprintId) {
-        if (myRole !== 'Owner') {
-            Alert.alert('Không có quyền', 'Chỉ Owner mới có quyền chỉnh sửa.');
+        if (!canEditProject) {
+            Alert.alert('Không có quyền', 'Chỉ Owner hoặc Management mới có quyền chỉnh sửa.');
             return;
         }
         const name = (newStoryBySprint[sprintId] || '').trim();
@@ -149,6 +241,56 @@ export default function Plan({ navigation, route }) {
             setNewStoryBySprint((prev) => ({ ...prev, [sprintId]: '' }));
             loadData();
         } catch (error) {
+            Alert.alert('Lỗi', 'Không thể tạo story.');
+        }
+    }
+
+    function toggleEpicBucket(key) {
+        setExpandedEpics((prev) => ({ ...prev, [key]: !prev[key] }));
+    }
+
+    function openEpicModal() {
+        setNewEpicName(`Epic ${epics.length + 1}`);
+        setNewEpicDesc('');
+        setEpicModalVisible(true);
+    }
+
+    async function saveEpic() {
+        if (!canEditProject) return;
+        const name = newEpicName.trim();
+        if (!name) {
+            Alert.alert('Thiếu thông tin', 'Nhập tên epic.');
+            return;
+        }
+        try {
+            await axios.post(endpoints.projects.createEpic(projectId), {
+                epicName: name,
+                description: newEpicDesc.trim(),
+            });
+            setEpicModalVisible(false);
+            loadData();
+        } catch (_err) {
+            Alert.alert('Lỗi', 'Không thể tạo epic.');
+        }
+    }
+
+    async function createStoryInEpicView(epicId) {
+        if (!canEditProject) {
+            Alert.alert('Không có quyền', 'Chỉ Owner hoặc Management mới có quyền chỉnh sửa.');
+            return;
+        }
+        const name = epicId == null ? newStoryBacklog.trim() : String(newStoryByEpic[epicId] || '').trim();
+        if (!name) return;
+        try {
+            await axios.post(endpoints.projects.createStory(projectId, null, epicId), {
+                storyName: name,
+                storyStatus: 'TODO',
+                ownerId: userData?.user_id,
+            });
+            if (epicId == null) setNewStoryBacklog('');
+            else setNewStoryByEpic((prev) => ({ ...prev, [epicId]: '' }));
+            loadData();
+        } catch (_err) {
             Alert.alert('Lỗi', 'Không thể tạo story.');
         }
     }
@@ -184,8 +326,8 @@ export default function Plan({ navigation, route }) {
     }
 
     async function saveSprint() {
-        if (myRole !== 'Owner') {
-            Alert.alert('Không có quyền', 'Chỉ Owner mới có quyền chỉnh sửa.');
+        if (!canEditProject) {
+            Alert.alert('Không có quyền', 'Chỉ Owner hoặc Management mới có quyền chỉnh sửa.');
             return;
         }
         if (!sprintNameInput.trim()) {
@@ -216,8 +358,8 @@ export default function Plan({ navigation, route }) {
     }
 
     async function deleteSprint(sprintId) {
-        if (myRole !== 'Owner') {
-            Alert.alert('Không có quyền', 'Chỉ Owner mới có quyền chỉnh sửa.');
+        if (!canEditProject) {
+            Alert.alert('Không có quyền', 'Chỉ Owner hoặc Management mới có quyền chỉnh sửa.');
             return;
         }
         try {
@@ -229,8 +371,8 @@ export default function Plan({ navigation, route }) {
     }
 
     async function markSprintDone(sprintId) {
-        if (myRole !== 'Owner') {
-            Alert.alert('Không có quyền', 'Chỉ Owner mới có quyền chỉnh sửa.');
+        if (!canEditProject) {
+            Alert.alert('Không có quyền', 'Chỉ Owner hoặc Management mới có quyền chỉnh sửa.');
             return;
         }
         try {
@@ -244,8 +386,8 @@ export default function Plan({ navigation, route }) {
     }
 
     async function createSprint() {
-        if (myRole !== 'Owner') {
-            Alert.alert('Không có quyền', 'Chỉ Owner mới có quyền chỉnh sửa.');
+        if (!canEditProject) {
+            Alert.alert('Không có quyền', 'Chỉ Owner hoặc Management mới có quyền chỉnh sửa.');
             return;
         }
         try {
@@ -268,6 +410,10 @@ export default function Plan({ navigation, route }) {
     }
 
     async function addMemberByEmail() {
+        if (!canEditProject) {
+            Alert.alert('Không có quyền', 'Chỉ Owner hoặc Management mới thêm thành viên.');
+            return;
+        }
         const email = memberEmailInput.trim();
         if (!email) {
             Alert.alert('Thiếu thông tin', 'Vui lòng nhập email thành viên.');
@@ -294,6 +440,57 @@ export default function Plan({ navigation, route }) {
         }
     }
 
+    function closeProjectInfo() {
+        Animated.timing(slideY, {
+            toValue: -SCREEN_HEIGHT,
+            duration: 240,
+            useNativeDriver: true,
+        }).start(() => {
+            setProjectInfoVisible(false);
+            setDeleteProjectConfirmInput('');
+        });
+    }
+
+    async function removeProjectMember(targetUserId) {
+        if (myRole !== 'Owner' || !userData?.user_id) return;
+        try {
+            await axios.post(endpoints.projects.removeMember(projectId, targetUserId, userData.user_id), {});
+            await loadData();
+            Alert.alert('Đã xóa', 'Đã gỡ thành viên khỏi dự án.');
+        } catch (error) {
+            Alert.alert('Lỗi', error?.response?.data?.message || 'Không thể xóa thành viên.');
+        }
+    }
+
+    async function setMemberRole(targetUserId, roleId) {
+        if (myRole !== 'Owner' || !userData?.user_id) return;
+        try {
+            await axios.post(endpoints.projects.updateUserRole(projectId, targetUserId, roleId, userData.user_id), {});
+            await loadData();
+            Alert.alert('Thành công', 'Đã cập nhật vai trò thành viên.');
+        } catch (error) {
+            Alert.alert('Lỗi', error?.response?.data?.message || 'Không thể cập nhật vai trò.');
+        }
+    }
+
+    async function submitDeleteProject() {
+        if (myRole !== 'Owner' || !userData?.user_id) return;
+        if (String(deleteProjectConfirmInput).trim() !== String(projectId)) {
+            Alert.alert('Chưa khớp', 'Nhập đúng mã ID dự án để xác nhận xóa.');
+            return;
+        }
+        try {
+            await axios.post(endpoints.projects.deleteProject(projectId, userData.user_id), {
+                confirmProjectId: String(deleteProjectConfirmInput).trim(),
+            });
+            Alert.alert('Đã xóa', 'Dự án đã được xóa.', [{ text: 'OK', onPress: () => navigation.goBack() }]);
+        } catch (error) {
+            Alert.alert('Lỗi', error?.response?.data?.message || 'Không thể xóa dự án.');
+        }
+    }
+
+    const isCreator = projectDetail && Number(projectDetail.projectowner) === Number(userData?.user_id);
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
@@ -312,12 +509,18 @@ export default function Plan({ navigation, route }) {
                             ) : null}
                         </TouchableOpacity>
                     ) : null}
-                    {myRole === 'Owner' ? (
+                    {canEditProject ? (
                         <TouchableOpacity style={styles.iconBtn} onPress={() => setAddMemberVisible(true)}>
                             <Icon name="user-plus" size={15} color="#333" />
                         </TouchableOpacity>
                     ) : null}
-                    <TouchableOpacity style={styles.iconBtn} onPress={() => setProjectInfoVisible(true)}>
+                    <TouchableOpacity
+                        style={styles.iconBtn}
+                        onPress={() => {
+                            setDeleteProjectConfirmInput('');
+                            setProjectInfoVisible(true);
+                        }}
+                    >
                         <Icon name="info-circle" size={16} color="#333" />
                     </TouchableOpacity>
                 </View>
@@ -337,8 +540,42 @@ export default function Plan({ navigation, route }) {
                         />
                     </View>
 
-                    <Text style={styles.sectionTitle}>Sprint ({sprints.length})</Text>
-                    {sprints.map((sprint) => {
+                    <View style={styles.planTabBar}>
+                        <TouchableOpacity
+                            style={[styles.planTab, planViewTab === 'sprints' && styles.planTabActive]}
+                            onPress={() => setPlanViewTab('sprints')}
+                        >
+                            <Text style={[styles.planTabLabel, planViewTab === 'sprints' && styles.planTabLabelActive]}>Sprint</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.planTab, planViewTab === 'epics' && styles.planTabActive]}
+                            onPress={() => setPlanViewTab('epics')}
+                        >
+                            <Text style={[styles.planTabLabel, planViewTab === 'epics' && styles.planTabLabelActive]}>Epic & Backlog</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {planViewTab === 'sprints' ? (
+                        <>
+                            <Text style={styles.sectionTitle}>Sprint ({sprints.length})</Text>
+                            {sprints.length === 0 ? (
+                                <View style={styles.emptySprintCard}>
+                                    <Icon name="layer-group" size={22} color="#ffab33" style={{ marginBottom: 8 }} />
+                                    <Text style={styles.emptySprintTitle}>Chưa có sprint</Text>
+                                    <Text style={styles.emptySprintSub}>
+                                        Sprint giúp nhóm story theo chu kỳ và theo dõi tiến độ theo thời gian.
+                                    </Text>
+                                    {canEditProject ? (
+                                        <TouchableOpacity style={styles.emptySprintBtn} onPress={openCreateSprintModal}>
+                                            <Icon name="plus" size={14} color="#fff" />
+                                            <Text style={styles.emptySprintBtnText}>Tạo sprint đầu tiên</Text>
+                                        </TouchableOpacity>
+                                    ) : (
+                                        <Text style={styles.emptySprintMember}>Chưa có sprint. Chờ Owner/Management tạo sprint cho dự án.</Text>
+                                    )}
+                                </View>
+                            ) : (
+                                sprints.map((sprint) => {
                         const isOpen = Boolean(expandedSprints[sprint.sprint_id]);
                         const sprintStories = storiesBySprint[sprint.sprint_id] || [];
                         const sprintStatusUi = getSprintStatusUi(sprint.sprintStatus);
@@ -346,7 +583,7 @@ export default function Plan({ navigation, route }) {
                             sprintStories.length > 0 &&
                             sprintStories.every((story) => String(story.storyStatus || '').toUpperCase() === 'DONE');
                         const shouldSuggestDone =
-                            myRole === 'Owner' &&
+                            canEditProject &&
                             allStoriesDone &&
                             String(sprint.sprintStatus || '').toUpperCase() !== 'DONE';
                         return (
@@ -361,12 +598,12 @@ export default function Plan({ navigation, route }) {
                                         <Text style={styles.sprintDate}>{formatDate(sprint.timeStart)} - {formatDate(sprint.timeEnd)}</Text>
                                     </TouchableOpacity>
                                     <View style={styles.sprintActionGroup}>
-                                        {myRole === 'Owner' ? (
+                                        {canEditProject ? (
                                             <TouchableOpacity style={styles.sprintActionBtn} onPress={() => openEditSprintModal(sprint)}>
                                                 <Icon name="edit" size={12} color="#3b82f6" />
                                             </TouchableOpacity>
                                         ) : null}
-                                        {myRole === 'Owner' ? (
+                                        {canEditProject ? (
                                             <TouchableOpacity
                                                 style={styles.sprintActionBtn}
                                                 onPress={() =>
@@ -419,7 +656,7 @@ export default function Plan({ navigation, route }) {
                                             );
                                         })}
 
-                                        {myRole === 'Owner' ? (
+                                        {canEditProject ? (
                                             <View style={styles.createRow}>
                                                 <TextInput
                                                     style={styles.createInput}
@@ -436,11 +673,147 @@ export default function Plan({ navigation, route }) {
                                 ) : null}
                             </View>
                         );
-                    })}
+                    })
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            <View style={styles.epicTabHeader}>
+                                <Text style={styles.sectionTitle}>Epic & Backlog</Text>
+                                {canEditProject ? (
+                                    <TouchableOpacity style={styles.epicAddBtn} onPress={openEpicModal}>
+                                        <Icon name="plus" size={13} color="#ffab33" />
+                                        <Text style={styles.epicAddBtnText}>Epic</Text>
+                                    </TouchableOpacity>
+                                ) : null}
+                            </View>
+
+                            {epics.length === 0 && backlogStories.length === 0 ? (
+                                <View style={styles.emptyEpicCard}>
+                                    <Icon name="clipboard-list" size={22} color="#94a3b8" style={{ marginBottom: 8 }} />
+                                    <Text style={styles.emptySprintTitle}>Chưa có epic và backlog</Text>
+                                    <Text style={styles.emptySprintSub}>
+                                        Tạo epic để nhóm theo tính năng lớn; story chưa gán epic nằm ở Backlog.
+                                    </Text>
+                                    {canEditProject ? (
+                                        <TouchableOpacity style={styles.emptySprintBtn} onPress={openEpicModal}>
+                                            <Icon name="plus" size={14} color="#fff" />
+                                            <Text style={styles.emptySprintBtnText}>Tạo epic đầu tiên</Text>
+                                        </TouchableOpacity>
+                                    ) : null}
+                                </View>
+                            ) : (
+                                <>
+                                    <View style={styles.epicCard}>
+                                        <TouchableOpacity style={styles.epicHeaderRow} onPress={() => toggleEpicBucket('__backlog__')}>
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={styles.epicName}>Backlog · chưa gán epic</Text>
+                                                <Text style={styles.epicMeta}>{backlogStories.length} story</Text>
+                                            </View>
+                                            <Icon name={expandedEpics.__backlog__ ? 'chevron-up' : 'chevron-down'} size={14} color="#666" />
+                                        </TouchableOpacity>
+                                        {expandedEpics.__backlog__ ? (
+                                            <View style={styles.epicBody}>
+                                                {backlogStories.length === 0 ? (
+                                                    <Text style={styles.epicEmptyHint}>Không có story chưa gán epic.</Text>
+                                                ) : null}
+                                                {backlogStories.map((story, idx) => {
+                                                    const assignee = getStoryAssignee(story);
+                                                    const statusUi = getStoryStatusUi(story.storyStatus);
+                                                    return (
+                                                        <TouchableOpacity key={story.story_id} style={styles.storyRow} onPress={() => openStory(story)}>
+                                                            <View style={{ flex: 1 }}>
+                                                                <Text style={styles.storyTitle}>{idx + 1}. {story.storyName}</Text>
+                                                                <View style={[styles.storyStatusBadge, { backgroundColor: statusUi.bg }]}>
+                                                                    <Text style={[styles.storyStatus, { color: statusUi.color }]}>{statusUi.label}</Text>
+                                                                </View>
+                                                            </View>
+                                                            <View style={styles.assigneeWrap}>
+                                                                <Image source={getAvatarSource(assignee)} style={styles.avatar} />
+                                                            </View>
+                                                        </TouchableOpacity>
+                                                    );
+                                                })}
+                                                {canEditProject ? (
+                                                    <View style={styles.createRow}>
+                                                        <TextInput
+                                                            style={styles.createInput}
+                                                            placeholder="Story mới (chưa gán epic)..."
+                                                            value={newStoryBacklog}
+                                                            onChangeText={setNewStoryBacklog}
+                                                        />
+                                                        <TouchableOpacity style={styles.createBtn} onPress={() => createStoryInEpicView(null)}>
+                                                            <Text style={styles.createBtnText}>Create</Text>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                ) : null}
+                                            </View>
+                                        ) : null}
+                                    </View>
+
+                                    {epics.map((epic) => {
+                                        const eid = epic.epic_id;
+                                        const epicStoriesList = storiesByEpicId[eid] || [];
+                                        const isOpen = Boolean(expandedEpics[eid]);
+                                        return (
+                                            <View key={String(eid)} style={styles.epicCard}>
+                                                <TouchableOpacity style={styles.epicHeaderRow} onPress={() => toggleEpicBucket(eid)}>
+                                                    <View style={{ flex: 1 }}>
+                                                        <Text style={styles.epicName}>{epic.epicName || 'Epic'}</Text>
+                                                        <Text style={styles.epicMeta} numberOfLines={2}>
+                                                            {(epic.description && String(epic.description).trim()) || 'Không có mô tả'} · {epicStoriesList.length} story
+                                                        </Text>
+                                                    </View>
+                                                    <Icon name={isOpen ? 'chevron-up' : 'chevron-down'} size={14} color="#666" />
+                                                </TouchableOpacity>
+                                                {isOpen ? (
+                                                    <View style={styles.epicBody}>
+                                                        {epicStoriesList.length === 0 ? (
+                                                            <Text style={styles.epicEmptyHint}>Chưa có story trong epic này.</Text>
+                                                        ) : null}
+                                                        {epicStoriesList.map((story, idx) => {
+                                                            const assignee = getStoryAssignee(story);
+                                                            const statusUi = getStoryStatusUi(story.storyStatus);
+                                                            return (
+                                                                <TouchableOpacity key={story.story_id} style={styles.storyRow} onPress={() => openStory(story)}>
+                                                                    <View style={{ flex: 1 }}>
+                                                                        <Text style={styles.storyTitle}>{idx + 1}. {story.storyName}</Text>
+                                                                        <View style={[styles.storyStatusBadge, { backgroundColor: statusUi.bg }]}>
+                                                                            <Text style={[styles.storyStatus, { color: statusUi.color }]}>{statusUi.label}</Text>
+                                                                        </View>
+                                                                    </View>
+                                                                    <View style={styles.assigneeWrap}>
+                                                                        <Image source={getAvatarSource(assignee)} style={styles.avatar} />
+                                                                    </View>
+                                                                </TouchableOpacity>
+                                                            );
+                                                        })}
+                                                        {canEditProject ? (
+                                                            <View style={styles.createRow}>
+                                                                <TextInput
+                                                                    style={styles.createInput}
+                                                                    placeholder="Story mới trong epic..."
+                                                                    value={newStoryByEpic[eid] || ''}
+                                                                    onChangeText={(text) => setNewStoryByEpic((prev) => ({ ...prev, [eid]: text }))}
+                                                                />
+                                                                <TouchableOpacity style={styles.createBtn} onPress={() => createStoryInEpicView(eid)}>
+                                                                    <Text style={styles.createBtnText}>Create</Text>
+                                                                </TouchableOpacity>
+                                                            </View>
+                                                        ) : null}
+                                                    </View>
+                                                ) : null}
+                                            </View>
+                                        );
+                                    })}
+                                </>
+                            )}
+                        </>
+                    )}
                 </ScrollView>
             )}
 
-            {myRole === 'Owner' ? (
+            {canEditProject && planViewTab === 'sprints' ? (
                 <TouchableOpacity style={styles.fabCreate} onPress={openCreateSprintModal}>
                     <Icon name="plus" size={14} color="#fff" />
                     <Text style={styles.fabText}>Create</Text>
@@ -529,61 +902,214 @@ export default function Plan({ navigation, route }) {
                 </View>
             </Modal>
 
+            <Modal transparent visible={epicModalVisible} animationType="fade" onRequestClose={() => setEpicModalVisible(false)}>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                        <Text style={styles.modalTitle}>Tạo Epic</Text>
+                        <TextInput style={styles.modalInput} value={newEpicName} onChangeText={setNewEpicName} placeholder="Tên epic" />
+                        <TextInput
+                            style={styles.modalInput}
+                            value={newEpicDesc}
+                            onChangeText={setNewEpicDesc}
+                            placeholder="Mô tả (tùy chọn)"
+                            multiline
+                        />
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity style={[styles.modalBtn, styles.modalCancel]} onPress={() => setEpicModalVisible(false)}>
+                                <Text style={styles.modalCancelText}>Hủy</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.modalBtn, styles.modalSave]} onPress={saveEpic}>
+                                <Text style={styles.modalSaveText}>Tạo</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
             <Modal
                 transparent
                 visible={projectInfoVisible}
-                animationType="fade"
-                onRequestClose={() => setProjectInfoVisible(false)}
+                animationType="none"
+                onRequestClose={closeProjectInfo}
             >
-                <View style={styles.modalOverlay}>
-                    <TouchableOpacity style={{ flex: 1, width: '100%' }} onPress={() => setProjectInfoVisible(false)} />
-                    <View style={styles.infoDrawer}>
+                <View style={styles.projectInfoRoot}>
+                    <TouchableOpacity style={styles.projectInfoBackdrop} activeOpacity={1} onPress={closeProjectInfo} />
+                    <Animated.View style={[styles.projectInfoSheet, { transform: [{ translateY: slideY }] }]}>
+                        <View style={styles.projectInfoHandle} />
                         <View style={styles.infoHeader}>
-                            <Text style={styles.infoTitle}>Project Info</Text>
-                            <TouchableOpacity onPress={() => setProjectInfoVisible(false)}>
+                            <Text style={styles.infoTitle}>Thông tin dự án</Text>
+                            <TouchableOpacity onPress={closeProjectInfo} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                                 <Icon name="times" size={18} color="#555" />
                             </TouchableOpacity>
                         </View>
 
-                        <View style={styles.projectCodeBox}>
-                            <Text style={styles.projectCodeLabel}>ID dự án</Text>
-                            <Text style={styles.projectCodeValue}>{projectId || '--'}</Text>
-                            <TouchableOpacity
-                                style={styles.copyProjectBtn}
-                                onPress={() => {
-                                    Clipboard.setString(projectId ? String(projectId) : '');
-                                    Alert.alert('Đã sao chép', `ID: ${projectId}`);
-                                }}
-                            >
-                                <Icon name="copy" size={12} color="#fff" />
-                                <Text style={styles.copyProjectBtnText}>Copy ID</Text>
-                            </TouchableOpacity>
-                        </View>
+                        <ScrollView
+                            style={styles.projectInfoScroll}
+                            showsVerticalScrollIndicator={false}
+                            keyboardShouldPersistTaps="handled"
+                        >
+                            <Text style={styles.projectInfoName}>{projectDetail?.projectName || projectName || '—'}</Text>
+                            <Text style={styles.projectInfoDesc}>{projectDetail?.projectDescription || 'Chưa có mô tả'}</Text>
 
-                        <Text style={styles.memberTitle}>Thành viên</Text>
-                        <FlatList
-                            data={users}
-                            keyExtractor={(item) => String(item.user_id)}
-                            renderItem={({ item }) => (
-                                <View style={styles.memberRow}>
-                                    <View style={styles.memberLeft}>
-                                        <Image
-                                            source={getAvatarSource(item)}
-                                            style={styles.memberAvatar}
-                                        />
-                                        <View>
-                                            <Text style={styles.memberName}>{item.username}</Text>
-                                            <Text style={styles.memberEmail}>{item.email}</Text>
-                                        </View>
-                                    </View>
-                                    <View style={styles.roleBadge}>
-                                        <Text style={styles.roleText}>{item.roleName || 'Member'}</Text>
-                                    </View>
+                            <View style={styles.statGrid}>
+                                <View style={styles.statCell}>
+                                    <Text style={styles.statValue}>{sprints.length}</Text>
+                                    <Text style={styles.statLabel}>Sprint</Text>
                                 </View>
-                            )}
-                            ListEmptyComponent={<Text style={styles.emptyText}>Chưa có thành viên</Text>}
-                        />
-                    </View>
+                                <View style={styles.statCell}>
+                                    <Text style={styles.statValue}>{stories.length}</Text>
+                                    <Text style={styles.statLabel}>Story</Text>
+                                </View>
+                                <View style={styles.statCell}>
+                                    <Text style={styles.statValue}>{tasks.length}</Text>
+                                    <Text style={styles.statLabel}>Subtask</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.progressBlock}>
+                                <View style={styles.progressHeader}>
+                                    <Text style={styles.progressTitle}>Tiến độ dự án</Text>
+                                    <Text style={styles.progressPercent}>{projectCompletion.percent}%</Text>
+                                </View>
+                                <View style={styles.progressTrack}>
+                                    <View style={[styles.progressFill, { width: `${Math.min(100, projectCompletion.percent)}%` }]} />
+                                </View>
+                                <Text style={styles.progressHint}>{projectCompletion.label}</Text>
+                            </View>
+
+                            <View style={styles.projectCodeBox}>
+                                <Text style={styles.projectCodeLabel}>Mã / ID dự án</Text>
+                                <Text style={styles.projectCodeValue}>{projectId || '--'}</Text>
+                                <Text style={styles.projectTimeLabel}>Thời gian dự án</Text>
+                                <Text style={styles.projectTimeValue}>
+                                    {formatDate(projectDetail?.timeStart)} — {formatDate(projectDetail?.timeEnd)}
+                                </Text>
+                                <TouchableOpacity
+                                    style={styles.copyProjectBtn}
+                                    onPress={() => {
+                                        Clipboard.setString(projectId ? String(projectId) : '');
+                                        Alert.alert('Đã sao chép', `ID: ${projectId}`);
+                                    }}
+                                >
+                                    <Icon name="copy" size={12} color="#fff" />
+                                    <Text style={styles.copyProjectBtnText}>Copy ID</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            <Text style={styles.memberTitle}>Thành viên ({users.length})</Text>
+                            {users.length === 0 ? <Text style={styles.emptyText}>Chưa có thành viên</Text> : null}
+                            {users.map((item) => {
+                                const ownerUserId = projectDetail?.projectowner;
+                                const isProjectCreator = Number(item.user_id) === Number(ownerUserId);
+                                const label = mapRoleLabel(item.roleName);
+                                const rawRole = String(item.roleName || '');
+                                const canOwnerEditThis =
+                                    myRole === 'Owner' && !isProjectCreator && Number(item.user_id) !== Number(userData?.user_id);
+
+                                return (
+                                    <View key={String(item.user_id)} style={styles.memberCard}>
+                                        <View style={styles.memberRow}>
+                                            <View style={styles.memberLeft}>
+                                                <Image source={getAvatarSource(item)} style={styles.memberAvatar} />
+                                                <View style={{ flex: 1 }}>
+                                                    <Text style={styles.memberName}>{item.username}</Text>
+                                                    <Text style={styles.memberEmail}>{item.email}</Text>
+                                                </View>
+                                            </View>
+                                            <View style={styles.roleBadge}>
+                                                <Text style={styles.roleText}>{label}</Text>
+                                            </View>
+                                        </View>
+                                        {canOwnerEditThis ? (
+                                            <View style={styles.memberActions}>
+                                                {rawRole !== 'Owner' && label !== 'Owner' ? (
+                                                    <TouchableOpacity
+                                                        style={styles.memberActionBtn}
+                                                        onPress={() =>
+                                                            Alert.alert('Gỡ thành viên', `Xóa ${item.username} khỏi dự án?`, [
+                                                                { text: 'Hủy', style: 'cancel' },
+                                                                {
+                                                                    text: 'Xóa',
+                                                                    style: 'destructive',
+                                                                    onPress: () => removeProjectMember(item.user_id),
+                                                                },
+                                                            ])
+                                                        }
+                                                    >
+                                                        <Icon name="user-minus" size={12} color="#b91c1c" />
+                                                        <Text style={styles.memberActionDanger}>Xóa</Text>
+                                                    </TouchableOpacity>
+                                                ) : null}
+                                                {label === 'Member' ? (
+                                                    <TouchableOpacity
+                                                        style={styles.memberActionBtn}
+                                                        onPress={() =>
+                                                            Alert.alert('Management', `Đưa ${item.username} lên Management?`, [
+                                                                { text: 'Hủy', style: 'cancel' },
+                                                                { text: 'OK', onPress: () => setMemberRole(item.user_id, 2) },
+                                                            ])
+                                                        }
+                                                    >
+                                                        <Icon name="arrow-up" size={12} color="#1d4ed8" />
+                                                        <Text style={styles.memberActionPrimary}>Lên Management</Text>
+                                                    </TouchableOpacity>
+                                                ) : null}
+                                                {(label === 'Management' || rawRole === 'Leader') && !isProjectCreator ? (
+                                                    <TouchableOpacity
+                                                        style={styles.memberActionBtn}
+                                                        onPress={() =>
+                                                            Alert.alert('Hạ vai trò', `Chuyển ${item.username} về Member?`, [
+                                                                { text: 'Hủy', style: 'cancel' },
+                                                                { text: 'OK', onPress: () => setMemberRole(item.user_id, 1) },
+                                                            ])
+                                                        }
+                                                    >
+                                                        <Icon name="arrow-down" size={12} color="#475569" />
+                                                        <Text style={styles.memberActionMuted}>Hạ xuống Member</Text>
+                                                    </TouchableOpacity>
+                                                ) : null}
+                                            </View>
+                                        ) : null}
+                                    </View>
+                                );
+                            })}
+
+                            {isCreator && myRole === 'Owner' ? (
+                                <View style={styles.deleteProjectSection}>
+                                    <Text style={styles.deleteProjectTitle}>Xóa dự án</Text>
+                                    <Text style={styles.deleteProjectHint}>
+                                        Nhập đúng mã ID dự án ({String(projectId)}) vào ô bên dưới, sau đó bấm Xóa dự án. Thao tác không hoàn tác.
+                                    </Text>
+                                    <TextInput
+                                        style={styles.deleteProjectInput}
+                                        placeholder="ID dự án để xác nhận"
+                                        placeholderTextColor="#94a3b8"
+                                        value={deleteProjectConfirmInput}
+                                        onChangeText={setDeleteProjectConfirmInput}
+                                        autoCapitalize="none"
+                                    />
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.deleteProjectBtn,
+                                            String(deleteProjectConfirmInput).trim() !== String(projectId) && styles.deleteProjectBtnDisabled,
+                                        ]}
+                                        disabled={String(deleteProjectConfirmInput).trim() !== String(projectId)}
+                                        onPress={() =>
+                                            Alert.alert('Xóa vĩnh viễn', 'Toàn bộ sprint, story, subtask và chat của dự án sẽ bị xóa.', [
+                                                { text: 'Hủy', style: 'cancel' },
+                                                { text: 'Xóa dự án', style: 'destructive', onPress: submitDeleteProject },
+                                            ])
+                                        }
+                                    >
+                                        <Icon name="trash-alt" size={14} color="#fff" />
+                                        <Text style={styles.deleteProjectBtnText}>Xóa dự án</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ) : null}
+
+                            <View style={{ height: 24 }} />
+                        </ScrollView>
+                    </Animated.View>
                 </View>
             </Modal>
         </SafeAreaView>
@@ -600,6 +1126,67 @@ const styles = StyleSheet.create({
     headerTitle: { fontSize: 18, fontWeight: '700', color: '#333', flex: 1, textAlign: 'center', marginHorizontal: 10 },
     scrollContent: { paddingHorizontal: 14, paddingBottom: 40 },
     chartCard: { backgroundColor: '#fff', borderRadius: 14, overflow: 'hidden', marginBottom: 16 },
+    planTabBar: {
+        flexDirection: 'row',
+        backgroundColor: '#eef2f7',
+        borderRadius: 12,
+        padding: 4,
+        marginBottom: 14,
+    },
+    planTab: { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
+    planTabActive: { backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 2, elevation: 2 },
+    planTabLabel: { fontSize: 13, fontWeight: '600', color: '#64748b' },
+    planTabLabelActive: { color: '#111827' },
+    emptySprintCard: {
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        padding: 20,
+        alignItems: 'center',
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#e8ecf1',
+    },
+    emptySprintTitle: { fontSize: 16, fontWeight: '700', color: '#1e293b', marginBottom: 6, textAlign: 'center' },
+    emptySprintSub: { fontSize: 13, color: '#64748b', textAlign: 'center', lineHeight: 19, marginBottom: 14 },
+    emptySprintBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#ffad44',
+        borderRadius: 12,
+        paddingHorizontal: 18,
+        paddingVertical: 11,
+        gap: 8,
+    },
+    emptySprintBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+    emptySprintMember: { fontSize: 13, color: '#64748b', textAlign: 'center' },
+    epicTabHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+    epicAddBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff7ed',
+        borderWidth: 1,
+        borderColor: '#fed7aa',
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        gap: 6,
+    },
+    epicAddBtnText: { fontSize: 12, fontWeight: '700', color: '#c2410c' },
+    emptyEpicCard: {
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        padding: 20,
+        alignItems: 'center',
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#e8ecf1',
+    },
+    epicCard: { backgroundColor: '#fff', borderRadius: 14, marginBottom: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#eef2f7' },
+    epicHeaderRow: { flexDirection: 'row', alignItems: 'center', padding: 12 },
+    epicName: { fontSize: 15, fontWeight: '700', color: '#1e293b' },
+    epicMeta: { fontSize: 12, color: '#64748b', marginTop: 4 },
+    epicBody: { borderTopWidth: 1, borderTopColor: '#f0f2f4', padding: 12 },
+    epicEmptyHint: { fontSize: 12, color: '#94a3b8', fontStyle: 'italic', marginBottom: 8 },
     sectionTitle: { fontSize: 16, fontWeight: '700', color: '#333', marginBottom: 10 },
     sprintCard: { backgroundColor: '#fff', borderRadius: 14, marginBottom: 12, overflow: 'hidden' },
     sprintHeader: { flexDirection: 'row', alignItems: 'center', padding: 12 },
@@ -669,20 +1256,62 @@ const styles = StyleSheet.create({
     modalSave: { backgroundColor: '#ffad44' },
     modalCancelText: { color: '#555', fontWeight: '600' },
     modalSaveText: { color: '#fff', fontWeight: '700' },
-    infoDrawer: {
-        width: '90%',
-        maxWidth: 420,
-        maxHeight: '75%',
+    projectInfoRoot: { flex: 1, justifyContent: 'flex-start' },
+    projectInfoBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)' },
+    projectInfoSheet: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 60,
+        maxHeight: '88%',
         backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 14,
-        marginBottom: 12,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+        paddingTop: Platform.OS === 'ios' ? 10 : 12,
+        paddingHorizontal: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 16,
     },
-    infoHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+    projectInfoHandle: {
+        width: 40,
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: '#e5e7eb',
+        alignSelf: 'center',
+        marginBottom: 10,
+    },
+    projectInfoScroll: { flexGrow: 0 },
+    projectInfoName: { fontSize: 20, fontWeight: '800', color: '#111827', marginBottom: 6 },
+    projectInfoDesc: { fontSize: 13, color: '#64748b', lineHeight: 19, marginBottom: 14 },
+    statGrid: { flexDirection: 'row', marginBottom: 14, gap: 8 },
+    statCell: {
+        flex: 1,
+        backgroundColor: '#f8fafc',
+        borderRadius: 12,
+        paddingVertical: 10,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
+    statValue: { fontSize: 18, fontWeight: '800', color: '#0f172a' },
+    statLabel: { fontSize: 11, color: '#64748b', marginTop: 2, fontWeight: '600' },
+    progressBlock: { marginBottom: 14 },
+    progressHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+    progressTitle: { fontSize: 13, fontWeight: '700', color: '#334155' },
+    progressPercent: { fontSize: 15, fontWeight: '800', color: '#ffad44' },
+    progressTrack: { height: 8, borderRadius: 999, backgroundColor: '#e2e8f0', overflow: 'hidden' },
+    progressFill: { height: 8, borderRadius: 999, backgroundColor: '#ffad44' },
+    progressHint: { fontSize: 11, color: '#94a3b8', marginTop: 6 },
+    infoHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
     infoTitle: { fontSize: 17, fontWeight: '700', color: '#222' },
-    projectCodeBox: { backgroundColor: '#f6f8fb', borderRadius: 10, padding: 10, marginBottom: 12 },
+    projectCodeBox: { backgroundColor: '#f6f8fb', borderRadius: 12, padding: 12, marginBottom: 14 },
     projectCodeLabel: { color: '#667085', fontSize: 12 },
     projectCodeValue: { color: '#1d2939', fontSize: 16, fontWeight: '700', marginTop: 4 },
+    projectTimeLabel: { color: '#667085', fontSize: 12, marginTop: 10 },
+    projectTimeValue: { color: '#334155', fontSize: 13, fontWeight: '600', marginTop: 4 },
     copyProjectBtn: {
         marginTop: 8,
         alignSelf: 'flex-start',
@@ -695,20 +1324,59 @@ const styles = StyleSheet.create({
     },
     copyProjectBtnText: { color: '#fff', fontSize: 11, fontWeight: '700', marginLeft: 6 },
     memberTitle: { fontSize: 14, fontWeight: '700', color: '#333', marginBottom: 8 },
-    memberRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f1f2f4',
+    memberCard: {
+        borderWidth: 1,
+        borderColor: '#eef2f7',
+        borderRadius: 12,
+        padding: 10,
+        marginBottom: 10,
+        backgroundColor: '#fafcff',
     },
+    memberRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     memberLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 10 },
-    memberAvatar: { width: 32, height: 32, borderRadius: 16, marginRight: 8, backgroundColor: '#eee' },
-    memberName: { fontSize: 13, fontWeight: '600', color: '#222' },
+    memberAvatar: { width: 36, height: 36, borderRadius: 18, marginRight: 10, backgroundColor: '#eee' },
+    memberName: { fontSize: 14, fontWeight: '600', color: '#222' },
     memberEmail: { fontSize: 11, color: '#667085' },
+    memberActions: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 8, gap: 8 },
+    memberActionBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, paddingHorizontal: 8, borderRadius: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#e2e8f0' },
+    memberActionDanger: { color: '#b91c1c', fontSize: 11, fontWeight: '700', marginLeft: 6 },
+    memberActionPrimary: { color: '#1d4ed8', fontSize: 11, fontWeight: '700', marginLeft: 6 },
+    memberActionMuted: { color: '#475569', fontSize: 11, fontWeight: '700', marginLeft: 6 },
     roleBadge: { backgroundColor: '#eef2ff', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4 },
     roleText: { color: '#3538cd', fontSize: 11, fontWeight: '700' },
+    deleteProjectSection: {
+        marginTop: 8,
+        padding: 12,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#fecaca',
+        backgroundColor: '#fef2f2',
+    },
+    deleteProjectTitle: { fontSize: 14, fontWeight: '800', color: '#991b1b', marginBottom: 6 },
+    deleteProjectHint: { fontSize: 12, color: '#7f1d1d', lineHeight: 17, marginBottom: 10 },
+    deleteProjectInput: {
+        borderWidth: 1,
+        borderColor: '#fca5a5',
+        borderRadius: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 9,
+        marginBottom: 10,
+        backgroundColor: '#fff',
+        fontSize: 14,
+        color: '#111827',
+    },
+    deleteProjectBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        backgroundColor: '#dc2626',
+        borderRadius: 10,
+        paddingVertical: 11,
+    },
+    deleteProjectBtnDisabled: { backgroundColor: '#fca5a5' },
+    deleteProjectBtnText: { color: '#fff', fontWeight: '800', fontSize: 14 },
+    emptyText: { fontSize: 13, color: '#94a3b8', fontStyle: 'italic', marginBottom: 8 },
     notiRow: { borderWidth: 1, borderColor: '#eef2f7', borderRadius: 10, padding: 10, marginBottom: 8, backgroundColor: '#fafcff' },
     notiMessage: { color: '#334155', fontSize: 12, fontWeight: '600' },
     notiTime: { color: '#94a3b8', fontSize: 11, marginTop: 4 },

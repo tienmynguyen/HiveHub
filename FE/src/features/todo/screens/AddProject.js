@@ -58,7 +58,6 @@ export default function AddProject({ route }) {
             .then(({ data: responseData }) => {
                 if (responseData.projectName == ProjectName) {
                     Alert.alert('Thành công', 'Đã tạo dự án thành công');
-                    setrole(responseData.project_id);
                 } else {
                     Alert.alert('Thất bại', responseData.message || 'Tạo dự án thất bại');
                 }
@@ -67,14 +66,6 @@ export default function AddProject({ route }) {
                 console.error('Error:', error);
                 Alert.alert('Lỗi', 'Có lỗi xảy ra, vui lòng thử lại.');
             });
-    };
-
-    const setrole = async (role) => {
-        try {
-            await axios.post(endpoints.projects.updateUserRole(role, userData.user_id, 3), {});
-        } catch (error) {
-            console.error(error);
-        }
     };
 
     // Format ngày hiển thị (DD/MM/YYYY nhìn thân thiện hơn YYYY-MM-DD)

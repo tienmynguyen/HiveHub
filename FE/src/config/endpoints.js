@@ -19,10 +19,16 @@ export const endpoints = {
     },
     projects: {
         getByUser: (userId) => `${BASE_URL}/getprjectbyuserId?userId=${userId}`,
+        getById: (projectId, userId) =>
+            `${BASE_URL}/getprojectbyid?projectId=${encodeURIComponent(projectId)}&userId=${userId}`,
         create: (userId) => `${BASE_URL}/createdproject?userId=${userId}`,
         join: (userId, projectId) => `${BASE_URL}/joinproject?userId=${userId}&projectId=${projectId}`,
-        updateUserRole: (projectId, userId, roleId) =>
-            `${BASE_URL}/updateuserproject?projectId=${projectId}&userId=${userId}&roleId=${roleId}`,
+        updateUserRole: (projectId, targetUserId, roleId, actorId) =>
+            `${BASE_URL}/updateuserproject?projectId=${encodeURIComponent(projectId)}&userId=${targetUserId}&roleId=${roleId}&actorId=${actorId}`,
+        removeMember: (projectId, targetUserId, actorId) =>
+            `${BASE_URL}/removememberfromproject?projectId=${encodeURIComponent(projectId)}&targetUserId=${targetUserId}&actorId=${actorId}`,
+        deleteProject: (projectId, actorId) =>
+            `${BASE_URL}/deleteproject?projectId=${encodeURIComponent(projectId)}&actorId=${actorId}`,
         getUsers: (projectId) => `${BASE_URL}/getalluserbyprojectId?projectId=${projectId}`,
         getTasks: (projectId) => `${BASE_URL}/gettaskbyprojectid?projectid=${projectId}`,
         getRole: (projectId, userId) => `${BASE_URL}/findroleinuspr?projectId=${projectId}&userId=${userId}`,
@@ -40,8 +46,8 @@ export const endpoints = {
         },
         createStory: (projectId, sprintId, epicId) => {
             const params = new URLSearchParams({ projectId: String(projectId) });
-            if (sprintId) params.append('sprintId', String(sprintId));
-            if (epicId) params.append('epicId', String(epicId));
+            if (sprintId != null && sprintId !== '') params.append('sprintId', String(sprintId));
+            if (epicId != null && epicId !== '') params.append('epicId', String(epicId));
             return `${BASE_URL}/addstory?${params.toString()}`;
         },
         addMemberByEmail: (projectId, ownerId) =>
@@ -55,6 +61,7 @@ export const endpoints = {
         getUsers: (taskId) => `${BASE_URL}/getalluserbytaskId?taskId=${taskId}`,
         update: (taskId, userId) => `${BASE_URL}/updatetask?taskId=${taskId}&userId=${userId}`,
         approve: () => `${BASE_URL}/approvetask`,
+        getApproval: (taskId) => `${BASE_URL}/task-approval/${taskId}`,
         reject: (taskId, adminId, reason) =>
             `${BASE_URL}/rejecttask?taskId=${taskId}&adminId=${adminId}&reason=${encodeURIComponent(reason)}`,
         postComment: (taskId, userId) => `${BASE_URL}/postcomment?taskId=${taskId}&userId=${userId}`,
