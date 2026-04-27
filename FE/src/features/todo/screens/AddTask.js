@@ -18,11 +18,8 @@ export default function AddTask({ route, navigation }) {
     const [description, setDescription] = useState('');
     const [selected, setSelected] = useState([]); 
     const [userList, setUserList] = useState([]); 
-    const [epicList, setEpicList] = useState([]);
     const [storyList, setStoryList] = useState([]);
-    const [selectedEpic, setSelectedEpic] = useState(null);
     const [selectedStory, setSelectedStory] = useState(null);
-    const [newEpicName, setNewEpicName] = useState('');
     const [newStoryName, setNewStoryName] = useState('');
     const [loading, setLoading] = useState(false);
     const [myRole, setMyRole] = useState('Member');
@@ -67,13 +64,10 @@ export default function AddTask({ route, navigation }) {
                 setUserList(cleanData);
             }
 
-            const [epicsRes, storiesRes] = await Promise.all([
-                axios.get(endpoints.projects.getEpics(projectId)),
+            const [storiesRes] = await Promise.all([
                 axios.get(endpoints.projects.getStories(projectId)),
             ]);
-            const epics = Array.isArray(epicsRes.data) ? epicsRes.data : [];
             const stories = Array.isArray(storiesRes.data) ? storiesRes.data : [];
-            setEpicList(epics.map((e) => ({ label: e.epicName, value: e.epic_id })));
             setStoryList(stories.map((s) => ({ label: s.storyName, value: s.story_id, epic_id: s.epic_id })));
         } catch (error) {
             console.error("Fetch Error:", error);
@@ -106,22 +100,11 @@ export default function AddTask({ route, navigation }) {
         onSubmitPressed();
     };
 
-    const handleCreateEpic = async () => {
-        if (!newEpicName.trim()) return;
-        try {
-            const { data } = await axios.post(endpoints.projects.createEpic(projectId), { epicName: newEpicName.trim() });
-            setEpicList((prev) => [...prev, { label: data.epicName, value: data.epic_id }]);
-            setSelectedEpic(data.epic_id);
-            setNewEpicName('');
-        } catch (error) {
-            Alert.alert('Lỗi', 'Không thể tạo epic.');
-        }
-    };
-
     const handleCreateStory = async () => {
         if (!newStoryName.trim()) return;
         try {
-            const url = endpoints.projects.createStory(projectId, null, selectedEpic);
+            // Task không cần chọn epic. Nếu cần gán epic, tạo story ở màn Plan.
+            const url = endpoints.projects.createStory(projectId, null, null);
             const { data } = await axios.post(url, { storyName: newStoryName.trim() });
             setStoryList((prev) => [...prev, { label: data.storyName, value: data.story_id, epic_id: data.epic_id }]);
             setSelectedStory(data.story_id);
@@ -219,37 +202,13 @@ export default function AddTask({ route, navigation }) {
                 </View>
 
                 <View style={styles.sectionContainer}>
-                    <Text style={styles.label}>Epic (tuỳ chọn):</Text>
-                    <Dropdown
-                        style={styles.dropdown}
-                        placeholderStyle={styles.placeholderStyle}
-                        selectedTextStyle={styles.selectedTextStyle}
-                        data={[{ label: 'Không chọn epic', value: null }, ...epicList]}
-                        labelField="label"
-                        valueField="value"
-                        value={selectedEpic}
-                        placeholder="Chọn epic"
-                        onChange={(item) => setSelectedEpic(item.value)}
-                    />
-                    <View style={styles.quickCreateRow}>
-                        <TextInput
-                            style={[styles.input, { flex: 1, marginBottom: 0 }]}
-                            placeholder="Tạo epic mới..."
-                            value={newEpicName}
-                            onChangeText={setNewEpicName}
-                        />
-                        <TouchableOpacity style={styles.smallCreateBtn} onPress={handleCreateEpic}>
-                            <Text style={styles.smallCreateBtnText}>+ Epic</Text>
-                        </TouchableOpacity>
-                    </View>
-
                     <Text style={styles.label}>Story <Text style={{color:'red'}}>*</Text>:</Text>
                     {storyName ? <Text style={styles.lockedHint}>Đang tạo subtask cho story: {storyName}</Text> : null}
                     <Dropdown
                         style={styles.dropdown}
                         placeholderStyle={styles.placeholderStyle}
                         selectedTextStyle={styles.selectedTextStyle}
-                        data={storyList.filter((s) => !selectedEpic || s.epic_id === selectedEpic)}
+                        data={storyList}
                         labelField="label"
                         valueField="value"
                         value={selectedStory}

@@ -5,7 +5,7 @@
       "email": "mytom@gmail.com",
       "username": "My",
       "password": "$2b$10$nkBGtEfSvOZNjRT2Q7ZPQub85hfBm3RZqbZB81fTofkDWwSvghBDS",
-      "imagePath": null,
+      "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777051632/pmk3y4akg4c9uugduhi3.jpg",
       "description": "Product owner",
       "walletAddress": ""
     },
@@ -14,8 +14,26 @@
       "email": "abc@gmail.com",
       "username": "Abc",
       "password": "$2b$10$Y6amz4KzF5KuFZ3/EHIWS.9fiNu6fw7eNLtVy0atjKW7Fw8iTRagO",
-      "imagePath": null,
+      "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777051883/slwbpgfdlti9u0obyd1a.jpg",
       "description": "Frontend member",
+      "walletAddress": ""
+    },
+    {
+      "user_id": 3,
+      "email": "ngoc@gmail.com",
+      "username": "Bich Ngoc",
+      "password": "$2b$10$miiQmiKCrIYX3w6UqbPG7OWmluY4lf.18Hg7FqYNeG6n/y58.Mv2.",
+      "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777096908/xjr2vyev18gon5wngblw.jpg",
+      "description": "Ngọc cute",
+      "walletAddress": ""
+    },
+    {
+      "user_id": 4,
+      "email": "trinh@gmail.com",
+      "username": "Àgjjvf",
+      "password": "$2b$10$R9CrKHdLUL6TmZ0P7SBSmuzshtyIr/kZh8tkYnkklSZ28kk49gumW",
+      "imagePath": null,
+      "description": "",
       "walletAddress": ""
     }
   ],
@@ -51,6 +69,134 @@
       "projectowner": 1,
       "timeStart": "2026-04-23T11:50:25.665Z",
       "timeEnd": "2026-06-23T08:20:46.000Z"
+    },
+    {
+      "project_id": "P-47041486",
+      "projectName": "Project 5752",
+      "projectDescription": "",
+      "projectowner": 1,
+      "timeStart": "2026-04-23T12:24:01.486Z",
+      "timeEnd": "2026-04-23T12:24:01.486Z"
+    },
+    {
+      "project_id": "P-47226967",
+      "projectName": "Project 4095",
+      "projectDescription": "",
+      "projectowner": 1,
+      "timeStart": "2026-04-23T12:27:06.967Z",
+      "timeEnd": "2026-04-23T12:27:06.967Z"
+    },
+    {
+      "project_id": "P-48105699",
+      "projectName": "abdjdksbsh",
+      "projectDescription": "",
+      "projectowner": 1,
+      "timeStart": "2026-04-23T12:41:45.699Z",
+      "timeEnd": "2026-04-23T12:41:45.699Z"
+    },
+    {
+      "project_id": "P-48262057",
+      "projectName": "FFHKT",
+      "projectDescription": "",
+      "projectowner": 1,
+      "timeStart": "2026-04-23T12:44:22.057Z",
+      "timeEnd": "2026-04-23T12:44:22.057Z"
+    },
+    {
+      "project_id": "P-44785432",
+      "projectName": "D",
+      "projectDescription": "A",
+      "projectowner": 1,
+      "timeStart": "2026-04-24T15:33:01.620Z",
+      "timeEnd": "2026-04-24T15:33:01.620Z"
+    },
+    {
+      "project_id": "P-44811407",
+      "projectName": "New Project",
+      "projectDescription": "",
+      "projectowner": 1,
+      "timeStart": "2026-04-24T15:33:31.407Z",
+      "timeEnd": "2026-04-24T15:33:31.407Z"
+    },
+    {
+      "project_id": "P-48116464",
+      "projectName": "New Project",
+      "projectDescription": "",
+      "projectowner": 1,
+      "timeStart": "2026-04-24T16:28:36.464Z",
+      "timeEnd": "2026-04-24T16:28:36.464Z"
+    },
+    {
+      "project_id": "P-48394698",
+      "projectName": "New Project",
+      "projectDescription": "",
+      "projectowner": 1,
+      "timeStart": "2026-04-24T16:33:14.698Z",
+      "timeEnd": "2026-04-24T16:33:14.698Z"
+    },
+    {
+      "project_id": "P-49722891",
+      "projectName": "HiveHub Mobile Scrum",
+      "projectDescription": "",
+      "projectowner": 2,
+      "timeStart": "2026-04-24T16:55:22.891Z",
+      "timeEnd": "2026-04-24T16:55:22.891Z"
+    },
+    {
+      "project_id": "P-49861593",
+      "projectName": "AAAAA",
+      "projectDescription": "Ấhhb",
+      "projectowner": 2,
+      "timeStart": "2026-04-24T16:57:30.334Z",
+      "timeEnd": "2026-04-24T16:57:30.334Z"
+    },
+    {
+      "project_id": "P-50922215",
+      "projectName": "HHHKT",
+      "projectDescription": "nhóm nhạc số một thế giới",
+      "projectowner": 2,
+      "timeStart": "2026-04-24T17:15:22.215Z",
+      "timeEnd": "2026-04-24T17:15:22.215Z"
+    },
+    {
+      "project_id": "P-54034826",
+      "projectName": "ABC",
+      "projectDescription": "xây dựng ứng dụng ABC",
+      "projectowner": 1,
+      "timeStart": "2026-04-25T17:00:00.000Z",
+      "timeEnd": "2026-05-23T17:00:00.000Z"
+    },
+    {
+      "project_id": "P-96952368",
+      "projectName": "ngoc cute",
+      "projectDescription": "khen ngọc",
+      "projectowner": 3,
+      "timeStart": "2026-04-25T06:02:12.330Z",
+      "timeEnd": "2026-08-25T05:58:53.000Z"
+    },
+    {
+      "project_id": "P-96955862",
+      "projectName": "ngoc cute",
+      "projectDescription": "khen ngọc",
+      "projectowner": 3,
+      "timeStart": "2026-04-25T06:02:12.330Z",
+      "timeEnd": "2026-08-25T05:58:53.000Z"
+    },
+    {
+      "project_id": "P-97079022",
+      "projectName": "mỹ ngu",
+      "projectDescription": "ngu dốt",
+      "projectowner": 3,
+      "timeStart": "2026-04-25T06:04:23.918Z",
+      "timeEnd": "2026-12-25T05:58:53.000Z"
+    },
+    {
+      "project_id": "P-97081498",
+      "projectName": "mỹ ngu",
+      "projectDescription": "ngu dốt",
+      "projectowner": 3,
+      "timeStart": "2026-04-25T06:04:23.918Z",
+      "timeEnd": "2026-12-25T05:58:53.000Z"
     }
   ],
   "userProjects": [
@@ -83,6 +229,108 @@
       "projectId": "P-45038379",
       "userId": 1,
       "roleId": 3
+    },
+    {
+      "userProjectId": "aaecb2ff-81ba-42c4-aa1c-ba4f4380a435",
+      "projectId": "P-47041486",
+      "userId": 1,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "1d01ad37-d141-430e-8456-a825489c8225",
+      "projectId": "P-47226967",
+      "userId": 1,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "0aa6a5c3-c99a-4e66-a24e-36db10a94c41",
+      "projectId": "P-48105699",
+      "userId": 1,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "10a62eff-1ae9-469c-b9fa-3f3bddf3c92a",
+      "projectId": "P-48262057",
+      "userId": 1,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "8758fa70-8693-4368-b024-25b8cea9b91d",
+      "projectId": "P-44785432",
+      "userId": 1,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "4b880b47-25f1-4442-897a-751e0c26dc47",
+      "projectId": "P-44811407",
+      "userId": 1,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "a8e277db-ea4f-4594-b130-8ea7b8a9fd0c",
+      "projectId": "P-48116464",
+      "userId": 1,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "4cc737a2-a991-4fd4-934c-444075ffedef",
+      "projectId": "P-48394698",
+      "userId": 1,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "bd9606d0-43c3-4d69-b786-de738ce2a744",
+      "projectId": "P-49722891",
+      "userId": 2,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "e48053dd-0ffe-4e67-ae48-99c8b1c4e78f",
+      "projectId": "P-49861593",
+      "userId": 2,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "bbdea249-375b-474e-9a82-c7182dec0cf5",
+      "projectId": "P-50922215",
+      "userId": 2,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "aeeff59c-48e0-4432-9660-72ae9137cb36",
+      "projectId": "P-54034826",
+      "userId": 1,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "da2e6e18-2595-4cb0-9140-8a3f9ce660c4",
+      "projectId": "P-96952368",
+      "userId": 3,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "289cb652-ef3a-4c52-bd59-7b1b1c3c9bab",
+      "projectId": "P-96955862",
+      "userId": 3,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "d9432e53-7582-47ac-a12e-22e3a80d3db6",
+      "projectId": "P-97079022",
+      "userId": 3,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "bbbad9a0-eb2c-4271-abb0-06fefaf7cf97",
+      "projectId": "P-97081498",
+      "userId": 3,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "30257835-0f65-43fe-8449-63988570538d",
+      "projectId": "P-32457576",
+      "userId": 4,
+      "roleId": 1
     }
   ],
   "sprints": [
@@ -110,7 +358,7 @@
       "project_id": "P-32457576",
       "sprintName": "Sprint 2 - Planning UX",
       "sprintGoal": "Xay dung plan screen, story detail, notification owner.",
-      "sprintStatus": "IN_PROGRESS",
+      "sprintStatus": "DONE",
       "timeStart": "2026-05-01T00:00:00.000Z",
       "timeEnd": "2026-05-10T23:59:59.000Z",
       "isDefault": false
@@ -134,6 +382,66 @@
       "isDefault": true,
       "timeStart": "2026-04-22T00:00:00.000Z",
       "timeEnd": "2026-05-20T23:59:59.000Z"
+    },
+    {
+      "sprint_id": 6,
+      "project_id": "P-48116464",
+      "sprintName": "New Sprint",
+      "sprintGoal": "",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-04-24T16:29:20.964Z",
+      "timeEnd": "2026-05-01T16:29:20.964Z"
+    },
+    {
+      "sprint_id": 7,
+      "project_id": "P-49861593",
+      "sprintName": "New Sprint",
+      "sprintGoal": "",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-04-24T16:58:50.040Z",
+      "timeEnd": "2026-05-01T16:58:50.040Z"
+    },
+    {
+      "sprint_id": 8,
+      "project_id": "P-54034826",
+      "sprintName": "Sprint 1 - Khoi tao va dinh nghia pham vi du an",
+      "sprintGoal": "Tap trung phat trien khoi tao va dinh nghia pham vi du an cho ABC",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-04-25T17:00:00.000Z",
+      "timeEnd": "2026-05-02T17:00:00.000Z"
+    },
+    {
+      "sprint_id": 9,
+      "project_id": "P-54034826",
+      "sprintName": "Sprint 2 - Xay dung luong nghiep vu cot loi",
+      "sprintGoal": "Tap trung phat trien xay dung luong nghiep vu cot loi cho ABC",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-05-02T17:00:00.000Z",
+      "timeEnd": "2026-05-09T17:00:00.000Z"
+    },
+    {
+      "sprint_id": 10,
+      "project_id": "P-54034826",
+      "sprintName": "Sprint 3 - Trien khai giao dien va trai nghiem nguoi dung",
+      "sprintGoal": "Tap trung phat trien trien khai giao dien va trai nghiem nguoi dung cho ABC",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-05-09T17:00:00.000Z",
+      "timeEnd": "2026-05-16T17:00:00.000Z"
+    },
+    {
+      "sprint_id": 11,
+      "project_id": "P-54034826",
+      "sprintName": "Sprint 4 - Tich hop he thong va dong bo du lieu",
+      "sprintGoal": "Tap trung phat trien tich hop he thong va dong bo du lieu cho ABC",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-05-16T17:00:00.000Z",
+      "timeEnd": "2026-05-23T17:00:00.000Z"
     }
   ],
   "epics": [
@@ -198,7 +506,7 @@
       "epic_id": 2,
       "storyName": "Plan screen with hierarchical gantt",
       "description": "Hien thi sprint -> story -> subtask theo timeline.",
-      "storyStatus": "IN_PROGRESS",
+      "storyStatus": "DONE",
       "storyOrder": 1,
       "assignee_user_id": 2,
       "isDefault": false
@@ -210,7 +518,7 @@
       "epic_id": 3,
       "storyName": "Owner notifications and add member",
       "description": "Them chuong thong bao va them thanh vien qua email.",
-      "storyStatus": "TODO",
+      "storyStatus": "DONE",
       "storyOrder": 2,
       "assignee_user_id": 1,
       "isDefault": false
@@ -224,6 +532,138 @@
       "description": "Default story for migrated tasks",
       "storyStatus": "TODO",
       "isDefault": true
+    },
+    {
+      "story_id": 7,
+      "project_id": "P-48262057",
+      "sprint_id": null,
+      "epic_id": null,
+      "storyName": "sprint 1",
+      "description": "",
+      "storyStatus": "TODO",
+      "storyOrder": 7,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 8,
+      "project_id": "P-44811407",
+      "sprint_id": null,
+      "epic_id": null,
+      "storyName": "đăng nhập OTP",
+      "description": "",
+      "storyStatus": "TODO",
+      "storyOrder": 8,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 9,
+      "project_id": "P-49861593",
+      "sprint_id": 7,
+      "epic_id": null,
+      "storyName": "xin chào",
+      "description": "",
+      "storyStatus": "TODO",
+      "storyOrder": 9,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 10,
+      "project_id": "P-54034826",
+      "sprint_id": 8,
+      "epic_id": null,
+      "storyName": "Khoi tao va dinh nghia pham vi du an cho ABC",
+      "description": "Story tu dong theo blueprint, thuoc Sprint 1 cua ABC",
+      "storyStatus": "TODO",
+      "storyOrder": 10,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 11,
+      "project_id": "P-54034826",
+      "sprint_id": 8,
+      "epic_id": null,
+      "storyName": "Xay dung luong nghiep vu cot loi cho ABC",
+      "description": "Story tu dong theo blueprint, thuoc Sprint 1 cua ABC",
+      "storyStatus": "TODO",
+      "storyOrder": 11,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 12,
+      "project_id": "P-54034826",
+      "sprint_id": 9,
+      "epic_id": null,
+      "storyName": "Xay dung luong nghiep vu cot loi cho ABC",
+      "description": "Story tu dong theo blueprint, thuoc Sprint 2 cua ABC",
+      "storyStatus": "TODO",
+      "storyOrder": 12,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 13,
+      "project_id": "P-54034826",
+      "sprint_id": 9,
+      "epic_id": null,
+      "storyName": "Trien khai giao dien va trai nghiem nguoi dung cho ABC",
+      "description": "Story tu dong theo blueprint, thuoc Sprint 2 cua ABC",
+      "storyStatus": "TODO",
+      "storyOrder": 13,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 14,
+      "project_id": "P-54034826",
+      "sprint_id": 10,
+      "epic_id": null,
+      "storyName": "Trien khai giao dien va trai nghiem nguoi dung cho ABC",
+      "description": "Story tu dong theo blueprint, thuoc Sprint 3 cua ABC",
+      "storyStatus": "TODO",
+      "storyOrder": 14,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 15,
+      "project_id": "P-54034826",
+      "sprint_id": 10,
+      "epic_id": null,
+      "storyName": "Tich hop he thong va dong bo du lieu cho ABC",
+      "description": "Story tu dong theo blueprint, thuoc Sprint 3 cua ABC",
+      "storyStatus": "TODO",
+      "storyOrder": 15,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 16,
+      "project_id": "P-54034826",
+      "sprint_id": 11,
+      "epic_id": null,
+      "storyName": "Tich hop he thong va dong bo du lieu cho ABC",
+      "description": "Story tu dong theo blueprint, thuoc Sprint 4 cua ABC",
+      "storyStatus": "TODO",
+      "storyOrder": 16,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 17,
+      "project_id": "P-54034826",
+      "sprint_id": 11,
+      "epic_id": null,
+      "storyName": "Bao mat, van hanh va toi uu cho ABC",
+      "description": "Story tu dong theo blueprint, thuoc Sprint 4 cua ABC",
+      "storyStatus": "TODO",
+      "storyOrder": 17,
+      "assignee_user_id": null,
+      "isDefault": false
     }
   ],
   "tasks": [
@@ -295,11 +735,11 @@
       "story_id": 4,
       "taskName": "Refactor gantt to hierarchy layout",
       "description": "Sprint, story, subtask tren cung mot timeline.",
-      "taskStatus": "IN_PROGRESS",
+      "taskStatus": "COMPLETED",
       "timeStart": "2026-05-02T08:30:00.000Z",
       "timeEnd": "2026-05-06T18:00:00.000Z",
       "deadline": "2026-05-06T22:00:00.000Z",
-      "is_approved": false,
+      "is_approved": true,
       "txHash": null
     },
     {
@@ -310,11 +750,11 @@
       "story_id": 4,
       "taskName": "Add status color legend",
       "description": "Them legend cho sprint/story/subtask statuses.",
-      "taskStatus": "TODO",
+      "taskStatus": "COMPLETED",
       "timeStart": "2026-05-05T08:30:00.000Z",
       "timeEnd": "2026-05-07T17:00:00.000Z",
       "deadline": "2026-05-07T21:00:00.000Z",
-      "is_approved": false,
+      "is_approved": true,
       "txHash": null
     },
     {
@@ -325,11 +765,11 @@
       "story_id": 5,
       "taskName": "Notification bell modal for owner",
       "description": "Hien thi thay doi story/subtask cho owner.",
-      "taskStatus": "TODO",
+      "taskStatus": "COMPLETED",
       "timeStart": "2026-05-06T08:30:00.000Z",
       "timeEnd": "2026-05-08T17:30:00.000Z",
       "deadline": "2026-05-08T21:00:00.000Z",
-      "is_approved": false,
+      "is_approved": true,
       "txHash": null
     },
     {
@@ -340,10 +780,268 @@
       "story_id": 5,
       "taskName": "Add member by email flow",
       "description": "Validate email and link member to project.",
-      "taskStatus": "TODO",
+      "taskStatus": "APPROVED",
       "timeStart": "2026-05-07T08:30:00.000Z",
       "timeEnd": "2026-05-09T17:30:00.000Z",
       "deadline": "2026-05-09T21:00:00.000Z",
+      "is_approved": true,
+      "txHash": "0x7afda2d547def51d5228a392abe41a2a2b1d0c797ce5f07608406d76626d1819",
+      "approvedBy": 1,
+      "approvedAt": "2026-04-25T08:07:31.496Z",
+      "blockHash": "9f32320dd80383e47c9dcd3734d981e71e5a0a5bb50cbdf1d59d08bcbef7c1e2"
+    },
+    {
+      "task_id": 9,
+      "project_id": "P-49861593",
+      "sprint_id": 7,
+      "epic_id": null,
+      "story_id": 9,
+      "taskName": "tạo UXUI",
+      "description": "",
+      "taskStatus": "TODO",
+      "timeStart": "2026-04-24T17:00:17.090Z",
+      "timeEnd": "2026-04-24T17:00:17.090Z",
+      "deadline": "2026-04-24T17:00:17.090Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 10,
+      "project_id": "P-54034826",
+      "sprint_id": 8,
+      "epic_id": null,
+      "story_id": 10,
+      "taskName": "Lam ro yeu cau va tieu chi chap nhan - khoi tao va dinh nghia pham vi du an",
+      "description": "Subtask 1 de hoan thanh story: Khoi tao va dinh nghia pham vi du an cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-04-25T17:00:00.000Z",
+      "timeEnd": "2026-05-02T17:00:00.000Z",
+      "deadline": "2026-05-02T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 11,
+      "project_id": "P-54034826",
+      "sprint_id": 8,
+      "epic_id": null,
+      "story_id": 10,
+      "taskName": "Thiet ke giai phap ky thuat - khoi tao va dinh nghia pham vi du an",
+      "description": "Subtask 2 de hoan thanh story: Khoi tao va dinh nghia pham vi du an cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-04-25T17:00:00.000Z",
+      "timeEnd": "2026-05-02T17:00:00.000Z",
+      "deadline": "2026-05-02T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 12,
+      "project_id": "P-54034826",
+      "sprint_id": 8,
+      "epic_id": null,
+      "story_id": 11,
+      "taskName": "Thiet ke giai phap ky thuat - xay dung luong nghiep vu cot loi",
+      "description": "Subtask 1 de hoan thanh story: Xay dung luong nghiep vu cot loi cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-04-25T17:00:00.000Z",
+      "timeEnd": "2026-05-02T17:00:00.000Z",
+      "deadline": "2026-05-02T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 13,
+      "project_id": "P-54034826",
+      "sprint_id": 8,
+      "epic_id": null,
+      "story_id": 11,
+      "taskName": "Trien khai chuc nang chi tiet - xay dung luong nghiep vu cot loi",
+      "description": "Subtask 2 de hoan thanh story: Xay dung luong nghiep vu cot loi cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-04-25T17:00:00.000Z",
+      "timeEnd": "2026-05-02T17:00:00.000Z",
+      "deadline": "2026-05-02T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 14,
+      "project_id": "P-54034826",
+      "sprint_id": 9,
+      "epic_id": null,
+      "story_id": 12,
+      "taskName": "Thiet ke giai phap ky thuat - xay dung luong nghiep vu cot loi",
+      "description": "Subtask 1 de hoan thanh story: Xay dung luong nghiep vu cot loi cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-02T17:00:00.000Z",
+      "timeEnd": "2026-05-09T17:00:00.000Z",
+      "deadline": "2026-05-09T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 15,
+      "project_id": "P-54034826",
+      "sprint_id": 9,
+      "epic_id": null,
+      "story_id": 12,
+      "taskName": "Trien khai chuc nang chi tiet - xay dung luong nghiep vu cot loi",
+      "description": "Subtask 2 de hoan thanh story: Xay dung luong nghiep vu cot loi cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-02T17:00:00.000Z",
+      "timeEnd": "2026-05-09T17:00:00.000Z",
+      "deadline": "2026-05-09T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 16,
+      "project_id": "P-54034826",
+      "sprint_id": 9,
+      "epic_id": null,
+      "story_id": 13,
+      "taskName": "Trien khai chuc nang chi tiet - trien khai giao dien va trai nghiem nguoi dung",
+      "description": "Subtask 1 de hoan thanh story: Trien khai giao dien va trai nghiem nguoi dung cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-02T17:00:00.000Z",
+      "timeEnd": "2026-05-09T17:00:00.000Z",
+      "deadline": "2026-05-09T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 17,
+      "project_id": "P-54034826",
+      "sprint_id": 9,
+      "epic_id": null,
+      "story_id": 13,
+      "taskName": "Kiem thu va sua loi - trien khai giao dien va trai nghiem nguoi dung",
+      "description": "Subtask 2 de hoan thanh story: Trien khai giao dien va trai nghiem nguoi dung cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-02T17:00:00.000Z",
+      "timeEnd": "2026-05-09T17:00:00.000Z",
+      "deadline": "2026-05-09T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 18,
+      "project_id": "P-54034826",
+      "sprint_id": 10,
+      "epic_id": null,
+      "story_id": 14,
+      "taskName": "Trien khai chuc nang chi tiet - trien khai giao dien va trai nghiem nguoi dung",
+      "description": "Subtask 1 de hoan thanh story: Trien khai giao dien va trai nghiem nguoi dung cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-09T17:00:00.000Z",
+      "timeEnd": "2026-05-16T17:00:00.000Z",
+      "deadline": "2026-05-16T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 19,
+      "project_id": "P-54034826",
+      "sprint_id": 10,
+      "epic_id": null,
+      "story_id": 14,
+      "taskName": "Kiem thu va sua loi - trien khai giao dien va trai nghiem nguoi dung",
+      "description": "Subtask 2 de hoan thanh story: Trien khai giao dien va trai nghiem nguoi dung cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-09T17:00:00.000Z",
+      "timeEnd": "2026-05-16T17:00:00.000Z",
+      "deadline": "2026-05-16T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 20,
+      "project_id": "P-54034826",
+      "sprint_id": 10,
+      "epic_id": null,
+      "story_id": 15,
+      "taskName": "Kiem thu va sua loi - tich hop he thong va dong bo du lieu",
+      "description": "Subtask 1 de hoan thanh story: Tich hop he thong va dong bo du lieu cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-09T17:00:00.000Z",
+      "timeEnd": "2026-05-16T17:00:00.000Z",
+      "deadline": "2026-05-16T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 21,
+      "project_id": "P-54034826",
+      "sprint_id": 10,
+      "epic_id": null,
+      "story_id": 15,
+      "taskName": "Tai lieu hoa va ban giao - tich hop he thong va dong bo du lieu",
+      "description": "Subtask 2 de hoan thanh story: Tich hop he thong va dong bo du lieu cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-09T17:00:00.000Z",
+      "timeEnd": "2026-05-16T17:00:00.000Z",
+      "deadline": "2026-05-16T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 22,
+      "project_id": "P-54034826",
+      "sprint_id": 11,
+      "epic_id": null,
+      "story_id": 16,
+      "taskName": "Kiem thu va sua loi - tich hop he thong va dong bo du lieu",
+      "description": "Subtask 1 de hoan thanh story: Tich hop he thong va dong bo du lieu cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-16T17:00:00.000Z",
+      "timeEnd": "2026-05-23T17:00:00.000Z",
+      "deadline": "2026-05-23T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 23,
+      "project_id": "P-54034826",
+      "sprint_id": 11,
+      "epic_id": null,
+      "story_id": 16,
+      "taskName": "Tai lieu hoa va ban giao - tich hop he thong va dong bo du lieu",
+      "description": "Subtask 2 de hoan thanh story: Tich hop he thong va dong bo du lieu cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-16T17:00:00.000Z",
+      "timeEnd": "2026-05-23T17:00:00.000Z",
+      "deadline": "2026-05-23T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 24,
+      "project_id": "P-54034826",
+      "sprint_id": 11,
+      "epic_id": null,
+      "story_id": 17,
+      "taskName": "Tai lieu hoa va ban giao - bao mat, van hanh va toi uu",
+      "description": "Subtask 1 de hoan thanh story: Bao mat, van hanh va toi uu cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-16T17:00:00.000Z",
+      "timeEnd": "2026-05-23T17:00:00.000Z",
+      "deadline": "2026-05-23T17:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 25,
+      "project_id": "P-54034826",
+      "sprint_id": 11,
+      "epic_id": null,
+      "story_id": 17,
+      "taskName": "Lam ro yeu cau va tieu chi chap nhan - bao mat, van hanh va toi uu",
+      "description": "Subtask 2 de hoan thanh story: Bao mat, van hanh va toi uu cho ABC",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-16T17:00:00.000Z",
+      "timeEnd": "2026-05-23T17:00:00.000Z",
+      "deadline": "2026-05-23T17:00:00.000Z",
       "is_approved": false,
       "txHash": null
     }
@@ -390,7 +1088,58 @@
       "userId": 1
     }
   ],
-  "notes": [],
+  "notes": [
+    {
+      "note_id": 1,
+      "userId": 1,
+      "title": "nhắ tôi 7h sáng mai dậy",
+      "content": "Lenh AI: nhắ tôi 7h sáng mai dậy",
+      "noteDate": "2026-04-24T00:00:00.000Z",
+      "reminderAt": null,
+      "date": "2026-04-24T17:48:00.817Z",
+      "pinned": false
+    },
+    {
+      "note_id": 3,
+      "userId": 1,
+      "title": "Snsbb",
+      "content": "Bsnsb",
+      "noteDate": "2026-04-25T00:00:00.000Z",
+      "reminderAt": "2026-04-24T17:51:00.000Z",
+      "date": "2026-04-24T17:50:28.682Z",
+      "pinned": false
+    },
+    {
+      "note_id": 4,
+      "userId": 1,
+      "title": "ă chiều 27/4  6h tối",
+      "content": "Lenh AI: Nhắc tôi ă chiều 27/4 lúc 6h tối",
+      "noteDate": "2026-04-25T00:00:00.000Z",
+      "reminderAt": null,
+      "date": "2026-04-24T17:51:52.435Z",
+      "pinned": false
+    },
+    {
+      "note_id": 5,
+      "userId": 1,
+      "title": "họp tối mai 8h",
+      "content": "Nhắc tôi họp tối mai 8h",
+      "noteDate": "2026-04-25T00:00:00.000Z",
+      "reminderAt": null,
+      "date": "2026-04-24T17:53:14.422Z",
+      "pinned": false
+    },
+    {
+      "note_id": 6,
+      "userId": 1,
+      "title": "dậy",
+      "content": "Nhắc tôi dậy sáng mai 7h",
+      "noteDate": "2026-04-26T00:00:00.000Z",
+      "reminderAt": "2026-04-26T00:00:00.000Z",
+      "date": "2026-04-24T17:54:48.028Z",
+      "pinned": false
+    }
+  ],
   "comments": [
     {
       "comment_id": 1,
@@ -412,6 +1161,118 @@
       "userId": 1,
       "commmentContent": "Uu tien fix label width de doc de hon.",
       "date": "2026-05-04T11:30:00.000Z"
+    },
+    {
+      "comment_id": 4,
+      "taskId": 7,
+      "userId": 1,
+      "commmentContent": "✅ OWNER ĐÃ DUYỆT",
+      "date": "2026-04-25T07:59:54.747Z",
+      "users": {
+        "user_id": 1,
+        "email": "mytom@gmail.com",
+        "username": "My",
+        "password": "$2b$10$nkBGtEfSvOZNjRT2Q7ZPQub85hfBm3RZqbZB81fTofkDWwSvghBDS",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777051632/pmk3y4akg4c9uugduhi3.jpg",
+        "description": "Product owner",
+        "walletAddress": ""
+      }
+    },
+    {
+      "comment_id": 5,
+      "taskId": 5,
+      "userId": 2,
+      "commmentContent": "[TRẠNG THÁI: DONE]",
+      "date": "2026-04-25T08:00:29.996Z",
+      "users": {
+        "user_id": 2,
+        "email": "abc@gmail.com",
+        "username": "Abc",
+        "password": "$2b$10$Y6amz4KzF5KuFZ3/EHIWS.9fiNu6fw7eNLtVy0atjKW7Fw8iTRagO",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777051883/slwbpgfdlti9u0obyd1a.jpg",
+        "description": "Frontend member",
+        "walletAddress": ""
+      }
+    },
+    {
+      "comment_id": 6,
+      "taskId": 6,
+      "userId": 2,
+      "commmentContent": "[TRẠNG THÁI: DONE]",
+      "date": "2026-04-25T08:00:52.018Z",
+      "users": {
+        "user_id": 2,
+        "email": "abc@gmail.com",
+        "username": "Abc",
+        "password": "$2b$10$Y6amz4KzF5KuFZ3/EHIWS.9fiNu6fw7eNLtVy0atjKW7Fw8iTRagO",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777051883/slwbpgfdlti9u0obyd1a.jpg",
+        "description": "Frontend member",
+        "walletAddress": ""
+      }
+    },
+    {
+      "comment_id": 7,
+      "taskId": 5,
+      "userId": 1,
+      "commmentContent": "✅ OWNER ĐÃ DUYỆT",
+      "date": "2026-04-25T08:01:54.643Z",
+      "users": {
+        "user_id": 1,
+        "email": "mytom@gmail.com",
+        "username": "My",
+        "password": "$2b$10$nkBGtEfSvOZNjRT2Q7ZPQub85hfBm3RZqbZB81fTofkDWwSvghBDS",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777051632/pmk3y4akg4c9uugduhi3.jpg",
+        "description": "Product owner",
+        "walletAddress": ""
+      }
+    },
+    {
+      "comment_id": 8,
+      "taskId": 6,
+      "userId": 1,
+      "commmentContent": "✅ OWNER ĐÃ DUYỆT",
+      "date": "2026-04-25T08:02:01.236Z",
+      "users": {
+        "user_id": 1,
+        "email": "mytom@gmail.com",
+        "username": "My",
+        "password": "$2b$10$nkBGtEfSvOZNjRT2Q7ZPQub85hfBm3RZqbZB81fTofkDWwSvghBDS",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777051632/pmk3y4akg4c9uugduhi3.jpg",
+        "description": "Product owner",
+        "walletAddress": ""
+      }
+    },
+    {
+      "comment_id": 9,
+      "taskId": 5,
+      "userId": 1,
+      "commmentContent": "✅ OWNER ĐÃ DUYỆT",
+      "date": "2026-04-25T08:02:29.273Z",
+      "users": {
+        "user_id": 1,
+        "email": "mytom@gmail.com",
+        "username": "My",
+        "password": "$2b$10$nkBGtEfSvOZNjRT2Q7ZPQub85hfBm3RZqbZB81fTofkDWwSvghBDS",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777051632/pmk3y4akg4c9uugduhi3.jpg",
+        "description": "Product owner",
+        "walletAddress": ""
+      }
+    },
+    {
+      "comment_id": 10,
+      "taskId": 8,
+      "userId": 1,
+      "commmentContent": "✅ MANAGER ĐÃ DUYỆT (ON-CHAIN)",
+      "date": "2026-04-25T08:07:32.984Z",
+      "users": {
+        "user_id": 1,
+        "email": "mytom@gmail.com",
+        "username": "My",
+        "password": "$2b$10$nkBGtEfSvOZNjRT2Q7ZPQub85hfBm3RZqbZB81fTofkDWwSvghBDS",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777051632/pmk3y4akg4c9uugduhi3.jpg",
+        "description": "Product owner",
+        "walletAddress": ""
+      }
     }
   ],
   "storyComments": [
@@ -457,6 +1318,26 @@
       "message": "Subtask \"Refactor gantt to hierarchy layout\" changed to IN_PROGRESS",
       "read": true,
       "createdAt": "2026-05-03T09:10:00.000Z"
+    },
+    {
+      "notification_id": 3,
+      "projectId": "P-32457576",
+      "ownerUserId": 1,
+      "actorUserId": 2,
+      "type": "SUBTASK_STATUS_CHANGED",
+      "message": "Subtask \"Refactor gantt to hierarchy layout\" changed to DONE",
+      "read": true,
+      "createdAt": "2026-04-25T08:00:28.508Z"
+    },
+    {
+      "notification_id": 4,
+      "projectId": "P-32457576",
+      "ownerUserId": 1,
+      "actorUserId": 2,
+      "type": "SUBTASK_STATUS_CHANGED",
+      "message": "Subtask \"Add status color legend\" changed to DONE",
+      "read": true,
+      "createdAt": "2026-04-25T08:00:50.529Z"
     }
   ],
   "messages": [
@@ -473,14 +1354,113 @@
       "senderId": 2,
       "content": "Ok anh, em se push ban dau truoc 5h.",
       "createdAt": "2026-05-02T07:35:00.000Z"
+    },
+    {
+      "message_id": 1,
+      "user_id": 2,
+      "message": "chào cả nhà",
+      "date": "2026-04-24T17:33:40.354Z",
+      "project_id": "P-32457576",
+      "users": {
+        "user_id": 2,
+        "email": "abc@gmail.com",
+        "username": "Abc",
+        "imagePath": "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+        "description": "Frontend member",
+        "walletAddress": ""
+      }
+    },
+    {
+      "message_id": 2,
+      "user_id": 2,
+      "message": "Hi",
+      "date": "2026-04-24T17:33:43.999Z",
+      "project_id": "P-32457576",
+      "users": {
+        "user_id": 2,
+        "email": "abc@gmail.com",
+        "username": "Abc",
+        "imagePath": "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+        "description": "Frontend member",
+        "walletAddress": ""
+      }
+    },
+    {
+      "message_id": 3,
+      "user_id": 1,
+      "message": "ừ",
+      "date": "2026-04-24T17:35:12.716Z",
+      "project_id": "P-32457576",
+      "users": {
+        "user_id": 1,
+        "email": "mytom@gmail.com",
+        "username": "My",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777051632/pmk3y4akg4c9uugduhi3.jpg",
+        "description": "Product owner",
+        "walletAddress": ""
+      }
+    },
+    {
+      "message_id": 4,
+      "user_id": 4,
+      "message": "a",
+      "date": "2026-04-25T07:19:58.434Z",
+      "project_id": "P-32457576",
+      "users": {
+        "user_id": 4,
+        "email": "trinh@gmail.com",
+        "username": "Àgjjvf",
+        "imagePath": null,
+        "walletAddress": "",
+        "roleName": "Member"
+      }
+    },
+    {
+      "message_id": 5,
+      "user_id": 1,
+      "message": "ok",
+      "date": "2026-04-25T07:43:49.054Z",
+      "project_id": "P-32457576",
+      "users": {
+        "user_id": 1,
+        "email": "mytom@gmail.com",
+        "username": "My",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777051632/pmk3y4akg4c9uugduhi3.jpg",
+        "walletAddress": "",
+        "roleName": "Owner"
+      }
     }
   ],
   "refreshTokens": [
     {
-      "token": "9193d0bc-aa2d-4a51-b989-a4e56dd38993e51cdafa3fe2491c982c8f2a17c3c97b",
+      "token": "009a4230-2496-4a23-bd06-6736b21321a8ce4ffb7ca0054606ab94ecc3a337b389",
+      "userId": 3,
+      "expiresAt": 1777701572414
+    },
+    {
+      "token": "8ec03ab7-63b9-49c9-8cf0-4cd9f51678b933eb1763704d4c04988a4bc2c815cf4b",
+      "userId": 4,
+      "expiresAt": 1777706361415
+    },
+    {
+      "token": "2f56fbd7-fec6-4408-8654-735aa0651e776224e9cd47eb44fd8d1467c9a9cdf555",
       "userId": 1,
-      "expiresAt": 1777547826293
+      "expiresAt": 1777708872560
     }
   ],
-  "wallets": {}
+  "wallets": {},
+  "blockchainApprovals": [
+    {
+      "blockIndex": 1,
+      "previousHash": "GENESIS",
+      "taskId": 8,
+      "projectId": "P-32457576",
+      "approverUserId": 1,
+      "approvedStatus": "APPROVED",
+      "note": "",
+      "timestamp": "2026-04-25T08:07:31.496Z",
+      "blockHash": "9f32320dd80383e47c9dcd3734d981e71e5a0a5bb50cbdf1d59d08bcbef7c1e2",
+      "txHash": "0x7afda2d547def51d5228a392abe41a2a2b1d0c797ce5f07608406d76626d1819"
+    }
+  ]
 }

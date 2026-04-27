@@ -78,6 +78,7 @@ export default function Plan({ navigation, route }) {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [expandedSprints, setExpandedSprints] = useState({});
     const [newStoryBySprint, setNewStoryBySprint] = useState({});
+    const [newStoryEpicBySprint, setNewStoryEpicBySprint] = useState({});
     const [projectInfoVisible, setProjectInfoVisible] = useState(false);
     const [sprintModalVisible, setSprintModalVisible] = useState(false);
     const [editingSprintId, setEditingSprintId] = useState(null);
@@ -232,13 +233,15 @@ export default function Plan({ navigation, route }) {
         }
         const name = (newStoryBySprint[sprintId] || '').trim();
         if (!name) return;
+        const epicId = newStoryEpicBySprint[sprintId] ?? null;
         try {
-            await axios.post(endpoints.projects.createStory(projectId, sprintId, null), {
+            await axios.post(endpoints.projects.createStory(projectId, sprintId, epicId), {
                 storyName: name,
                 storyStatus: 'TODO',
                 ownerId: userData?.user_id,
             });
             setNewStoryBySprint((prev) => ({ ...prev, [sprintId]: '' }));
+            setNewStoryEpicBySprint((prev) => ({ ...prev, [sprintId]: null }));
             loadData();
         } catch (error) {
             Alert.alert('Lỗi', 'Không thể tạo story.');
@@ -667,6 +670,42 @@ export default function Plan({ navigation, route }) {
                                                 <TouchableOpacity style={styles.createBtn} onPress={() => createStory(sprint.sprint_id)}>
                                                     <Text style={styles.createBtnText}>Create</Text>
                                                 </TouchableOpacity>
+                                            </View>
+                                        ) : null}
+
+                                        {canEditProject ? (
+                                            <View style={styles.epicPickerRow}>
+                                                <Text style={styles.epicPickerLabel}>Epic:</Text>
+                                                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                                                    <TouchableOpacity
+                                                        style={[
+                                                            styles.epicChip,
+                                                            (newStoryEpicBySprint[sprint.sprint_id] == null) && styles.epicChipActive,
+                                                        ]}
+                                                        onPress={() => setNewStoryEpicBySprint((prev) => ({ ...prev, [sprint.sprint_id]: null }))}
+                                                    >
+                                                        <Text style={[
+                                                            styles.epicChipText,
+                                                            (newStoryEpicBySprint[sprint.sprint_id] == null) && styles.epicChipTextActive,
+                                                        ]}>
+                                                            Không chọn
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                    {epics.map((e) => {
+                                                        const active = Number(newStoryEpicBySprint[sprint.sprint_id]) === Number(e.epic_id);
+                                                        return (
+                                                            <TouchableOpacity
+                                                                key={`epic-chip-${sprint.sprint_id}-${e.epic_id}`}
+                                                                style={[styles.epicChip, active && styles.epicChipActive]}
+                                                                onPress={() => setNewStoryEpicBySprint((prev) => ({ ...prev, [sprint.sprint_id]: e.epic_id }))}
+                                                            >
+                                                                <Text style={[styles.epicChipText, active && styles.epicChipTextActive]} numberOfLines={1}>
+                                                                    {e.epicName || `Epic ${e.epic_id}`}
+                                                                </Text>
+                                                            </TouchableOpacity>
+                                                        );
+                                                    })}
+                                                </ScrollView>
                                             </View>
                                         ) : null}
                                     </View>
@@ -1227,6 +1266,12 @@ const styles = StyleSheet.create({
     createInput: { flex: 1, backgroundColor: '#f4f6f9', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8, marginRight: 8 },
     createBtn: { backgroundColor: '#ffad44', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9 },
     createBtnText: { color: '#fff', fontWeight: '700', fontSize: 12 },
+    epicPickerRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
+    epicPickerLabel: { fontSize: 12, fontWeight: '700', color: '#475569', marginRight: 8 },
+    epicChip: { backgroundColor: '#f1f5f9', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 7, borderWidth: 1, borderColor: 'transparent', maxWidth: 160 },
+    epicChipActive: { backgroundColor: '#fff7ed', borderColor: '#fed7aa' },
+    epicChipText: { fontSize: 11, fontWeight: '700', color: '#64748b' },
+    epicChipTextActive: { color: '#c2410c' },
     fabCreate: {
         position: 'absolute',
         right: 18,
