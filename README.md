@@ -84,7 +84,6 @@ Update backend API URL in `FE/src/config/config.json` if needed.
 
 ## Screenshots
 
-If your screenshot files are placed at the repository root with names like `image1.jpg`, `image2.jpg`, etc., they will render directly below:
 
 ![image1](./image1.jpg)
 ![image2](./image2.jpg)
