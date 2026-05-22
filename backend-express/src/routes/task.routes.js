@@ -44,11 +44,36 @@ router.post("/addtask", (req, res) => {
 router.post("/addusertask", (req, res) => {
   const taskId = Number(req.query.taskId);
   const userId = Number(req.query.userId);
+  const actorId = Number(req.query.actorId || req.body?.actorId || 0);
   const db = readDb();
+  const task = db.tasks.find((t) => t.task_id === taskId);
+  if (!task) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Task not found" });
+
+  if (!canManageProject(db, task.project_id, actorId)) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or manager can add assignees" });
+  }
+
   const exists = db.userTasks.some((x) => x.taskId === taskId && x.userId === userId);
   if (!exists) db.userTasks.push({ id: uuidv4(), taskId, userId });
   writeDb(db);
   return res.json({ taskId, userId });
+});
+
+router.post("/removeusertask", (req, res) => {
+  const taskId = Number(req.query.taskId);
+  const userId = Number(req.query.userId);
+  const actorId = Number(req.query.actorId || req.body?.actorId || 0);
+  const db = readDb();
+  const task = db.tasks.find((t) => t.task_id === taskId);
+  if (!task) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Task not found" });
+
+  if (!canManageProject(db, task.project_id, actorId)) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or manager can remove assignees" });
+  }
+
+  db.userTasks = db.userTasks.filter((x) => !(x.taskId === taskId && x.userId === userId));
+  writeDb(db);
+  return res.json({ success: true, taskId, userId });
 });
 
 router.get("/gettaskbyprojectid", (req, res) => {

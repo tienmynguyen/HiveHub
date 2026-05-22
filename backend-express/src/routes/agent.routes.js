@@ -20,6 +20,7 @@ const {
   updateMemoryFromPayload,
   setPendingClarification,
   clearPendingClarification,
+  clearUserMemory,
   updateMemoryFromExecution,
 } = require("../services/agentSessionMemory");
 const { resolveContextFromDatabase } = require("../services/agentEntityResolver");
@@ -175,6 +176,14 @@ function mergePayloadWithResolved(basePayload, resolvedContext) {
     resolverConfidence: resolved.resolverConfidence ?? base.resolverConfidence,
   };
 }
+
+router.post("/agent/clear-memory", (req, res) => {
+  const userId = Number(req.body.userId || 0);
+  if (userId) {
+    clearUserMemory(userId);
+  }
+  return res.json({ ok: true });
+});
 
 router.post("/agent/chat", async (req, res) => {
   try {

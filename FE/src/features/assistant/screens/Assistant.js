@@ -104,7 +104,7 @@ export default function Assistant({ route }) {
     ]);
   }
 
-  function clearChat() {
+  async function clearChat() {
     setMessages([initialAssistantMessage]);
     setInput('');
     setPreviewResult(null);
@@ -120,6 +120,13 @@ export default function Assistant({ route }) {
       sprintId: routeSprintId || null,
       storyId: routeStoryId || null,
     });
+    try {
+      if (userData?.user_id) {
+        await axios.post(endpoints.agent.clearMemory(), { userId: userData.user_id });
+      }
+    } catch (e) {
+      console.error('Failed to clear backend memory', e);
+    }
   }
 
   function speakText(text) {
@@ -213,9 +220,31 @@ export default function Assistant({ route }) {
           setPreviewResult(previewRes.data);
           syncMemoryFromResponse(previewRes.data);
           setLatestGuide(previewRes.data?.guide || data?.guide || null);
-          const previewMsg = `Đã tạo preview cho lệnh "${message}". Chưa thực thi. Bạn bấm "Mở xác nhận execute" để xem và xác nhận.`;
-          pushMessage('assistant', previewMsg);
-          speakText(previewMsg);
+          
+          const previewActionType = String(previewRes.data?.action?.type || '').toUpperCase();
+          const isRisky = ['UPDATE_SPRINT_STATUS', 'DELETE_PROJECT', 'REMOVE_MEMBER'].includes(previewActionType);
+          
+          if (!isRisky && previewRes.data?.confirmationToken) {
+            try {
+              const execRes = await axios.post(endpoints.agent.execute(), {
+                userId: userData?.user_id,
+                confirmationToken: previewRes.data.confirmationToken,
+                idempotencyKey: key,
+              });
+              syncMemoryFromResponse(execRes.data);
+              const okMsg = `Đã thực thi thành công ${execRes.data?.executedAction || 'ACTION'}.`;
+              pushMessage('assistant', okMsg);
+              speakText('Đã thực thi thành công thao tác.');
+              setPreviewResult(null);
+            } catch (execErr) {
+              const execMsg = execErr?.response?.data?.message || 'Lỗi khi thực thi tự động.';
+              pushMessage('assistant', `Preview đã sẵn sàng nhưng thực thi tự động bị lỗi: ${execMsg}`);
+            }
+          } else {
+            const previewMsg = `Đã tạo preview cho lệnh "${message}". Chưa thực thi. Bạn bấm "Mở xác nhận execute" để xem và xác nhận.`;
+            pushMessage('assistant', previewMsg);
+            speakText(previewMsg);
+          }
         } catch (previewError) {
           const msg = previewError?.response?.data?.message || 'Không thể tạo preview tự động.';
           pushMessage('assistant', `Lệnh đã được nhận diện nhưng preview thất bại: ${msg}`);

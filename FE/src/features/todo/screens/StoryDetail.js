@@ -47,7 +47,11 @@ export default function StoryDetail({ navigation, route }) {
 
   useEffect(() => {
     loadData();
-  }, []);
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadData();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   async function loadData() {
     if (!initialStory?.story_id) return;

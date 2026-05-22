@@ -34,11 +34,15 @@ export default function PlanDetail({ navigation, route }) {
     const [statusReason, setStatusReason] = useState('');
     const [approvalInfo, setApprovalInfo] = useState(null);
 
+    const [projectMembers, setProjectMembers] = useState([]);
+    const [isAssigneeModalVisible, setAssigneeModalVisible] = useState(false);
+
     useEffect(() => {
         fetchData();
         fetchComments();
         checkRole();
         fetchApprovalInfo();
+        fetchProjectMembers();
     }, []);
 
     // --- API HELPER ---
@@ -77,6 +81,39 @@ export default function PlanDetail({ navigation, route }) {
             setApprovalInfo(data || null);
         } catch (_error) {
             setApprovalInfo(null);
+        }
+    }
+
+    async function fetchProjectMembers() {
+        try {
+            const pId = task.project_id || projectId;
+            if (!pId) return;
+            const { data } = await axios.get(endpoints.projects.getUsers(pId));
+            if (Array.isArray(data)) setProjectMembers(data);
+        } catch (error) {
+            console.error("Lỗi fetch project members:", error);
+        }
+    }
+
+    async function handleAddAssignee(memberId) {
+        try {
+            const res = await axios.post(endpoints.tasks.addUser(task.task_id, memberId, userData.user_id));
+            if (res.data) {
+                fetchData();
+            }
+        } catch (error) {
+            Alert.alert("Lỗi", error.response?.data?.message || "Không thể thêm người đảm nhận.");
+        }
+    }
+
+    async function handleRemoveAssignee(memberId) {
+        try {
+            const res = await axios.post(endpoints.tasks.removeUser(task.task_id, memberId, userData.user_id));
+            if (res.data) {
+                fetchData();
+            }
+        } catch (error) {
+            Alert.alert("Lỗi", error.response?.data?.message || "Không thể xóa người đảm nhận.");
         }
     }
 
@@ -329,16 +366,33 @@ export default function PlanDetail({ navigation, route }) {
 
                     {/* MEMBERS */}
                     <View style={styles.card}>
-                        <Text style={styles.sectionHeader}>Người thực hiện ({users.length})</Text>
-                        {Array.isArray(users) && users.map((user, index) => (
-                            <View key={user.user_id} style={styles.memberRow}>
-                                <Image source={getAvatarSource(user)} style={styles.avatarImage} />
-                                <View style={styles.memberInfo}>
-                                    <Text style={styles.memberName}>{user.username}</Text>
-                                    <Text style={styles.memberEmail}>{user.email}</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
+                            <Text style={[styles.sectionHeader, { marginBottom: 0 }]}>Người thực hiện ({users.length})</Text>
+                            {(role === 3 || role === 2) && (
+                                <TouchableOpacity onPress={() => setAssigneeModalVisible(true)} style={styles.manageAssigneeBtn}>
+                                    <Icon name="user-plus" size={14} color="#ffad44" />
+                                    <Text style={styles.manageAssigneeText}>Thêm/Bớt</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                        {Array.isArray(users) && users.length > 0 ? (
+                            users.map((user, index) => (
+                                <View key={user.user_id || index} style={styles.memberRow}>
+                                    <Image source={getAvatarSource(user)} style={styles.avatarImage} />
+                                    <View style={styles.memberInfo}>
+                                        <Text style={styles.memberName}>{user.username}</Text>
+                                        <Text style={styles.memberEmail}>{user.email}</Text>
+                                    </View>
+                                    {(role === 3 || role === 2) && (
+                                        <TouchableOpacity onPress={() => handleRemoveAssignee(user.user_id)} style={styles.removeUserBtn}>
+                                            <Icon name="user-minus" size={14} color="#ef4444" />
+                                        </TouchableOpacity>
+                                    )}
                                 </View>
-                            </View>
-                        ))}
+                            ))
+                        ) : (
+                            <Text style={styles.noAssigneeText}>Chưa có người đảm nhận.</Text>
+                        )}
                     </View>
 
                     {/* COMMENTS */}
@@ -446,6 +500,40 @@ export default function PlanDetail({ navigation, route }) {
                     </View>
                 </View>
             </Modal>
+
+            {/* MODAL 3: QUẢN LÝ NGƯỜI ĐẢM NHẬN */}
+            <Modal isVisible={isAssigneeModalVisible} onBackdropPress={() => setAssigneeModalVisible(false)} style={styles.bottomModal} useNativeDriver={true} hideModalContentWhileAnimating={true}>
+                <View style={[styles.modalContent, { maxHeight: '70%', width: '100%' }]}>
+                    <View style={styles.modalIndicator} />
+                    <Text style={styles.modalTitle}>Quản lý người đảm nhận</Text>
+                    <ScrollView style={{ width: '100%', marginBottom: 15 }}>
+                        {projectMembers.map((member) => {
+                            const isAssigned = users.some((u) => Number(u.user_id) === Number(member.user_id));
+                            return (
+                                <View key={member.user_id} style={styles.memberSelectRow}>
+                                    <Image source={getAvatarSource(member)} style={styles.avatarImage} />
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.memberName}>{member.username}</Text>
+                                        <Text style={styles.memberEmail}>{member.email}</Text>
+                                    </View>
+                                    {isAssigned ? (
+                                        <TouchableOpacity onPress={() => handleRemoveAssignee(member.user_id)} style={[styles.selectBtn, styles.removeBtn]}>
+                                            <Text style={styles.selectBtnTextActive}>Xoá</Text>
+                                        </TouchableOpacity>
+                                    ) : (
+                                        <TouchableOpacity onPress={() => handleAddAssignee(member.user_id)} style={[styles.selectBtn, styles.addBtn]}>
+                                            <Text style={styles.selectBtnText}>Thêm</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                            );
+                        })}
+                    </ScrollView>
+                    <TouchableOpacity style={styles.cancelButton} onPress={() => setAssigneeModalVisible(false)}>
+                        <Text style={{color: '#666', fontWeight: 'bold'}}>Đóng</Text>
+                    </TouchableOpacity>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -519,4 +607,14 @@ const styles = StyleSheet.create({
     commentUser: { fontSize: 11, color: '#888', marginBottom: 2, fontWeight: 'bold' },
     commentContent: { fontSize: 14 },
     commentTime: { fontSize: 10, marginTop: 5, alignSelf: 'flex-end' },
+    manageAssigneeBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff7ed', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 15, borderWidth: 1, borderColor: '#ffad44' },
+    manageAssigneeText: { color: '#ffad44', fontSize: 12, fontWeight: 'bold', marginLeft: 5 },
+    removeUserBtn: { padding: 8 },
+    noAssigneeText: { color: '#888', fontStyle: 'italic', textAlign: 'center', paddingVertical: 10 },
+    memberSelectRow: { flexDirection: 'row', alignItems: 'center', width: '100%', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f5f5f5' },
+    selectBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 15, minWidth: 60, alignItems: 'center' },
+    addBtn: { backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#ffad44' },
+    removeBtn: { backgroundColor: '#fee2e2', borderWidth: 1, borderColor: '#ef4444' },
+    selectBtnText: { color: '#ffad44', fontSize: 12, fontWeight: 'bold' },
+    selectBtnTextActive: { color: '#ef4444', fontSize: 12, fontWeight: 'bold' },
 });

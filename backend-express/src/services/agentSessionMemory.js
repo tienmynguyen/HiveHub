@@ -63,6 +63,11 @@ function clearPendingClarification(userId) {
   return { ...mem };
 }
 
+function clearUserMemory(userId) {
+  const key = Number(userId || 0);
+  memoryStore.delete(key);
+}
+
 function updateMemoryFromExecution(userId, action, entity) {
   const mem = ensureUserMemory(userId);
   if (action?.projectId) mem.projectId = String(action.projectId).toUpperCase();
@@ -86,5 +91,6 @@ module.exports = {
   updateMemoryFromPayload,
   setPendingClarification,
   clearPendingClarification,
+  clearUserMemory,
   updateMemoryFromExecution,
 };

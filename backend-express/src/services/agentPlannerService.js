@@ -10,73 +10,50 @@ function normalizeText(value) {
 
 function detectIntentFallback(text) {
   const input = normalizeText(text);
+  
   if (
-    (input.includes("tao") || input.includes("create") || input.includes("lap")) &&
-    (input.includes("du an") || input.includes("project")) &&
-    (input.includes("gom") || input.includes("moi sprint") || input.includes("blueprint"))
+    input.match(/\b(tao|create|lap|them|xay dung)\b.*\b(du an|project)\b.*\b(gom|moi sprint|blueprint|chi tiet)\b/i)
   ) {
     return "CREATE_PROJECT_BLUEPRINT";
   }
   if (
-    input.includes("tao project") ||
-    input.includes("create project") ||
-    input.includes("tao du an") ||
-    input.includes("tao du an") ||
-    input.includes("lap du an") ||
-    input.includes("them du an")
+    input.match(/\b(tao|create|lap|them)\b.*\b(du an|project)\b/i) || 
+    input.includes("tao project") || input.includes("tao du an") || input.includes("lap du an")
   ) {
     return "CREATE_PROJECT";
   }
   if (
-    input.includes("tao sprint") ||
-    input.includes("tao sprint") ||
-    input.includes("create sprint") ||
-    input.includes("them sprint")
+    input.match(/\b(tao|create|them)\b.*\b(sprint)\b/i) ||
+    input.includes("tao sprint")
   ) {
     return "CREATE_SPRINT";
   }
   if (
-    input.includes("tao story") ||
-    input.includes("create story") ||
+    input.match(/\b(tao|create|them)\b.*\b(story)\b/i) ||
     input.includes("tao story")
   ) {
     return "CREATE_STORY";
   }
   if (
-    input.includes("tao task") ||
-    input.includes("tao subtask") ||
-    input.includes("create task") ||
-    input.includes("tao task") ||
-    input.includes("tao cong viec") ||
-    input.includes("tao cong viec") ||
-    input.includes("them task") ||
-    input.includes("giao viec")
+    input.match(/\b(tao|create|them|giao)\b.*\b(task|subtask|cong viec)\b/i) ||
+    input.includes("tao task") || input.includes("tao cong viec")
   ) {
     return "CREATE_TASK";
   }
   if (
-    input.includes("dat lich") ||
-    input.includes("len lich") ||
-    input.includes("nhac viec") ||
-    input.includes("dat bao thuc") ||
-    input.includes("dat thong bao") ||
-    input.includes("nhac toi") ||
-    input.includes("tao lich nhac") ||
-    input.includes("create reminder") ||
-    input.includes("set reminder") ||
-    input.includes("schedule reminder")
+    input.match(/\b(dat lich|len lich|nhac viec|dat bao thuc|dat thong bao|nhac toi|tao lich nhac|create reminder|set reminder|schedule reminder)\b/i)
   ) {
     return "CREATE_CALENDAR_NOTE";
   }
   if (
-    input.includes("doi trang thai sprint") ||
-    input.includes("doi trang thai sprint") ||
-    input.includes("update sprint status")
+    input.match(/\b(doi|cap nhat|update)\b.*\b(trang thai sprint|sprint status)\b/i) ||
+    input.includes("doi trang thai sprint")
   ) {
     return "UPDATE_SPRINT_STATUS";
   }
-  if (input.includes("bao cao") || input.includes("report") || input.includes("tien do") || input.includes("tong hop")) return "REPORT";
-  if (input.includes("goi y") || input.includes("chia viec") || input.includes("planning") || input.includes("ke hoach")) return "PLANNING";
+  if (input.match(/\b(bao cao|report|tien do|tong hop)\b/i)) return "REPORT";
+  if (input.match(/\b(goi y|chia viec|planning|ke hoach)\b/i)) return "PLANNING";
+  
   return "HELP";
 }
 

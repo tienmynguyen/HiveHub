@@ -57,7 +57,8 @@ export const endpoints = {
         getByUser: (userId) => `${BASE_URL}/getalltaskbyuser?userId=${userId}`,
         getByDate: (userId, date) => `${BASE_URL}/findtaskbydate?user_id=${userId}&date=${date}`,
         create: (projectId) => `${BASE_URL}/addtask?projectId=${projectId}`,
-        addUser: (taskId, userId) => `${BASE_URL}/addusertask?taskId=${taskId}&userId=${userId}`,
+        addUser: (taskId, userId, actorId) => `${BASE_URL}/addusertask?taskId=${taskId}&userId=${userId}&actorId=${actorId}`,
+        removeUser: (taskId, userId, actorId) => `${BASE_URL}/removeusertask?taskId=${taskId}&userId=${userId}&actorId=${actorId}`,
         getUsers: (taskId) => `${BASE_URL}/getalluserbytaskId?taskId=${taskId}`,
         update: (taskId, userId) => `${BASE_URL}/updatetask?taskId=${taskId}&userId=${userId}`,
         approve: () => `${BASE_URL}/approvetask`,
@@ -89,6 +90,7 @@ export const endpoints = {
         report: () => `${BASE_URL}/agent/report`,
         preview: () => `${BASE_URL}/agent/commands/preview`,
         execute: () => `${BASE_URL}/agent/commands/execute`,
+        clearMemory: () => `${BASE_URL}/agent/clear-memory`,
     },
 };
 
