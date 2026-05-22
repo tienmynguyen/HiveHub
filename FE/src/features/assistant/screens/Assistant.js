@@ -2,7 +2,6 @@ import React, { useContext, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Modal, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import axios from 'axios';
-import * as Speech from 'expo-speech';
 import { AuthContext } from '../../auth/context/AuthContext';
 import { endpoints } from '../../../config/endpoints';
 
@@ -12,6 +11,76 @@ function prettyJson(value) {
   } catch (_err) {
     return String(value || '');
   }
+}
+
+function MarkdownText({ text, style }) {
+  if (!text) return null;
+
+  const renderInlineStyles = (rawText, keyPrefix) => {
+    const parts = rawText.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        const cleanBoldText = part.slice(2, -2);
+        return (
+          <Text key={`${keyPrefix}-bold-${index}`} style={{ fontWeight: '700', color: '#0f172a' }}>
+            {cleanBoldText}
+          </Text>
+        );
+      }
+      return <Text key={`${keyPrefix}-text-${index}`}>{part}</Text>;
+    });
+  };
+
+  const lines = String(text).split('\n');
+  return (
+    <View style={{ gap: 4 }}>
+      {lines.map((line, lineIdx) => {
+        let trimmed = line.trim();
+
+        // Headers
+        const headerMatch = line.match(/^(#{1,6})\s*(.*)$/);
+        if (headerMatch) {
+          const headerLevel = headerMatch[1].length;
+          const headerContent = headerMatch[2];
+          const fontSize = headerLevel === 1 ? 17 : headerLevel === 2 ? 15 : 13;
+          return (
+            <Text
+              key={`line-${lineIdx}`}
+              style={{
+                fontSize,
+                fontWeight: '700',
+                color: '#1e293b',
+                marginTop: 6,
+                marginBottom: 2,
+              }}
+            >
+              {renderInlineStyles(headerContent, `line-${lineIdx}`)}
+            </Text>
+          );
+        }
+
+        // Bullet point
+        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          const bulletContent = trimmed.slice(2);
+          return (
+            <View key={`line-${lineIdx}`} style={{ flexDirection: 'row', alignItems: 'flex-start', paddingLeft: 4 }}>
+              <Text style={{ fontSize: 13, color: '#1f2937', marginRight: 6 }}>•</Text>
+              <Text style={{ flex: 1, fontSize: 13, color: '#1f2937', lineHeight: 18 }}>
+                {renderInlineStyles(bulletContent, `line-${lineIdx}`)}
+              </Text>
+            </View>
+          );
+        }
+
+        // Ordinary line
+        return (
+          <Text key={`line-${lineIdx}`} style={[style, { fontSize: 13, color: '#1f2937', lineHeight: 18 }]}>
+            {renderInlineStyles(line, `line-${lineIdx}`)}
+          </Text>
+        );
+      })}
+    </View>
+  );
 }
 
 export default function Assistant({ route }) {
@@ -30,7 +99,6 @@ export default function Assistant({ route }) {
   const [projectIdInput, setProjectIdInput] = useState('');
   const [previewResult, setPreviewResult] = useState(null);
   const [idempotencyKey, setIdempotencyKey] = useState(null);
-  const [speaking, setSpeaking] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [pendingClarification, setPendingClarification] = useState(null);
   const [latestGuide, setLatestGuide] = useState(null);
@@ -40,6 +108,7 @@ export default function Assistant({ route }) {
   const [contextSprintId, setContextSprintId] = useState(routeSprintId ? String(routeSprintId) : '');
   const [contextStoryId, setContextStoryId] = useState(routeStoryId ? String(routeStoryId) : '');
   const [riskyConfirmChecked, setRiskyConfirmChecked] = useState(false);
+  const [mode, setMode] = useState('agent'); // 'agent' or 'chatbot'
   const [sessionMemory, setSessionMemory] = useState({
     projectId: routeProjectId,
     sprintId: routeSprintId,
@@ -129,16 +198,6 @@ export default function Assistant({ route }) {
     }
   }
 
-  function speakText(text) {
-    if (!text) return;
-    setSpeaking(true);
-    Speech.speak(text, {
-      language: 'vi-VN',
-      onDone: () => setSpeaking(false),
-      onStopped: () => setSpeaking(false),
-      onError: () => setSpeaking(false),
-    });
-  }
 
   async function onChat() {
     const message = input.trim();
@@ -166,20 +225,17 @@ export default function Assistant({ route }) {
         setPendingClarification(null);
         const doneMsg = 'Đã nhận đủ thông tin bổ sung và tạo preview. Bạn có thể bấm "Mở xác nhận execute" để xem lại trước khi thực thi.';
         pushMessage('assistant', doneMsg);
-        speakText(doneMsg);
       } catch (error) {
         const missing = error?.response?.data?.missingFields;
         if (pendingClarification.retryLeft <= 0) {
           setPendingClarification(null);
           const stopMsg = `Sau 1 lần hỏi bổ sung, vẫn thiếu dữ liệu (${Array.isArray(missing) ? missing.join(', ') : 'không xác định'}). Vui lòng gửi lại lệnh đầy đủ.`;
           pushMessage('assistant', stopMsg);
-          speakText(stopMsg);
         } else {
           const askAgain = Array.isArray(missing) ? missing.join(', ') : 'dữ liệu bắt buộc';
           setPendingClarification((prev) => ({ ...prev, retryLeft: prev.retryLeft - 1 }));
           const askMsg = `Mình vẫn thiếu: ${askAgain}. Trả lời 1 lần nữa để mình thực hiện.`;
           pushMessage('assistant', askMsg);
-          speakText(askMsg);
         }
       }
       setIsPreviewLoading(false);
@@ -191,6 +247,7 @@ export default function Assistant({ route }) {
       const { data } = await axios.post(endpoints.agent.chat(), {
         userId: userData?.user_id,
         message,
+        mode,
       });
       syncMemoryFromResponse(data);
 
@@ -234,7 +291,6 @@ export default function Assistant({ route }) {
               syncMemoryFromResponse(execRes.data);
               const okMsg = `Đã thực thi thành công ${execRes.data?.executedAction || 'ACTION'}.`;
               pushMessage('assistant', okMsg);
-              speakText('Đã thực thi thành công thao tác.');
               setPreviewResult(null);
             } catch (execErr) {
               const execMsg = execErr?.response?.data?.message || 'Lỗi khi thực thi tự động.';
@@ -243,7 +299,6 @@ export default function Assistant({ route }) {
           } else {
             const previewMsg = `Đã tạo preview cho lệnh "${message}". Chưa thực thi. Bạn bấm "Mở xác nhận execute" để xem và xác nhận.`;
             pushMessage('assistant', previewMsg);
-            speakText(previewMsg);
           }
         } catch (previewError) {
           const msg = previewError?.response?.data?.message || 'Không thể tạo preview tự động.';
@@ -257,7 +312,6 @@ export default function Assistant({ route }) {
           data?.guide?.question ||
           `Mình cần thêm thông tin để thực hiện: ${missing || 'projectId/storyName/taskName'}. Vui lòng trả lời bổ sung ngay tin nhắn tiếp theo.`;
         pushMessage('assistant', askMsg);
-        speakText(askMsg);
         setLatestGuide(data?.guide || null);
         setPendingClarification({
           intent: data?.intent,
@@ -267,7 +321,6 @@ export default function Assistant({ route }) {
       } else {
         // Câu hỏi thông thường mới dùng text LLM nguyên bản.
         pushMessage('assistant', data?.answer || 'Mình chưa có câu trả lời phù hợp.');
-        speakText(data?.answer || '');
       }
     } catch (error) {
       pushMessage('assistant', 'Không thể gọi AI Agent lúc này.');
@@ -318,7 +371,6 @@ export default function Assistant({ route }) {
       syncMemoryFromResponse(data);
       const okMsg = `Đã thực thi thành công ${data?.executedAction || 'ACTION'}.`;
       pushMessage('assistant', okMsg);
-      speakText('Đã thực thi thành công thao tác.');
       setPreviewResult(null);
       setConfirmModalVisible(false);
       setPendingClarification(null);
@@ -371,108 +423,116 @@ export default function Assistant({ route }) {
           <TouchableOpacity style={styles.clearBtn} onPress={clearChat}>
             <Icon name="trash-alt" size={13} color="#b91c1c" />
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.ttsBtn}
-            onPress={() => {
-              if (speaking) {
-                Speech.stop();
-                setSpeaking(false);
-              } else {
-                const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant');
-                speakText(lastAssistant?.text || 'Chưa có nội dung để đọc.');
-              }
-            }}
-          >
-            <Icon name={speaking ? 'volume-mute' : 'volume-up'} size={15} color="#1f2937" />
-          </TouchableOpacity>
         </View>
       </View>
 
-      <View style={styles.contextRow}>
-        {renderContextPill('Project', effectiveProjectId)}
-        {renderContextPill('Sprint', effectiveSprintId)}
-        {renderContextPill('Story', effectiveStoryId)}
-      </View>
-
-      <View style={styles.contextPickerCard}>
-        <Text style={styles.contextPickerTitle}>Context Picker</Text>
-        <View style={styles.contextPickerRow}>
-          <TextInput style={styles.contextInput} placeholder="Project ID" value={contextProjectId} onChangeText={setContextProjectId} />
-          <TextInput style={styles.contextInput} placeholder="Sprint ID" value={contextSprintId} onChangeText={setContextSprintId} />
-          <TextInput style={styles.contextInput} placeholder="Story ID" value={contextStoryId} onChangeText={setContextStoryId} />
-        </View>
-      </View>
-
-      <View style={styles.quickRow}>
-        <TouchableOpacity style={styles.quickBtn} onPress={() => setConfirmModalVisible(Boolean(previewResult?.confirmationToken))}>
-          <Text style={styles.quickText}>Mở xác nhận execute</Text>
+      {/* SEGMENTED CONTROL MODE TOGGLE */}
+      <View style={styles.modeToggleRow}>
+        <TouchableOpacity
+          style={[styles.modeTab, mode === 'agent' && styles.activeModeTab]}
+          onPress={() => setMode('agent')}
+        >
+          <Icon name="robot" size={13} color={mode === 'agent' ? '#fff' : '#64748b'} />
+          <Text style={[styles.modeTabText, mode === 'agent' && styles.activeModeTabText]}>AI Agent (Thực thi)</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.quickBtn} onPress={onExecute} disabled={!previewResult?.confirmationToken}>
-          <Text style={styles.quickText}>Confirm Execute</Text>
+        <TouchableOpacity
+          style={[styles.modeTab, mode === 'chatbot' && styles.activeModeTab]}
+          onPress={() => setMode('chatbot')}
+        >
+          <Icon name="comments" size={13} color={mode === 'chatbot' ? '#fff' : '#64748b'} />
+          <Text style={[styles.modeTabText, mode === 'chatbot' && styles.activeModeTabText]}>Chatbot (Tư vấn)</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.reportRow}>
-        <TextInput
-          style={styles.projectInput}
-          placeholder="Nhập Project ID để báo cáo..."
-          value={projectIdInput}
-          onChangeText={setProjectIdInput}
-        />
-        <TouchableOpacity style={styles.reportBtn} onPress={onReport}>
-          <Text style={styles.reportText}>Báo cáo</Text>
-        </TouchableOpacity>
-      </View>
+      {mode === 'agent' && (
+        <>
+          <View style={styles.contextRow}>
+            {renderContextPill('Project', effectiveProjectId)}
+            {renderContextPill('Sprint', effectiveSprintId)}
+            {renderContextPill('Story', effectiveStoryId)}
+          </View>
 
-      {latestGuide ? (
-        <View style={styles.guideCard}>
-          <Text style={styles.guideTitle}>{latestGuide.title || 'Hướng dẫn'}</Text>
-          <Text style={styles.guideQuestion}>{latestGuide.question || ''}</Text>
-          {latestGuide.hint ? <Text style={styles.guideHint}>{latestGuide.hint}</Text> : null}
-          {Array.isArray(latestGuide.examples) && latestGuide.examples.length > 0 ? (
-            <View style={{ marginTop: 6 }}>
-              {latestGuide.examples.slice(0, 2).map((ex, idx) => (
-                <Text key={`ex-${idx}`} style={styles.guideExample}>- {ex}</Text>
-              ))}
+          <View style={styles.contextPickerCard}>
+            <Text style={styles.contextPickerTitle}>Context Picker</Text>
+            <View style={styles.contextPickerRow}>
+              <TextInput style={styles.contextInput} placeholder="Project ID" value={contextProjectId} onChangeText={setContextProjectId} />
+              <TextInput style={styles.contextInput} placeholder="Sprint ID" value={contextSprintId} onChangeText={setContextSprintId} />
+              <TextInput style={styles.contextInput} placeholder="Story ID" value={contextStoryId} onChangeText={setContextStoryId} />
+            </View>
+          </View>
+
+          <View style={styles.quickRow}>
+            <TouchableOpacity style={styles.quickBtn} onPress={() => setConfirmModalVisible(Boolean(previewResult?.confirmationToken))}>
+              <Text style={styles.quickText}>Mở xác nhận execute</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.quickBtn} onPress={onExecute} disabled={!previewResult?.confirmationToken}>
+              <Text style={styles.quickText}>Confirm Execute</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.reportRow}>
+            <TextInput
+              style={styles.projectInput}
+              placeholder="Nhập Project ID để báo cáo..."
+              value={projectIdInput}
+              onChangeText={setProjectIdInput}
+            />
+            <TouchableOpacity style={styles.reportBtn} onPress={onReport}>
+              <Text style={styles.reportText}>Báo cáo</Text>
+            </TouchableOpacity>
+          </View>
+
+          {latestGuide ? (
+            <View style={styles.guideCard}>
+              <Text style={styles.guideTitle}>{latestGuide.title || 'Hướng dẫn'}</Text>
+              <Text style={styles.guideQuestion}>{latestGuide.question || ''}</Text>
+              {latestGuide.hint ? <Text style={styles.guideHint}>{latestGuide.hint}</Text> : null}
+              {Array.isArray(latestGuide.examples) && latestGuide.examples.length > 0 ? (
+                <View style={{ marginTop: 6 }}>
+                  {latestGuide.examples.slice(0, 2).map((ex, idx) => (
+                    <Text key={`ex-${idx}`} style={styles.guideExample}>- {ex}</Text>
+                  ))}
+                </View>
+              ) : null}
             </View>
           ) : null}
-        </View>
-      ) : null}
 
-      {isAnalyzingIntent ? (
-        <View style={styles.intentLoadingBar}>
-          <ActivityIndicator size="small" color="#f59e0b" />
-          <Text style={styles.intentLoadingText}>AI đang phân tích intent...</Text>
-        </View>
-      ) : null}
-
-      {isPreviewLoading ? (
-        <View style={styles.previewCard}>
-          <Text style={styles.previewTitle}>Đang tạo preview...</Text>
-          <View style={styles.skeletonLine} />
-          <View style={[styles.skeletonLine, { width: '85%' }]} />
-          <View style={[styles.skeletonLine, { width: '70%' }]} />
-        </View>
-      ) : previewResult ? (
-        <View style={styles.previewCard}>
-          <Text style={styles.previewTitle}>Preview action</Text>
-          <Text style={styles.previewLabel}>Action</Text>
-          <Text style={styles.previewValue}>{previewActionType || 'N/A'}</Text>
-          <Text style={styles.previewLabel}>Payload</Text>
-          <Text style={styles.previewJson}>{prettyJson(previewPayload)}</Text>
-          {previewMissingRequired.length > 0 ? (
-            <Text style={styles.previewError}>Thiếu field bắt buộc: {previewMissingRequired.join(', ')}</Text>
-          ) : (
-            <Text style={styles.previewOk}>Payload hợp lệ để execute.</Text>
-          )}
-          {previewResult?.policy?.reason ? (
-            <>
-              <Text style={styles.previewLabel}>Policy</Text>
-              <Text style={styles.previewValue}>{previewResult.policy.reason}</Text>
-            </>
+          {isAnalyzingIntent ? (
+            <View style={styles.intentLoadingBar}>
+              <ActivityIndicator size="small" color="#f59e0b" />
+              <Text style={styles.intentLoadingText}>AI đang phân tích intent...</Text>
+            </View>
           ) : null}
-        </View>
-      ) : null}
+
+          {isPreviewLoading ? (
+            <View style={styles.previewCard}>
+              <Text style={styles.previewTitle}>Đang tạo preview...</Text>
+              <View style={styles.skeletonLine} />
+              <View style={[styles.skeletonLine, { width: '85%' }]} />
+              <View style={[styles.skeletonLine, { width: '70%' }]} />
+            </View>
+          ) : previewResult ? (
+            <View style={styles.previewCard}>
+              <Text style={styles.previewTitle}>Preview action</Text>
+              <Text style={styles.previewLabel}>Action</Text>
+              <Text style={styles.previewValue}>{previewActionType || 'N/A'}</Text>
+              <Text style={styles.previewLabel}>Payload</Text>
+              <Text style={styles.previewJson}>{prettyJson(previewPayload)}</Text>
+              {previewMissingRequired.length > 0 ? (
+                <Text style={styles.previewError}>Thiếu field bắt buộc: {previewMissingRequired.join(', ')}</Text>
+              ) : (
+                <Text style={styles.previewOk}>Payload hợp lệ để execute.</Text>
+              )}
+              {previewResult?.policy?.reason ? (
+                <>
+                  <Text style={styles.previewLabel}>Policy</Text>
+                  <Text style={styles.previewValue}>{previewResult.policy.reason}</Text>
+                </>
+              ) : null}
+            </View>
+          ) : null}
+        </>
+      )}
 
       <FlatList
         data={messages}
@@ -481,7 +541,7 @@ export default function Assistant({ route }) {
         contentContainerStyle={{ padding: 12, paddingBottom: 16 }}
         renderItem={({ item }) => (
           <View style={[styles.messageRow, item.role === 'user' ? styles.userRow : styles.aiRow]}>
-            <Text style={styles.messageText}>{item.text}</Text>
+            <MarkdownText text={item.text} style={styles.messageText} />
           </View>
         )}
       />
@@ -561,7 +621,6 @@ const styles = StyleSheet.create({
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   title: { fontSize: 20, fontWeight: '700', color: '#111827' },
   clearBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#fee2e2', alignItems: 'center', justifyContent: 'center' },
-  ttsBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center' },
   quickRow: { flexDirection: 'row', paddingHorizontal: 12, gap: 8, marginTop: 8 },
   quickBtn: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, padding: 10 },
   quickText: { fontSize: 11, fontWeight: '600', color: '#334155', textAlign: 'center' },
@@ -615,4 +674,9 @@ const styles = StyleSheet.create({
   executeBtn: { backgroundColor: '#16a34a' },
   cancelText: { color: '#334155', fontWeight: '600' },
   executeText: { color: '#fff', fontWeight: '700' },
+  modeToggleRow: { flexDirection: 'row', backgroundColor: '#e2e8f0', borderRadius: 20, marginHorizontal: 12, marginTop: 8, padding: 3 },
+  modeTab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 18, gap: 6 },
+  activeModeTab: { backgroundColor: '#f59e0b', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1 },
+  modeTabText: { fontSize: 12, fontWeight: '600', color: '#64748b' },
+  activeModeTabText: { color: '#fff' },
 });

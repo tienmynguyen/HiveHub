@@ -99,6 +99,149 @@ function executeAction(db, action, userId) {
     return { ok: true, entity: project };
   }
   if (action.type === "CREATE_PROJECT_BLUEPRINT") {
+    if (action.customBlueprint && Array.isArray(action.customBlueprint.sprints)) {
+      const startDate = action.startDate ? new Date(`${action.startDate}T00:00:00`) : new Date();
+      const sprintsList = action.customBlueprint.sprints;
+      const sprintCount = sprintsList.length;
+      const sprintDurationWeeks = Math.max(1, Number(action.sprintDurationWeeks || 1));
+
+      const project = {
+        project_id: `P-${Date.now().toString().slice(-8)}`,
+        projectName: action.projectName,
+        projectDescription: action.projectDescription || "",
+        projectowner: Number(userId),
+        timeStart: startDate.toISOString(),
+        timeEnd: new Date(startDate.getTime() + sprintCount * sprintDurationWeeks * 7 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+      db.projects.push(project);
+      db.userProjects.push({
+        userProjectId: uuidv4(),
+        projectId: String(project.project_id),
+        userId: Number(userId),
+        roleId: 3,
+      });
+
+      const createdSprints = [];
+      const createdStories = [];
+      const createdTasks = [];
+
+      const resolveAssignee = (name) => {
+        if (!name) return null;
+        const normName = String(name).toLowerCase().trim();
+        const matched = db.users.find(
+          (u) =>
+            String(u.username || "").toLowerCase().includes(normName) ||
+            String(u.email || "").toLowerCase().includes(normName)
+        );
+        return matched ? Number(matched.user_id) : null;
+      };
+
+      const ensureProjectMembership = (uId) => {
+        if (!uId) return;
+        const exists = db.userProjects.some(
+          (up) => up.projectId === String(project.project_id) && Number(up.userId) === Number(uId)
+        );
+        if (!exists) {
+          db.userProjects.push({
+            userProjectId: uuidv4(),
+            projectId: String(project.project_id),
+            userId: Number(uId),
+            roleId: 1,
+          });
+        }
+      };
+
+      for (let i = 0; i < sprintCount; i += 1) {
+        const customSprint = sprintsList[i];
+        const sprintStart = new Date(startDate.getTime() + i * sprintDurationWeeks * 7 * 24 * 60 * 60 * 1000);
+        const sprintEnd = new Date(sprintStart.getTime() + sprintDurationWeeks * 7 * 24 * 60 * 60 * 1000);
+
+        const sprint = {
+          sprint_id: nextNumericId(db.sprints, "sprint_id"),
+          project_id: String(project.project_id),
+          sprintName: customSprint.sprintName || `Sprint ${i + 1}`,
+          sprintGoal: customSprint.sprintGoal || "",
+          sprintStatus: "TODO",
+          isDefault: false,
+          timeStart: sprintStart.toISOString(),
+          timeEnd: sprintEnd.toISOString(),
+        };
+        db.sprints.push(sprint);
+        createdSprints.push(sprint);
+
+        if (Array.isArray(customSprint.stories)) {
+          for (let j = 0; j < customSprint.stories.length; j += 1) {
+            const customStory = customSprint.stories[j];
+            const assigneeUserId = resolveAssignee(customStory.assigneeName);
+            ensureProjectMembership(assigneeUserId);
+
+            const story = {
+              story_id: nextNumericId(db.stories, "story_id"),
+              project_id: String(project.project_id),
+              sprint_id: Number(sprint.sprint_id),
+              epic_id: null,
+              storyName: customStory.storyName || `Story ${j + 1}`,
+              description: customStory.description || "",
+              storyStatus: "TODO",
+              storyOrder: Number(db.stories.length + 1),
+              assignee_user_id: assigneeUserId,
+              isDefault: false,
+            };
+            db.stories.push(story);
+            createdStories.push(story);
+
+            if (Array.isArray(customStory.tasks)) {
+              for (let k = 0; k < customStory.tasks.length; k += 1) {
+                const customTask = customStory.tasks[k];
+                const taskAssigneeId = resolveAssignee(customTask.assigneeName) || assigneeUserId;
+                ensureProjectMembership(taskAssigneeId);
+
+                const task = {
+                  task_id: db.tasks.length ? Math.max(...db.tasks.map((t) => t.task_id)) + 1 : 1,
+                  project_id: String(project.project_id),
+                  sprint_id: Number(sprint.sprint_id),
+                  epic_id: null,
+                  story_id: Number(story.story_id),
+                  taskName: customTask.taskName || `Task ${k + 1}`,
+                  description: customTask.description || "",
+                  taskStatus: "TODO",
+                  timeStart: sprintStart.toISOString(),
+                  timeEnd: sprintEnd.toISOString(),
+                  deadline: sprintEnd.toISOString(),
+                  is_approved: false,
+                  txHash: null,
+                };
+                db.tasks.push(task);
+                createdTasks.push(task);
+
+                if (taskAssigneeId) {
+                  db.userTasks.push({
+                    id: uuidv4(),
+                    taskId: task.task_id,
+                    userId: taskAssigneeId,
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return {
+        ok: true,
+        entity: {
+          project_id: project.project_id,
+          projectName: project.projectName,
+          projectDescription: project.projectDescription,
+          created: {
+            sprints: createdSprints.length,
+            stories: createdStories.length,
+            tasks: createdTasks.length,
+          },
+        },
+      };
+    }
+
     const sprintCount = Math.max(1, Number(action.sprintCount || 1));
     const storiesPerSprint = Math.max(1, Number(action.storiesPerSprint || 1));
     const tasksPerStory = Math.max(1, Number(action.tasksPerStory || 1));

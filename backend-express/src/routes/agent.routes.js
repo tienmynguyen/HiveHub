@@ -190,11 +190,44 @@ router.post("/agent/chat", async (req, res) => {
     const body = req.body || {};
     const userId = Number(body.userId || 0);
     const message = String(body.message || "").trim();
+    const mode = String(body.mode || "agent").toLowerCase();
     if (!message) {
       return res.status(400).json({ code: "VALIDATION_ERROR", message: "Missing message" });
     }
     const db = readDb();
     const memory = getUserMemory(userId);
+
+    if (mode === "chatbot") {
+      const parserContext = buildParserContext(db, userId, memory);
+      const answer = await generateChatAnswer({
+        userMessage: message,
+        userContext: {
+          userId,
+          mode: "chatbot",
+          hasOpenAI: hasOpenAI(),
+          resolvedContext: {},
+          parserContext,
+          capabilityGuide: "General Chatbot Mode: Bạn có thể tự do đặt các câu hỏi, gợi ý, hướng dẫn, v.v. Các thao tác trực tiếp trên hệ thống như thêm/sửa/xóa đã được vô hiệu hóa ở chế độ này.",
+        },
+      });
+      return res.json({
+        answer,
+        intent: "HELP",
+        parserMode: "chatbot-mode",
+        parserConfidence: 1.0,
+        actionSuggestion: null,
+        actionReady: false,
+        missingFields: [],
+        parsedPayload: {},
+        resolvedContext: {},
+        sessionMemory: memory,
+        guide: buildGuidedPrompt("HELP", []),
+        functionList: getAgentFunctionList(),
+        usageGuide: getAgentUsageGuide(),
+        clarification: { active: false },
+      });
+    }
+
     if (isCancelClarificationText(message) && memory?.pendingClarification) {
       const afterClear = clearPendingClarification(userId);
       return res.json({

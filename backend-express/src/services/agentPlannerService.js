@@ -302,6 +302,7 @@ function normalizeAiPayload(payload) {
     sprintDurationWeeks: Number.isFinite(Number(p.sprintDurationWeeks)) ? Number(p.sprintDurationWeeks) : undefined,
     startDate: p.startDate ? String(p.startDate).trim() : undefined,
     sprintStatus,
+    customBlueprint: p.customBlueprint || undefined,
   };
   // Important: remove undefined keys so AI payload does not overwrite fallback payload fields.
   return Object.fromEntries(Object.entries(normalized).filter(([, v]) => v !== undefined));
@@ -339,11 +340,12 @@ async function parseIntentWithAI(commandText, parserContext = {}) {
   const systemPrompt = [
     "You are an intent parser for HiveHub app.",
     "Return ONLY one JSON object. No markdown. No explanation.",
-    'Schema: {"intent":"CREATE_PROJECT|CREATE_PROJECT_BLUEPRINT|CREATE_SPRINT|CREATE_STORY|CREATE_TASK|CREATE_CALENDAR_NOTE|UPDATE_SPRINT_STATUS|REPORT|PLANNING|HELP","payload":{"projectId?":"P-...","projectName?":"...","projectDescription?":"...","sprintName?":"...","storyName?":"...","taskName?":"...","sprintId?":1,"storyId?":1,"sprintStatus?":"TODO|IN_PROGRESS|DONE","noteTitle?":"...","noteContent?":"...","noteDate?":"ISO","reminderAt?":"ISO","sprintCount?":4,"storiesPerSprint?":2,"tasksPerStory?":2,"sprintDurationWeeks?":1,"startDate?":"YYYY-MM-DD"},"confidence":0.0}',
+    'Schema: {"intent":"CREATE_PROJECT|CREATE_PROJECT_BLUEPRINT|CREATE_SPRINT|CREATE_STORY|CREATE_TASK|CREATE_CALENDAR_NOTE|UPDATE_SPRINT_STATUS|REPORT|PLANNING|HELP","payload":{"projectId?":"P-...","projectName?":"...","projectDescription?":"...","sprintName?":"...","storyName?":"...","taskName?":"...","sprintId?":1,"storyId?":1,"sprintStatus?":"TODO|IN_PROGRESS|DONE","noteTitle?":"...","noteContent?":"...","noteDate?":"ISO","reminderAt?":"ISO","sprintCount?":4,"storiesPerSprint?":2,"tasksPerStory?":2,"sprintDurationWeeks?":1,"startDate?":"YYYY-MM-DD","customBlueprint?":{"sprints":[{"sprintName":"...","sprintGoal":"...","stories":[{"storyName":"...","description":"...","assigneeName?":"...","tasks":[{"taskName":"...","description":"...","assigneeName?":"..."}]}]}]}},"confidence":0.0}',
     "Use confidence from 0 to 1.",
     "If command says current/this project, use memory.projectId if available.",
     "Prefer projectId from projectHints when project name in command loosely matches.",
     "Support Vietnamese and English commands.",
+    "CRITICAL CRITERIA: If user requests a complete project, intermediate scale or mentions project duration, purpose, or a list of participant names/roles, you MUST set intent to 'CREATE_PROJECT_BLUEPRINT' and populate a highly tailored 'customBlueprint' detailing Sprints, Stories, and Tasks with dynamic 'assigneeName' mapped from user input (e.g. My, Trình, Abc, etc.)."
   ].join("\n");
   const userPrompt = `Context: ${JSON.stringify(contextPayload)}\nCommand: ${commandText}`;
   try {
@@ -371,21 +373,33 @@ async function parseIntentWithAI(commandText, parserContext = {}) {
 }
 
 async function generateChatAnswer({ userMessage, userContext }) {
+  const isChatbot = userContext?.mode === "chatbot";
   if (!hasOpenAI()) {
+    if (isChatbot) {
+      return "Mình là trợ lý thông thường. Bạn có thể hỏi mình bất kỳ câu hỏi nào để thảo luận hoặc nhận gợi ý phát triển phần mềm, quản lý dự án.";
+    }
     return (
       "Mình có thể hỗ trợ bạn: tạo project/story/task, gợi ý chia việc, báo cáo tiến độ sprint/project, " +
       "và phân tích việc cần làm hôm nay. Hãy nói rõ lệnh theo dạng: 'tạo project ...', 'tạo story ...', 'báo cáo sprint ...'."
     );
   }
 
-  const systemPrompt = [
-    "You are HiveHub assistant.",
-    "Think with capability-first reasoning, not shallow keyword matching.",
-    "Use available function list and usage guide to decide what is feasible.",
-    "Ground answers in user context, project context, role/policy constraints.",
-    "If required info is missing, ask concise clarifying question.",
-    "Answer in concise Vietnamese, practical, action-oriented.",
-  ].join(" ");
+  const systemPrompt = isChatbot
+    ? [
+        "You are a helpful general chatbot assistant for HiveHub app.",
+        "Answer user questions, provide detailed suggestions, brainstorm ideas, and help with software development or project management questions.",
+        "Be friendly, conversational, and informative.",
+        "Do NOT talk about executing system commands, performing DB operations, or database modifications since actions are disabled in this mode.",
+        "Answer in friendly, concise Vietnamese.",
+      ].join(" ")
+    : [
+        "You are HiveHub assistant.",
+        "Think with capability-first reasoning, not shallow keyword matching.",
+        "Use available function list and usage guide to decide what is feasible.",
+        "Ground answers in user context, project context, role/policy constraints.",
+        "If required info is missing, ask concise clarifying question.",
+        "Answer in concise Vietnamese, practical, action-oriented.",
+      ].join(" ");
   const userPrompt = `User context: ${JSON.stringify(userContext)}\nUser message: ${userMessage}`;
   try {
     return (
@@ -433,6 +447,7 @@ function buildActionDraft({ intent, payload }) {
         tasksPerStory: Number(payload.tasksPerStory || 0),
         sprintDurationWeeks: Number(payload.sprintDurationWeeks || 1),
         startDate: payload.startDate || null,
+        customBlueprint: payload.customBlueprint || null,
       };
     case "CREATE_SPRINT":
       return {
@@ -509,11 +524,13 @@ function validateActionDraft(action) {
       .trim();
     if (!normalizedName || normalizedName === "new project") missing.push("projectName");
     if (!String(action.projectDescription || "").trim()) missing.push("projectDescription");
-    if (!Number.isFinite(action.sprintCount) || action.sprintCount < 1) missing.push("sprintCount");
-    if (!Number.isFinite(action.storiesPerSprint) || action.storiesPerSprint < 1) missing.push("storiesPerSprint");
-    if (!Number.isFinite(action.tasksPerStory) || action.tasksPerStory < 1) missing.push("tasksPerStory");
-    if (!Number.isFinite(action.sprintDurationWeeks) || action.sprintDurationWeeks < 1) missing.push("sprintDurationWeeks");
-    if (!String(action.startDate || "").trim()) missing.push("startDate");
+    if (!action.customBlueprint) {
+      if (!Number.isFinite(action.sprintCount) || action.sprintCount < 1) missing.push("sprintCount");
+      if (!Number.isFinite(action.storiesPerSprint) || action.storiesPerSprint < 1) missing.push("storiesPerSprint");
+      if (!Number.isFinite(action.tasksPerStory) || action.tasksPerStory < 1) missing.push("tasksPerStory");
+      if (!Number.isFinite(action.sprintDurationWeeks) || action.sprintDurationWeeks < 1) missing.push("sprintDurationWeeks");
+      if (!String(action.startDate || "").trim()) missing.push("startDate");
+    }
   }
   if (action.type === "CREATE_SPRINT") {
     const normalizedSprintName = String(action.sprintName || "")
