@@ -1,6 +1,4 @@
-import Config from './config.json';
-
-const BASE_URL = Config.URLAPI;
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.3:8889';
 
 export const endpoints = {
     auth: {
@@ -68,12 +66,14 @@ export const endpoints = {
         postComment: (taskId, userId) => `${BASE_URL}/postcomment?taskId=${taskId}&userId=${userId}`,
         getComments: (taskId) => `${BASE_URL}/getallcommentbyTask?taskId=${taskId}`,
         getByStory: (storyId) => `${BASE_URL}/getsubtaskbystoryid?storyId=${storyId}`,
+        delete: (taskId, userId) => `${BASE_URL}/deletetask?taskId=${taskId}&userId=${userId}`,
     },
     stories: {
         getById: (storyId) => `${BASE_URL}/getstorybyid?storyId=${storyId}`,
         update: (storyId, userId) => `${BASE_URL}/updatestory?storyId=${storyId}&userId=${userId}`,
         getComments: (storyId) => `${BASE_URL}/getallcommentbystory?storyId=${storyId}`,
         postComment: (storyId, userId) => `${BASE_URL}/poststorycomment?storyId=${storyId}&userId=${userId}`,
+        delete: (storyId, userId) => `${BASE_URL}/deletestory?storyId=${storyId}&userId=${userId}`,
     },
     notifications: {
         getForOwner: (projectId, userId) => `${BASE_URL}/notifications?projectId=${projectId}&userId=${userId}`,

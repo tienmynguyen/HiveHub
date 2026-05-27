@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import Modal from 'react-native-modal';
 import Icon from 'react-native-vector-icons/FontAwesome5'; 
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { AuthContext } from "../../auth/context/AuthContext";
 import axios from 'axios';
 import { endpoints } from '../../../config/endpoints';
@@ -36,6 +37,74 @@ export default function PlanDetail({ navigation, route }) {
 
     const [projectMembers, setProjectMembers] = useState([]);
     const [isAssigneeModalVisible, setAssigneeModalVisible] = useState(false);
+
+    const [editTaskModalVisible, setEditTaskModalVisible] = useState(false);
+    const [editTaskName, setEditTaskName] = useState('');
+    const [editDescription, setEditDescription] = useState('');
+    const [editTimeStart, setEditTimeStart] = useState(new Date());
+    const [editTimeEnd, setEditTimeEnd] = useState(new Date());
+    const [editDeadline, setEditDeadline] = useState(new Date());
+
+    const [isEditStartVisible, setEditStartVisible] = useState(false);
+    const [isEditEndVisible, setEditEndVisible] = useState(false);
+    const [isEditDeadlineVisible, setEditDeadlineVisible] = useState(false);
+
+    const openEditTaskModal = () => {
+        setEditTaskName(task.taskName || '');
+        setEditDescription(task.description || '');
+        setEditTimeStart(task.timeStart ? new Date(task.timeStart) : new Date());
+        setEditTimeEnd(task.timeEnd ? new Date(task.timeEnd) : new Date());
+        setEditDeadline(task.deadline ? new Date(task.deadline) : new Date());
+        setEditTaskModalVisible(true);
+    };
+
+    const handleSaveTask = async () => {
+        if (!editTaskName.trim()) {
+            Alert.alert('Lỗi', 'Tên công việc không được để trống.');
+            return;
+        }
+        try {
+            await axios.post(endpoints.tasks.update(task.task_id, userData.user_id), {
+                taskName: editTaskName.trim(),
+                description: editDescription.trim(),
+                timeStart: editTimeStart.toISOString(),
+                timeEnd: editTimeEnd.toISOString(),
+                deadline: editDeadline.toISOString(),
+            });
+            setEditTaskModalVisible(false);
+            Alert.alert('Thành công', 'Đã lưu thay đổi công việc.', [
+                { text: 'OK', onPress: () => {
+                    navigation.goBack();
+                }}
+              ]);
+        } catch (error) {
+            Alert.alert('Lỗi', 'Không thể cập nhật công việc.');
+        }
+    };
+
+    const handleDeleteTask = () => {
+        Alert.alert(
+            'Xác nhận xóa',
+            'Bạn có chắc muốn xóa công việc này không?',
+            [
+                { text: 'Hủy' },
+                {
+                  text: 'Xóa',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      await axios.delete(endpoints.tasks.delete(task.task_id, userData.user_id));
+                      Alert.alert('Thành công', 'Đã xóa công việc.', [
+                        { text: 'OK', onPress: () => navigation.goBack() }
+                      ]);
+                    } catch (error) {
+                      Alert.alert('Lỗi', 'Không thể xóa công việc.');
+                    }
+                  }
+                }
+            ]
+        );
+    };
 
     useEffect(() => {
         fetchData();
@@ -287,7 +356,21 @@ export default function PlanDetail({ navigation, route }) {
                     {/* INFO CARD */}
                     <View style={styles.card}>
                         <View style={styles.titleRow}>
-                            <Text style={styles.taskTitle}>{task.taskName}</Text>
+                            <View style={{ flex: 1, marginRight: 10 }}>
+                                <Text style={styles.taskTitle}>{task.taskName}</Text>
+                                {(Number(role) === 3 || Number(role) === 2) && (
+                                    <View style={{ flexDirection: 'row', gap: 16, marginTop: 8 }}>
+                                        <TouchableOpacity onPress={openEditTaskModal} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                            <Icon name="edit" size={12} color="#ffad44" />
+                                            <Text style={{ fontSize: 12, color: '#ffad44', fontWeight: 'bold' }}>Sửa</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={handleDeleteTask} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                            <Icon name="trash-alt" size={12} color="#ef4444" />
+                                            <Text style={{ fontSize: 12, color: '#ef4444', fontWeight: 'bold' }}>Xóa</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+                            </View>
                             
                             {/* BADGE TRẠNG THÁI */}
                             <TouchableOpacity onPress={() => setModalVisible(true)} style={[styles.statusBadge, { backgroundColor: currentStatusStyle.bg }]}>
@@ -534,6 +617,96 @@ export default function PlanDetail({ navigation, route }) {
                     </TouchableOpacity>
                 </View>
             </Modal>
+
+            {/* MODAL 4: CHỈNH SỬA TASK */}
+            <Modal isVisible={editTaskModalVisible} onBackdropPress={() => setEditTaskModalVisible(false)} style={styles.bottomModal} useNativeDriver={true} hideModalContentWhileAnimating={true} avoidKeyboard={true}>
+                <View style={[styles.modalContent, { width: '100%', maxHeight: '80%' }]}>
+                    <View style={styles.modalIndicator} />
+                    <Text style={styles.modalTitle}>Chỉnh sửa Công việc</Text>
+                    
+                    <ScrollView style={{ width: '100%' }} keyboardShouldPersistTaps="handled">
+                        <Text style={styles.fieldLabel}>Tên công việc *</Text>
+                        <TextInput
+                            style={styles.taskTextInput}
+                            value={editTaskName}
+                            onChangeText={setEditTaskName}
+                            placeholder="Tên task..."
+                        />
+                        
+                        <Text style={styles.fieldLabel}>Mô tả</Text>
+                        <TextInput
+                            style={[styles.taskTextInput, { height: 75, textAlignVertical: 'top' }]}
+                            value={editDescription}
+                            onChangeText={setEditDescription}
+                            placeholder="Mô tả task..."
+                            multiline
+                        />
+                        
+                        {/* Start Date */}
+                        <Text style={styles.fieldLabel}>Ngày bắt đầu</Text>
+                        <TouchableOpacity onPress={() => setEditStartVisible(true)} activeOpacity={0.7} style={styles.datePickerBtn}>
+                            <Icon name="calendar-alt" size={14} color="#666" style={{ marginRight: 8 }} />
+                            <Text style={styles.datePickerText}>
+                                {editTimeStart.toLocaleDateString('vi-VN')}
+                            </Text>
+                        </TouchableOpacity>
+                        <DateTimePickerModal
+                            isVisible={isEditStartVisible}
+                            mode="date"
+                            date={editTimeStart}
+                            onConfirm={(date) => { setEditTimeStart(date); setEditStartVisible(false); }}
+                            onCancel={() => setEditStartVisible(false)}
+                            confirmTextIOS="Chọn"
+                            cancelTextIOS="Hủy"
+                        />
+                        
+                        {/* End Date */}
+                        <Text style={styles.fieldLabel}>Ngày kết thúc</Text>
+                        <TouchableOpacity onPress={() => setEditEndVisible(true)} activeOpacity={0.7} style={styles.datePickerBtn}>
+                            <Icon name="calendar-alt" size={14} color="#666" style={{ marginRight: 8 }} />
+                            <Text style={styles.datePickerText}>
+                                {editTimeEnd.toLocaleDateString('vi-VN')}
+                            </Text>
+                        </TouchableOpacity>
+                        <DateTimePickerModal
+                            isVisible={isEditEndVisible}
+                            mode="date"
+                            date={editTimeEnd}
+                            onConfirm={(date) => { setEditTimeEnd(date); setEditEndVisible(false); }}
+                            onCancel={() => setEditEndVisible(false)}
+                            confirmTextIOS="Chọn"
+                            cancelTextIOS="Hủy"
+                        />
+                        
+                        {/* Deadline */}
+                        <Text style={styles.fieldLabel}>Deadline</Text>
+                        <TouchableOpacity onPress={() => setEditDeadlineVisible(true)} activeOpacity={0.7} style={[styles.datePickerBtn, { borderColor: '#ff6b6b' }]}>
+                            <Icon name="clock" size={14} color="#ff6b6b" style={{ marginRight: 8 }} />
+                            <Text style={[styles.datePickerText, { color: '#ff6b6b' }]}>
+                                {editDeadline.toLocaleDateString('vi-VN')}
+                            </Text>
+                        </TouchableOpacity>
+                        <DateTimePickerModal
+                            isVisible={isEditDeadlineVisible}
+                            mode="date"
+                            date={editDeadline}
+                            onConfirm={(date) => { setEditDeadline(date); setEditDeadlineVisible(false); }}
+                            onCancel={() => setEditDeadlineVisible(false)}
+                            confirmTextIOS="Chọn"
+                            cancelTextIOS="Hủy"
+                        />
+                        
+                        <View style={styles.modalButtonRow}>
+                            <TouchableOpacity style={[styles.dialogBtn, styles.btnCancel]} onPress={() => setEditTaskModalVisible(false)}>
+                                <Text style={{ color: '#666', fontWeight: 'bold' }}>Hủy</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.dialogBtn, styles.btnConfirm]} onPress={handleSaveTask}>
+                                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Lưu</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </ScrollView>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -617,4 +790,9 @@ const styles = StyleSheet.create({
     removeBtn: { backgroundColor: '#fee2e2', borderWidth: 1, borderColor: '#ef4444' },
     selectBtnText: { color: '#ffad44', fontSize: 12, fontWeight: 'bold' },
     selectBtnTextActive: { color: '#ef4444', fontSize: 12, fontWeight: 'bold' },
+    fieldLabel: { fontSize: 13, fontWeight: '700', color: '#475569', marginTop: 10, marginBottom: 4 },
+    taskTextInput: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, backgroundColor: '#f8fafc', color: '#333', fontSize: 14, width: '100%', marginBottom: 8 },
+    datePickerBtn: { flexDirection: 'row', alignItems: 'center', height: 40, borderColor: '#e2e8f0', borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, backgroundColor: '#f8fafc', marginBottom: 8 },
+    datePickerText: { fontSize: 14, color: '#333' },
+    modalButtonRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 16, marginBottom: 20 },
 });

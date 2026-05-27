@@ -5383,6 +5383,21 @@
       "deadline": "2026-06-24T17:00:00.000Z",
       "is_approved": false,
       "txHash": null
+    },
+    {
+      "task_id": 192,
+      "project_id": "P-46987711",
+      "sprint_id": 23,
+      "epic_id": 10,
+      "story_id": 34,
+      "taskName": "Train AI",
+      "description": "Train theo mô tả",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-23T16:47:04.000Z",
+      "timeEnd": "2026-05-28T16:47:04.000Z",
+      "deadline": "2026-05-28T16:47:04.000Z",
+      "is_approved": false,
+      "txHash": null
     }
   ],
   "userTasks": [
@@ -5630,6 +5645,11 @@
       "id": "4567a88e-203e-45bc-b6eb-51cfd3a8837f",
       "taskId": 173,
       "userId": 2
+    },
+    {
+      "id": "55fd36a2-165c-4437-968b-772a20056305",
+      "taskId": 192,
+      "userId": 5
     }
   ],
   "notes": [
@@ -6465,9 +6485,9 @@
       "expiresAt": 1778580193356
     },
     {
-      "token": "8aa53e49-c490-47d0-9d0d-2b9bc5ec9cc7a501b39731f84882a1fccd5e5705c67e",
+      "token": "9fd8612e-1655-438c-b994-4bed4c464b8698f84513e7af41daabf9926bf44cef5e",
       "userId": 5,
-      "expiresAt": 1780502589854
+      "expiresAt": 1780504654601
     }
   ],
   "wallets": {},
