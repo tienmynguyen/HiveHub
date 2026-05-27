@@ -286,7 +286,7 @@ const GanttChart = ({ tasks = [], stories = [], sprints = [], currentMonth, setC
                   const meta = barMeta(row);
                   const shownText = fitTextOnBar(row.title, barWidth);
 
-                  // Nesting relationship connectors
+                  // Nesting relationship connectors (branching leftward to prevent cutting parent bars)
                   let connector = null;
                   if (row.type === 'story' && row.sprintId) {
                     const parentRow = renderedRows.find(r => r.type === 'sprint' && r.id === `sprint-${row.sprintId}`);
@@ -299,17 +299,29 @@ const GanttChart = ({ tasks = [], stories = [], sprints = [], currentMonth, setC
                       
                       connector = (
                         <G key={`connect-${row.id}`}>
+                          {/* Horizontal leftward from parent start */}
                           <Line
-                            x1={parentX + 10}
+                            x1={parentX}
                             y1={parentY}
-                            x2={parentX + 10}
+                            x2={parentX - 8}
+                            y2={parentY}
+                            stroke="#c084fc"
+                            strokeWidth="1.2"
+                            strokeDasharray="2 2"
+                          />
+                          {/* Vertical down outside the bars */}
+                          <Line
+                            x1={parentX - 8}
+                            y1={parentY}
+                            x2={parentX - 8}
                             y2={currentY}
                             stroke="#c084fc"
                             strokeWidth="1.2"
                             strokeDasharray="2 2"
                           />
+                          {/* Horizontal rightward into child start */}
                           <Line
-                            x1={parentX + 10}
+                            x1={parentX - 8}
                             y1={currentY}
                             x2={barX}
                             y2={currentY}
@@ -331,17 +343,29 @@ const GanttChart = ({ tasks = [], stories = [], sprints = [], currentMonth, setC
                       
                       connector = (
                         <G key={`connect-${row.id}`}>
+                          {/* Horizontal leftward from parent start */}
                           <Line
-                            x1={parentX + 10}
+                            x1={parentX}
                             y1={parentY}
-                            x2={parentX + 10}
+                            x2={parentX - 8}
+                            y2={parentY}
+                            stroke="#93c5fd"
+                            strokeWidth="1.2"
+                            strokeDasharray="2 2"
+                          />
+                          {/* Vertical down outside the bars */}
+                          <Line
+                            x1={parentX - 8}
+                            y1={parentY}
+                            x2={parentX - 8}
                             y2={currentY}
                             stroke="#93c5fd"
                             strokeWidth="1.2"
                             strokeDasharray="2 2"
                           />
+                          {/* Horizontal rightward into child start */}
                           <Line
-                            x1={parentX + 10}
+                            x1={parentX - 8}
                             y1={currentY}
                             x2={barX}
                             y2={currentY}
