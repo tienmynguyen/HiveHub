@@ -276,4 +276,27 @@ router.post("/poststorycomment", (req, res) => {
   });
 });
 
+router.delete("/deletestory", (req, res) => {
+  const storyId = Number(req.query.storyId);
+  const userId = Number(req.query.userId || 0);
+  const db = readDb();
+  ensureScrumSchema(db);
+  const story = db.stories.find((x) => Number(x.story_id) === storyId);
+  if (!story) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Story not found" });
+  if (!canManageProject(db, story.project_id, userId)) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or management can delete story" });
+  }
+
+  const taskIds = db.tasks.filter((x) => Number(x.story_id) === storyId).map((x) => Number(x.task_id));
+
+  db.stories = db.stories.filter((x) => Number(x.story_id) !== storyId);
+  db.tasks = db.tasks.filter((x) => Number(x.story_id) !== storyId);
+  db.userTasks = db.userTasks.filter((x) => !taskIds.includes(Number(x.taskId)));
+  db.comments = db.comments.filter((x) => !taskIds.includes(Number(x.taskId)));
+  db.storyComments = db.storyComments.filter((x) => Number(x.storyId) !== storyId);
+
+  writeDb(db);
+  return res.json({ ok: true });
+});
+
 module.exports = router;

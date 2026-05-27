@@ -302,4 +302,22 @@ router.get("/getallcommentbyTask", (req, res) => {
   return res.json(comments);
 });
 
+router.delete("/deletetask", (req, res) => {
+  const taskId = Number(req.query.taskId);
+  const userId = Number(req.query.userId || 0);
+  const db = readDb();
+  const task = db.tasks.find((t) => Number(t.task_id) === taskId);
+  if (!task) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Task not found" });
+  if (!canManageProject(db, task.project_id, userId)) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or management can delete subtask" });
+  }
+
+  db.tasks = db.tasks.filter((t) => Number(t.task_id) !== taskId);
+  db.userTasks = db.userTasks.filter((x) => Number(x.taskId) !== taskId);
+  db.comments = db.comments.filter((x) => Number(x.taskId) !== taskId);
+
+  writeDb(db);
+  return res.json({ ok: true });
+});
+
 module.exports = router;

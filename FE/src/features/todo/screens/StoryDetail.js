@@ -38,6 +38,57 @@ export default function StoryDetail({ navigation, route }) {
   const [statusModalVisible, setStatusModalVisible] = useState(false);
   const [myRole, setMyRole] = useState('Member');
 
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+
+  const openEditStoryModal = () => {
+    setEditName(story?.storyName || '');
+    setEditDesc(story?.description || '');
+    setEditModalVisible(true);
+  };
+
+  const handleSaveStory = async () => {
+    if (!editName.trim()) {
+      Alert.alert('Lỗi', 'Tên story không được để trống.');
+      return;
+    }
+    try {
+      await axios.post(endpoints.stories.update(story.story_id, userData.user_id), {
+        storyName: editName.trim(),
+        description: editDesc.trim(),
+      });
+      setEditModalVisible(false);
+      loadData();
+    } catch (error) {
+      Alert.alert('Lỗi', 'Không thể lưu thay đổi.');
+    }
+  };
+
+  const handleDeleteStory = () => {
+    Alert.alert(
+      'Xác nhận xóa',
+      'Bạn có chắc muốn xóa Story này cùng toàn bộ các subtask thuộc về nó không?',
+      [
+        { text: 'Hủy' },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await axios.delete(endpoints.stories.delete(story.story_id, userData.user_id));
+              Alert.alert('Thành công', 'Đã xóa story.', [
+                { text: 'OK', onPress: () => navigation.goBack() }
+              ]);
+            } catch (error) {
+              Alert.alert('Lỗi', 'Không thể xóa story.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const completion = useMemo(() => {
     if (!subTasks.length) return 0;
     const done = subTasks.filter((x) => x.taskStatus === 'COMPLETED' || x.taskStatus === 'DONE' || x.taskStatus === 'APPROVED').length;
@@ -131,7 +182,19 @@ export default function StoryDetail({ navigation, route }) {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.card}>
-          <Text style={styles.storyTitle}>{story?.storyName || 'Story'}</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Text style={[styles.storyTitle, { flex: 1, marginRight: 8 }]}>{story?.storyName || 'Story'}</Text>
+            {myRole === 'Owner' && (
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <TouchableOpacity onPress={openEditStoryModal}>
+                  <Icon name="edit" size={16} color="#ffad44" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleDeleteStory}>
+                  <Icon name="trash-alt" size={16} color="#ef4444" />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
           <Text style={styles.storyDesc}>{story?.description || 'Chưa có mô tả'}</Text>
           <View style={styles.metaRow}>
             <TouchableOpacity
@@ -222,6 +285,45 @@ export default function StoryDetail({ navigation, route }) {
           </View>
         </View>
       </Modal>
+      
+      <Modal
+        transparent
+        visible={editModalVisible}
+        animationType="fade"
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Chỉnh sửa Story</Text>
+            
+            <Text style={styles.modalLabel}>Tên Story *</Text>
+            <TextInput
+              style={styles.textInput}
+              value={editName}
+              onChangeText={setEditName}
+              placeholder="Nhập tên story..."
+            />
+            
+            <Text style={styles.modalLabel}>Mô tả</Text>
+            <TextInput
+              style={[styles.textInput, { height: 80, textAlignVertical: 'top' }]}
+              value={editDesc}
+              onChangeText={setEditDesc}
+              placeholder="Mô tả story..."
+              multiline
+            />
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={[styles.modalBtn, styles.cancel]} onPress={() => setEditModalVisible(false)}>
+                <Text style={styles.cancelText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalBtn, styles.save]} onPress={handleSaveStory}>
+                <Text style={styles.saveText}>Lưu</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -264,4 +366,12 @@ const styles = StyleSheet.create({
   statusOptionText: { fontSize: 14, fontWeight: '600' },
   cancelBtn: { alignSelf: 'flex-end', marginTop: 10, backgroundColor: '#f1f5f9', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   cancelBtnText: { color: '#334155', fontWeight: '600' },
+  modalLabel: { fontSize: 13, fontWeight: '700', color: '#475569', marginTop: 10, marginBottom: 4 },
+  textInput: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, backgroundColor: '#f8fafc', color: '#333', fontSize: 14, width: '100%', marginBottom: 10 },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 14, gap: 8 },
+  modalBtn: { borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10, minWidth: 70, alignItems: 'center' },
+  cancel: { backgroundColor: '#f1f5f9' },
+  save: { backgroundColor: '#ffad44' },
+  cancelText: { color: '#334155', fontWeight: '600' },
+  saveText: { color: '#fff', fontWeight: '700' },
 });
