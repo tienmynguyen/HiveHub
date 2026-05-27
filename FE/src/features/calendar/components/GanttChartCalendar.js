@@ -255,9 +255,9 @@ const GanttChart = ({ tasks, currentMonth, setCurrentMonth }) => {
                                                         ry={CONFIG.barRadius}
                                                         fill={color}
                                                     />
-                                                    {barWidth > 24 ? (
+                                                    {barWidth >= 60 ? (
                                                         <SvgText
-                                                            x={barX + 6}
+                                                            x={barX + 12}
                                                             y={barY + CONFIG.barHeight / 2 + 3}
                                                             fill="#fff"
                                                             fontSize="10"
@@ -266,7 +266,18 @@ const GanttChart = ({ tasks, currentMonth, setCurrentMonth }) => {
                                                         >
                                                             {displayTitle}
                                                         </SvgText>
-                                                    ) : null}
+                                                    ) : (
+                                                        <SvgText
+                                                            x={barX + barWidth + 10}
+                                                            y={barY + CONFIG.barHeight / 2 + 3}
+                                                            fill="#475569"
+                                                            fontSize="10"
+                                                            fontWeight="700"
+                                                            textAnchor="start"
+                                                        >
+                                                            {taskTitle}
+                                                        </SvgText>
+                                                    )}
                                                 </G>
                                             );
                                         })}
