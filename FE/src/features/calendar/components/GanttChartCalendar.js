@@ -257,7 +257,7 @@ const GanttChart = ({ tasks, currentMonth, setCurrentMonth }) => {
                                                     />
                                                     {barWidth >= 60 ? (
                                                         <SvgText
-                                                            x={barX + 6}
+                                                            x={barX + 12}
                                                             y={barY + CONFIG.barHeight / 2 + 3}
                                                             fill="#fff"
                                                             fontSize="10"
@@ -268,7 +268,7 @@ const GanttChart = ({ tasks, currentMonth, setCurrentMonth }) => {
                                                         </SvgText>
                                                     ) : (
                                                         <SvgText
-                                                            x={barX + barWidth + 6}
+                                                            x={barX + barWidth + 10}
                                                             y={barY + CONFIG.barHeight / 2 + 3}
                                                             fill="#475569"
                                                             fontSize="10"

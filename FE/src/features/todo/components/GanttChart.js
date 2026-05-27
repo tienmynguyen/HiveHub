@@ -370,11 +370,11 @@ const GanttChart = ({ tasks = [], stories = [], sprints = [], currentMonth, setC
                           opacity={row.type === 'subtask' ? 1 : 0.9}
                         />
                         {barWidth >= 60 ? (
-                          <SvgText x={barX + 6} y={barY + 12} fill="#fff" fontSize="9" fontWeight="700">
+                          <SvgText x={barX + 12} y={barY + 12} fill="#fff" fontSize="9" fontWeight="700">
                             {shownText}
                           </SvgText>
                         ) : (
-                          <SvgText x={barX + barWidth + 6} y={barY + 12} fill="#475569" fontSize="9" fontWeight="700">
+                          <SvgText x={barX + barWidth + 10} y={barY + 12} fill="#475569" fontSize="9" fontWeight="700">
                             {row.title}
                           </SvgText>
                         )}

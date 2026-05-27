@@ -8,6 +8,17 @@ const { isEnabled: isOnchainEnabled, submitTaskApprovalOnChain } = require("../s
 
 const router = express.Router();
 
+function enrichTasks(db, tasks) {
+  return tasks.map((t) => {
+    const project = db.projects.find((p) => String(p.project_id) === String(t.project_id));
+    return {
+      ...t,
+      project: project ? { projectName: project.projectName } : null,
+      projectName: project ? project.projectName : "Dự án cá nhân",
+    };
+  });
+}
+
 router.post("/addtask", (req, res) => {
   const projectId = String(req.query.projectId);
   const ownerId = Number(req.query.ownerId || req.body?.ownerId || 0);
@@ -38,7 +49,8 @@ router.post("/addtask", (req, res) => {
   };
   db.tasks.push(task);
   writeDb(db);
-  return res.json(task);
+  const enriched = enrichTasks(db, [task])[0];
+  return res.json(enriched);
 });
 
 router.post("/addusertask", (req, res) => {
@@ -86,14 +98,14 @@ router.get("/gettaskbyprojectid", (req, res) => {
   if (sprintId) tasks = tasks.filter((t) => Number(t.sprint_id) === sprintId);
   if (storyId) tasks = tasks.filter((t) => Number(t.story_id) === storyId);
   if (epicId) tasks = tasks.filter((t) => Number(t.epic_id) === epicId);
-  return res.json(tasks);
+  return res.json(enrichTasks(db, tasks));
 });
 
 router.get("/getsubtaskbystoryid", (req, res) => {
   const storyId = Number(req.query.storyId);
   const db = readDb();
   const tasks = db.tasks.filter((t) => Number(t.story_id) === storyId);
-  return res.json(tasks);
+  return res.json(enrichTasks(db, tasks));
 });
 
 router.get("/getalltaskbyuser", (req, res) => {
@@ -101,7 +113,7 @@ router.get("/getalltaskbyuser", (req, res) => {
   const db = readDb();
   const taskIds = db.userTasks.filter((x) => x.userId === userId).map((x) => x.taskId);
   const tasks = db.tasks.filter((t) => taskIds.includes(t.task_id));
-  return res.json(tasks);
+  return res.json(enrichTasks(db, tasks));
 });
 
 router.get("/findtaskbydate", (req, res) => {
@@ -114,7 +126,7 @@ router.get("/findtaskbydate", (req, res) => {
     const sourceDate = (t.deadline || t.timeStart || "").slice(0, 10);
     return sourceDate === date;
   });
-  return res.json(tasks);
+  return res.json(enrichTasks(db, tasks));
 });
 
 router.post("/updatetask", (req, res) => {
