@@ -2,6 +2,7 @@ import React, { useContext, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Modal, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import axios from 'axios';
+import Svg, { Line, Rect, G, Text as SvgText } from 'react-native-svg';
 import { AuthContext } from '../../auth/context/AuthContext';
 import { endpoints } from '../../../config/endpoints';
 
@@ -79,6 +80,222 @@ function MarkdownText({ text, style }) {
           </Text>
         );
       })}
+    </View>
+  );
+}
+
+function ProjectReportDashboard({ data }) {
+  const project = data?.project || {};
+  const summary = data?.summary || {};
+  const sprintStats = data?.sprintStats || [];
+  const todayFocus = data?.todayFocus || [];
+  const blockedItems = data?.blockedItems || [];
+
+  const totalTasks = summary.taskCount || 0;
+  const completedTasks = summary.completedTaskCount || 0;
+  const progressPct = totalTasks ? Math.round((completedTasks * 100) / totalTasks) : 0;
+
+  return (
+    <View style={styles.dashboardContainer}>
+      <View style={styles.dashboardHeader}>
+        <Icon name="folder-open" size={14} color="#f59e0b" style={{ marginRight: 6 }} />
+        <Text style={styles.dashboardProjectName} numberOfLines={1}>
+          {project.projectName || 'Dự án'}
+        </Text>
+        <View style={styles.projectIdBadge}>
+          <Text style={styles.projectIdBadgeText}>{project.project_id}</Text>
+        </View>
+      </View>
+
+      {project.projectDescription ? (
+        <Text style={styles.dashboardDesc}>{project.projectDescription}</Text>
+      ) : null}
+
+      <View style={styles.progressSection}>
+        <View style={styles.progressTextRow}>
+          <Text style={styles.progressLabel}>Tiến độ dự án</Text>
+          <Text style={styles.progressVal}>{progressPct}%</Text>
+        </View>
+        <View style={styles.progressBarBg}>
+          <View style={[styles.progressBarFill, { width: `${progressPct}%` }]} />
+        </View>
+        <Text style={styles.progressSubtext}>
+          Đã hoàn thành {completedTasks}/{totalTasks} công việc của {summary.sprintCount || 0} sprints
+        </Text>
+      </View>
+
+      <View style={styles.statsGrid}>
+        <View style={styles.statCard}>
+          <Text style={styles.statNum}>{summary.sprintCount || 0}</Text>
+          <Text style={styles.statLabel}>Sprints</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statNum}>{summary.storyCount || 0}</Text>
+          <Text style={styles.statLabel}>Stories</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statNum}>{summary.taskCount || 0}</Text>
+          <Text style={styles.statLabel}>Tasks</Text>
+        </View>
+      </View>
+
+      {sprintStats.length > 0 ? (
+        <View style={styles.chartContainer}>
+          <Text style={styles.sectionTitle}>Sơ đồ tiến độ Sprint (%)</Text>
+          <View style={styles.svgWrapper}>
+            <Svg width="100%" height={130} viewBox="0 0 300 130">
+              <Line x1="30" y1="15" x2="280" y2="15" stroke="#e2e8f0" strokeDasharray="3,3" />
+              <Line x1="30" y1="55" x2="280" y2="55" stroke="#e2e8f0" strokeDasharray="3,3" />
+              <Line x1="30" y1="95" x2="280" y2="95" stroke="#cbd5e1" strokeWidth="1" />
+              
+              <SvgText x="5" y="18" fontSize="8" fill="#94a3b8" fontWeight="600">100%</SvgText>
+              <SvgText x="10" y="58" fontSize="8" fill="#94a3b8" fontWeight="600">50%</SvgText>
+              <SvgText x="15" y="98" fontSize="8" fill="#94a3b8" fontWeight="600">0%</SvgText>
+
+              {sprintStats.slice(0, 5).map((sprint, idx) => {
+                const limitSprints = sprintStats.slice(0, 5);
+                const barWidth = 26;
+                const gap = (240 - barWidth * limitSprints.length) / (limitSprints.length + 1);
+                const x = 30 + gap + idx * (barWidth + gap);
+                const pct = Math.min(100, Math.max(0, sprint.progressPct || 0));
+                
+                const barHeight = (pct / 100) * 80;
+                const y = 95 - barHeight;
+                const barColor = pct === 100 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#3b82f6';
+
+                return (
+                  <G key={`bar-${idx}`}>
+                    <Rect
+                      x={x}
+                      y={15}
+                      width={barWidth}
+                      height={80}
+                      rx="3"
+                      fill="#f1f5f9"
+                    />
+                    {barHeight > 0 ? (
+                      <Rect
+                        x={x}
+                        y={y}
+                        width={barWidth}
+                        height={barHeight}
+                        rx="3"
+                        fill={barColor}
+                      />
+                    ) : null}
+                    
+                    <SvgText
+                      x={x + barWidth / 2}
+                      y={y - 3}
+                      fontSize="8"
+                      fill="#475569"
+                      fontWeight="bold"
+                      textAnchor="middle"
+                    >
+                      {pct}%
+                    </SvgText>
+
+                    <SvgText
+                      x={x + barWidth / 2}
+                      y="110"
+                      fontSize="7"
+                      fill="#64748b"
+                      fontWeight="600"
+                      textAnchor="middle"
+                    >
+                      S{idx + 1}
+                    </SvgText>
+                  </G>
+                );
+              })}
+            </Svg>
+          </View>
+          <View style={styles.chartLegend}>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
+              <Text style={styles.legendText}>Xong (100%)</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
+              <Text style={styles.legendText}>Khá (&gt;=50%)</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: '#3b82f6' }]} />
+              <Text style={styles.legendText}>Mới (&lt;50%)</Text>
+            </View>
+          </View>
+        </View>
+      ) : null}
+
+      <View style={styles.detailsSection}>
+        <Text style={styles.sectionTitle}>Chi tiết các Sprint</Text>
+        {sprintStats.map((sprint, idx) => {
+          const isDone = ['DONE', 'COMPLETED'].includes(String(sprint.sprintStatus).toUpperCase());
+          const isCurrent = String(sprint.sprintStatus).toUpperCase() === 'IN_PROGRESS';
+          
+          let statusBg = '#f1f5f9';
+          let statusText = '#475569';
+          let statusLabel = 'Chưa làm';
+          if (isDone) {
+            statusBg = '#d1fae5';
+            statusText = '#065f46';
+            statusLabel = 'Xong';
+          } else if (isCurrent) {
+            statusBg = '#fef3c7';
+            statusText = '#92400e';
+            statusLabel = 'Đang chạy';
+          }
+
+          return (
+            <View key={`sprint-detail-${idx}`} style={styles.sprintRow}>
+              <View style={styles.sprintRowHeader}>
+                <Text style={styles.sprintNameText} numberOfLines={1}>
+                  {sprint.sprintName}
+                </Text>
+                <View style={[styles.sprintStatusBadge, { backgroundColor: statusBg }]}>
+                  <Text style={[styles.sprintStatusBadgeText, { color: statusText }]}>
+                    {statusLabel}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.sprintProgressRow}>
+                <View style={styles.miniBarBg}>
+                  <View style={[styles.miniBarFill, { width: `${sprint.progressPct}%` }]} />
+                </View>
+                <Text style={styles.miniBarText}>{sprint.progressPct}% ({sprint.doneTasks}/{sprint.taskCount} tasks)</Text>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+
+      {blockedItems.length > 0 ? (
+        <View style={styles.blockerCard}>
+          <View style={styles.blockerCardHeader}>
+            <Icon name="exclamation-triangle" size={10} color="#b91c1c" style={{ marginRight: 6 }} />
+            <Text style={styles.blockerCardTitle}>Công việc cần đẩy nhanh ({blockedItems.length})</Text>
+          </View>
+          {blockedItems.slice(0, 3).map((item, idx) => (
+            <Text key={`blocked-${idx}`} style={styles.blockerText} numberOfLines={1}>
+              ⚠️ {item.taskName} ({item.taskStatus})
+            </Text>
+          ))}
+        </View>
+      ) : null}
+
+      {todayFocus.length > 0 ? (
+        <View style={styles.todayCard}>
+          <View style={styles.todayCardHeader}>
+            <Icon name="bullseye" size={10} color="#0369a1" style={{ marginRight: 6 }} />
+            <Text style={styles.todayCardTitle}>Trọng tâm hôm nay ({todayFocus.length})</Text>
+          </View>
+          {todayFocus.map((item, idx) => (
+            <Text key={`today-${idx}`} style={styles.todayText} numberOfLines={1}>
+              🎯 {item.taskName}
+            </Text>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -184,6 +401,9 @@ export default function Assistant({ route }) {
     setIsAnalyzingIntent(false);
     setIsPreviewLoading(false);
     setRiskyConfirmChecked(false);
+    setContextProjectId('');
+    setContextSprintId('');
+    setContextStoryId('');
     setSessionMemory({
       projectId: routeProjectId || null,
       sprintId: routeSprintId || null,
@@ -259,6 +479,7 @@ export default function Assistant({ route }) {
         'CREATE_TASK',
         'CREATE_CALENDAR_NOTE',
         'UPDATE_SPRINT_STATUS',
+        'REPORT',
       ];
       const clarificationActive = Boolean(data?.clarification?.active);
       if (actionableIntents.includes(String(data?.intent || '')) && data?.actionReady && !clarificationActive) {
@@ -279,7 +500,7 @@ export default function Assistant({ route }) {
           setLatestGuide(previewRes.data?.guide || data?.guide || null);
           
           const previewActionType = String(previewRes.data?.action?.type || '').toUpperCase();
-          const isRisky = ['UPDATE_SPRINT_STATUS', 'DELETE_PROJECT', 'REMOVE_MEMBER'].includes(previewActionType);
+          const isRisky = ['UPDATE_SPRINT_STATUS', 'DELETE_PROJECT', 'REMOVE_MEMBER', 'REPORT'].includes(previewActionType);
           
           if (!isRisky && previewRes.data?.confirmationToken) {
             try {
@@ -297,7 +518,9 @@ export default function Assistant({ route }) {
               pushMessage('assistant', `Preview đã sẵn sàng nhưng thực thi tự động bị lỗi: ${execMsg}`);
             }
           } else {
-            const previewMsg = `Đã tạo preview cho lệnh "${message}". Chưa thực thi. Bạn bấm "Mở xác nhận execute" để xem và xác nhận.`;
+            const previewMsg = previewActionType === 'REPORT'
+              ? `Đã tìm thấy dự án phù hợp! Vui lòng bấm "Mở xác nhận execute" để xác nhận mã số dự án.`
+              : `Đã tạo preview cho lệnh "${message}". Chưa thực thi. Bạn bấm "Mở xác nhận execute" để xem và xác nhận.`;
             pushMessage('assistant', previewMsg);
           }
         } catch (previewError) {
@@ -369,8 +592,20 @@ export default function Assistant({ route }) {
         idempotencyKey,
       });
       syncMemoryFromResponse(data);
-      const okMsg = `Đã thực thi thành công ${data?.executedAction || 'ACTION'}.`;
-      pushMessage('assistant', okMsg);
+      if (data?.executedAction === 'REPORT') {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `report-${Date.now()}-${Math.random()}`,
+            role: 'assistant',
+            text: `Báo cáo tiến độ dự án ${data.entity?.project?.projectName || ''} (${data.entity?.project?.project_id || ''})`,
+            reportData: data.entity,
+          },
+        ]);
+      } else {
+        const okMsg = `Đã thực thi thành công ${data?.executedAction || 'ACTION'}.`;
+        pushMessage('assistant', okMsg);
+      }
       setPreviewResult(null);
       setConfirmModalVisible(false);
       setPendingClarification(null);
@@ -394,7 +629,15 @@ export default function Assistant({ route }) {
         userId: userData?.user_id,
       });
       syncMemoryFromResponse(data);
-      pushMessage('assistant', `Báo cáo:\n${prettyJson(data?.summary || data)}`);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `report-${Date.now()}-${Math.random()}`,
+          role: 'assistant',
+          text: `Báo cáo tiến độ dự án ${data?.project?.projectName || ''} (${data?.project?.project_id || ''})`,
+          reportData: data,
+        },
+      ]);
     } catch (error) {
       const msg = error?.response?.data?.message || 'Không lấy được báo cáo.';
       Alert.alert('Lỗi báo cáo', msg);
@@ -484,6 +727,12 @@ export default function Assistant({ route }) {
 
           {latestGuide ? (
             <View style={styles.guideCard}>
+              <TouchableOpacity
+                style={{ position: 'absolute', right: 8, top: 8, padding: 4, zIndex: 10 }}
+                onPress={() => setLatestGuide(null)}
+              >
+                <Icon name="times" size={14} color="#9a3412" />
+              </TouchableOpacity>
               <Text style={styles.guideTitle}>{latestGuide.title || 'Hướng dẫn'}</Text>
               <Text style={styles.guideQuestion}>{latestGuide.question || ''}</Text>
               {latestGuide.hint ? <Text style={styles.guideHint}>{latestGuide.hint}</Text> : null}
@@ -540,8 +789,16 @@ export default function Assistant({ route }) {
         style={styles.messagesList}
         contentContainerStyle={{ padding: 12, paddingBottom: 16 }}
         renderItem={({ item }) => (
-          <View style={[styles.messageRow, item.role === 'user' ? styles.userRow : styles.aiRow]}>
-            <MarkdownText text={item.text} style={styles.messageText} />
+          <View style={[
+            styles.messageRow,
+            item.role === 'user' ? styles.userRow : styles.aiRow,
+            item.reportData ? { maxWidth: '100%', width: '100%', alignSelf: 'stretch', backgroundColor: '#fff', borderWidth: 0, padding: 0 } : null
+          ]}>
+            {item.reportData ? (
+              <ProjectReportDashboard data={item.reportData} />
+            ) : (
+              <MarkdownText text={item.text} style={styles.messageText} />
+            )}
           </View>
         )}
       />
@@ -590,7 +847,14 @@ export default function Assistant({ route }) {
                 </TouchableOpacity>
               </View>
             ) : null}
-            {previewResult?.action ? (
+            {previewActionType === 'REPORT' ? (
+              <View style={styles.confirmReportBox}>
+                <Icon name="chart-bar" size={32} color="#f59e0b" style={{ alignSelf: 'center', marginBottom: 10 }} />
+                <Text style={styles.confirmReportText}>Bạn đang yêu cầu xem báo cáo tiến độ cho dự án:</Text>
+                <Text style={styles.confirmReportName}>✨ {previewPayload?.projectName || 'Dự án'}</Text>
+                <Text style={styles.confirmReportCode}>Mã số: {previewPayload?.projectId || 'N/A'}</Text>
+              </View>
+            ) : previewResult?.action ? (
               <Text style={styles.modalBody}>{prettyJson(previewResult.action)}</Text>
             ) : (
               <Text style={styles.modalBody}>Chưa có preview action.</Text>
@@ -679,4 +943,59 @@ const styles = StyleSheet.create({
   activeModeTab: { backgroundColor: '#f59e0b', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1 },
   modeTabText: { fontSize: 12, fontWeight: '600', color: '#64748b' },
   activeModeTabText: { color: '#fff' },
+
+  confirmReportBox: { backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fde68a', borderRadius: 10, padding: 12, marginBottom: 10 },
+  confirmReportText: { color: '#b45309', fontSize: 12, textAlign: 'center', lineHeight: 18 },
+  confirmReportName: { color: '#92400e', fontSize: 16, fontWeight: '700', marginTop: 6, textAlign: 'center' },
+  confirmReportCode: { color: '#d97706', fontSize: 12, fontWeight: '600', marginTop: 4, textAlign: 'center' },
+
+  // Dashboard styles
+  dashboardContainer: { width: '100%', padding: 12, borderRadius: 12, backgroundColor: '#ffffff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2, borderWidth: 1, borderColor: '#e2e8f0' },
+  dashboardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
+  dashboardProjectName: { flex: 1, fontSize: 15, fontWeight: '700', color: '#1e293b' },
+  projectIdBadge: { backgroundColor: '#f1f5f9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#cbd5e1' },
+  projectIdBadgeText: { fontSize: 10, fontWeight: '700', color: '#64748b' },
+  dashboardDesc: { fontSize: 11, color: '#64748b', marginBottom: 12, lineHeight: 15 },
+  
+  progressSection: { backgroundColor: '#f8fafc', padding: 10, borderRadius: 8, marginBottom: 12, borderWidth: 1, borderColor: '#f1f5f9' },
+  progressTextRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  progressLabel: { fontSize: 12, fontWeight: '600', color: '#475569' },
+  progressVal: { fontSize: 15, fontWeight: '800', color: '#f59e0b' },
+  progressBarBg: { height: 8, backgroundColor: '#e2e8f0', borderRadius: 4, overflow: 'hidden' },
+  progressBarFill: { height: '100%', backgroundColor: '#f59e0b', borderRadius: 4 },
+  progressSubtext: { fontSize: 10, color: '#64748b', marginTop: 6 },
+  
+  statsGrid: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  statCard: { flex: 1, backgroundColor: '#f8fafc', padding: 8, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#f1f5f9' },
+  statNum: { fontSize: 16, fontWeight: '800', color: '#1e293b' },
+  statLabel: { fontSize: 9, fontWeight: '600', color: '#64748b', marginTop: 2 },
+  
+  chartContainer: { backgroundColor: '#ffffff', borderRadius: 8, padding: 8, marginBottom: 12, borderWidth: 1, borderColor: '#e2e8f0' },
+  chartLegend: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginTop: 8 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendText: { fontSize: 8, fontWeight: '600', color: '#64748b' },
+  svgWrapper: { alignItems: 'center', justifyContent: 'center', height: 130 },
+  
+  detailsSection: { marginBottom: 10 },
+  sectionTitle: { fontSize: 11, fontWeight: '700', color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
+  sprintRow: { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  sprintRowHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  sprintNameText: { fontSize: 11, fontWeight: '600', color: '#1e293b', flex: 1, marginRight: 6 },
+  sprintStatusBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 999 },
+  sprintStatusBadgeText: { fontSize: 8, fontWeight: '700' },
+  sprintProgressRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  miniBarBg: { flex: 1, height: 4, backgroundColor: '#e2e8f0', borderRadius: 2, overflow: 'hidden' },
+  miniBarFill: { height: '100%', backgroundColor: '#10b981', borderRadius: 2 },
+  miniBarText: { fontSize: 8, fontWeight: '600', color: '#64748b' },
+  
+  blockerCard: { backgroundColor: '#fee2e2', borderLeftWidth: 3, borderLeftColor: '#ef4444', borderRadius: 6, padding: 8, marginBottom: 8 },
+  blockerCardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
+  blockerCardTitle: { fontSize: 10, fontWeight: '700', color: '#b91c1c' },
+  blockerText: { fontSize: 9, color: '#991b1b', marginTop: 2, fontWeight: '500' },
+  
+  todayCard: { backgroundColor: '#e0f2fe', borderLeftWidth: 3, borderLeftColor: '#0ea5e9', borderRadius: 6, padding: 8 },
+  todayCardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
+  todayCardTitle: { fontSize: 10, fontWeight: '700', color: '#0369a1' },
+  todayText: { fontSize: 9, color: '#075985', marginTop: 2, fontWeight: '500' },
 });

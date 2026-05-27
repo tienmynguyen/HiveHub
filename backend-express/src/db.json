@@ -289,6 +289,22 @@
       "projectowner": 5,
       "timeStart": "2026-05-24T17:00:00.000Z",
       "timeEnd": "2026-10-11T17:00:00.000Z"
+    },
+    {
+      "project_id": "P-17321324",
+      "projectName": "Obooks",
+      "projectDescription": "Xây dựng website bán hàng với 3 người tham gia",
+      "projectowner": 5,
+      "timeStart": "2026-05-25T00:00:00.000Z",
+      "timeEnd": "2026-06-22T00:00:00.000Z"
+    },
+    {
+      "project_id": "P-18869643",
+      "projectName": "ABCD",
+      "projectDescription": "Xây dựng website bán hàng với 4 người tham gia (My, Trình, Abc, Nam) trong 1 tháng.",
+      "projectowner": 5,
+      "timeStart": "2026-05-24T00:00:00.000Z",
+      "timeEnd": "2026-06-21T00:00:00.000Z"
     }
   ],
   "userProjects": [
@@ -434,7 +450,7 @@
       "userProjectId": "80e32eb3-f27d-49c6-ad1a-e192dee0aad1",
       "projectId": "P-07146217",
       "userId": 3,
-      "roleId": 2
+      "roleId": 1
     },
     {
       "userProjectId": "26350c55-ec52-4005-bee0-95afd8e01495",
@@ -495,6 +511,24 @@
       "projectId": "P-57510737",
       "userId": 5,
       "roleId": 3
+    },
+    {
+      "userProjectId": "c47977a8-de7c-428a-a04f-797375a01bd3",
+      "projectId": "P-17321324",
+      "userId": 5,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "3c1ce3a0-e1bf-4922-a1bf-1046b8836999",
+      "projectId": "P-18869643",
+      "userId": 5,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "525b0ac8-ade7-43d4-af91-062c72f645f5",
+      "projectId": "P-18869643",
+      "userId": 1,
+      "roleId": 1
     }
   ],
   "sprints": [
@@ -994,6 +1028,86 @@
       "isDefault": false,
       "timeStart": "2026-10-04T17:00:00.000Z",
       "timeEnd": "2026-10-11T17:00:00.000Z"
+    },
+    {
+      "sprint_id": 51,
+      "project_id": "P-17321324",
+      "sprintName": "Sprint 1",
+      "sprintGoal": "Khởi tạo dự án và thiết kế giao diện",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-05-25T00:00:00.000Z",
+      "timeEnd": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "sprint_id": 52,
+      "project_id": "P-17321324",
+      "sprintName": "Sprint 2",
+      "sprintGoal": "Phát triển tính năng sản phẩm",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-06-01T00:00:00.000Z",
+      "timeEnd": "2026-06-08T00:00:00.000Z"
+    },
+    {
+      "sprint_id": 53,
+      "project_id": "P-17321324",
+      "sprintName": "Sprint 3",
+      "sprintGoal": "Phát triển tính năng thanh toán và đơn hàng",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-06-08T00:00:00.000Z",
+      "timeEnd": "2026-06-15T00:00:00.000Z"
+    },
+    {
+      "sprint_id": 54,
+      "project_id": "P-17321324",
+      "sprintName": "Sprint 4",
+      "sprintGoal": "Kiểm thử và triển khai",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-06-15T00:00:00.000Z",
+      "timeEnd": "2026-06-22T00:00:00.000Z"
+    },
+    {
+      "sprint_id": 55,
+      "project_id": "P-18869643",
+      "sprintName": "Sprint 1",
+      "sprintGoal": "Khởi tạo dự án và thiết kế giao diện",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-05-24T00:00:00.000Z",
+      "timeEnd": "2026-05-31T00:00:00.000Z"
+    },
+    {
+      "sprint_id": 56,
+      "project_id": "P-18869643",
+      "sprintName": "Sprint 2",
+      "sprintGoal": "Phát triển tính năng sản phẩm",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-05-31T00:00:00.000Z",
+      "timeEnd": "2026-06-07T00:00:00.000Z"
+    },
+    {
+      "sprint_id": 57,
+      "project_id": "P-18869643",
+      "sprintName": "Sprint 3",
+      "sprintGoal": "Phát triển tính năng thanh toán",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-06-07T00:00:00.000Z",
+      "timeEnd": "2026-06-14T00:00:00.000Z"
+    },
+    {
+      "sprint_id": 58,
+      "project_id": "P-18869643",
+      "sprintName": "Sprint 4",
+      "sprintGoal": "Kiểm thử và bàn giao",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-06-14T00:00:00.000Z",
+      "timeEnd": "2026-06-21T00:00:00.000Z"
     }
   ],
   "epics": [
@@ -1400,7 +1514,7 @@
       "epic_id": 9,
       "storyName": "Hệ thống đăng ký và đăng nhập bảo mật",
       "description": "",
-      "storyStatus": "TODO",
+      "storyStatus": "DONE",
       "storyOrder": 30,
       "assignee_user_id": null,
       "isDefault": false
@@ -2001,6 +2115,198 @@
       "storyStatus": "TODO",
       "storyOrder": 79,
       "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 81,
+      "project_id": "P-17321324",
+      "sprint_id": 51,
+      "epic_id": null,
+      "storyName": "Thiết kế UI/UX",
+      "description": "Thiết kế giao diện người dùng",
+      "storyStatus": "TODO",
+      "storyOrder": 80,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 82,
+      "project_id": "P-17321324",
+      "sprint_id": 51,
+      "epic_id": null,
+      "storyName": "Thiết lập môi trường",
+      "description": "Cấu hình server và database",
+      "storyStatus": "TODO",
+      "storyOrder": 81,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 83,
+      "project_id": "P-17321324",
+      "sprint_id": 52,
+      "epic_id": null,
+      "storyName": "Quản lý sản phẩm",
+      "description": "Xây dựng chức năng CRUD sản phẩm",
+      "storyStatus": "TODO",
+      "storyOrder": 82,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 84,
+      "project_id": "P-17321324",
+      "sprint_id": 52,
+      "epic_id": null,
+      "storyName": "Giỏ hàng",
+      "description": "Xây dựng chức năng giỏ hàng",
+      "storyStatus": "TODO",
+      "storyOrder": 83,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 85,
+      "project_id": "P-17321324",
+      "sprint_id": 53,
+      "epic_id": null,
+      "storyName": "Thanh toán",
+      "description": "Tích hợp cổng thanh toán",
+      "storyStatus": "TODO",
+      "storyOrder": 84,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 86,
+      "project_id": "P-17321324",
+      "sprint_id": 53,
+      "epic_id": null,
+      "storyName": "Đơn hàng",
+      "description": "Quản lý đơn hàng",
+      "storyStatus": "TODO",
+      "storyOrder": 85,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 87,
+      "project_id": "P-17321324",
+      "sprint_id": 54,
+      "epic_id": null,
+      "storyName": "Testing",
+      "description": "Kiểm thử toàn bộ hệ thống",
+      "storyStatus": "TODO",
+      "storyOrder": 86,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 88,
+      "project_id": "P-17321324",
+      "sprint_id": 54,
+      "epic_id": null,
+      "storyName": "Deployment",
+      "description": "Triển khai lên production",
+      "storyStatus": "TODO",
+      "storyOrder": 87,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 89,
+      "project_id": "P-18869643",
+      "sprint_id": 55,
+      "epic_id": null,
+      "storyName": "Thiết kế UI/UX",
+      "description": "Thiết kế giao diện người dùng",
+      "storyStatus": "TODO",
+      "storyOrder": 88,
+      "assignee_user_id": 1,
+      "isDefault": false
+    },
+    {
+      "story_id": 90,
+      "project_id": "P-18869643",
+      "sprint_id": 55,
+      "epic_id": null,
+      "storyName": "Thiết lập môi trường",
+      "description": "Cấu hình server và database",
+      "storyStatus": "TODO",
+      "storyOrder": 89,
+      "assignee_user_id": 2,
+      "isDefault": false
+    },
+    {
+      "story_id": 91,
+      "project_id": "P-18869643",
+      "sprint_id": 56,
+      "epic_id": null,
+      "storyName": "Quản lý sản phẩm",
+      "description": "Xây dựng chức năng CRUD sản phẩm",
+      "storyStatus": "TODO",
+      "storyOrder": 90,
+      "assignee_user_id": 1,
+      "isDefault": false
+    },
+    {
+      "story_id": 92,
+      "project_id": "P-18869643",
+      "sprint_id": 56,
+      "epic_id": null,
+      "storyName": "Giỏ hàng",
+      "description": "Xây dựng chức năng giỏ hàng",
+      "storyStatus": "TODO",
+      "storyOrder": 91,
+      "assignee_user_id": 2,
+      "isDefault": false
+    },
+    {
+      "story_id": 93,
+      "project_id": "P-18869643",
+      "sprint_id": 57,
+      "epic_id": null,
+      "storyName": "Thanh toán",
+      "description": "Tích hợp cổng thanh toán",
+      "storyStatus": "TODO",
+      "storyOrder": 92,
+      "assignee_user_id": 1,
+      "isDefault": false
+    },
+    {
+      "story_id": 94,
+      "project_id": "P-18869643",
+      "sprint_id": 57,
+      "epic_id": null,
+      "storyName": "Người dùng",
+      "description": "Quản lý tài khoản người dùng",
+      "storyStatus": "TODO",
+      "storyOrder": 93,
+      "assignee_user_id": 2,
+      "isDefault": false
+    },
+    {
+      "story_id": 95,
+      "project_id": "P-18869643",
+      "sprint_id": 58,
+      "epic_id": null,
+      "storyName": "Kiểm thử",
+      "description": "Fix bug và tối ưu",
+      "storyStatus": "TODO",
+      "storyOrder": 94,
+      "assignee_user_id": 1,
+      "isDefault": false
+    },
+    {
+      "story_id": 96,
+      "project_id": "P-18869643",
+      "sprint_id": 58,
+      "epic_id": null,
+      "storyName": "Triển khai",
+      "description": "Deploy dự án",
+      "storyStatus": "TODO",
+      "storyOrder": 95,
+      "assignee_user_id": 2,
       "isDefault": false
     }
   ],
@@ -2771,12 +3077,17 @@
       "story_id": 30,
       "taskName": "Xây dựng giao diện",
       "description": "Đăng ký, đăng nhập, dash",
-      "taskStatus": "TODO",
+      "taskStatus": "APPROVED",
       "timeStart": "2026-05-14T06:29:09.000Z",
       "timeEnd": "2026-05-20T06:29:09.000Z",
       "deadline": "2026-05-20T06:29:09.000Z",
-      "is_approved": false,
-      "txHash": null
+      "is_approved": true,
+      "txHash": "0x2c09a9a8fb007b02d8e5d85753c6990051674b4c2c6a47286aec4d01df194bd7",
+      "approvedBy": 5,
+      "approvedAt": "2026-05-27T14:57:36.761Z",
+      "blockHash": "8c20049d86a507a9e2e8dbe7b29b4677c521633ab4dddd6737c4f9dc27e01551",
+      "onChainMode": "off",
+      "onChainSynced": false
     },
     {
       "task_id": 47,
@@ -4202,6 +4513,486 @@
       "deadline": "2026-10-11T17:00:00.000Z",
       "is_approved": false,
       "txHash": null
+    },
+    {
+      "task_id": 142,
+      "project_id": "P-17321324",
+      "sprint_id": 51,
+      "epic_id": null,
+      "story_id": 81,
+      "taskName": "Vẽ wireframe",
+      "description": "Vẽ wireframe trang chủ",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-25T00:00:00.000Z",
+      "timeEnd": "2026-06-01T00:00:00.000Z",
+      "deadline": "2026-06-01T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 143,
+      "project_id": "P-17321324",
+      "sprint_id": 51,
+      "epic_id": null,
+      "story_id": 81,
+      "taskName": "Thiết kế UI",
+      "description": "Thiết kế chi tiết UI",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-25T00:00:00.000Z",
+      "timeEnd": "2026-06-01T00:00:00.000Z",
+      "deadline": "2026-06-01T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 144,
+      "project_id": "P-17321324",
+      "sprint_id": 51,
+      "epic_id": null,
+      "story_id": 82,
+      "taskName": "Setup DB",
+      "description": "Cấu hình database",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-25T00:00:00.000Z",
+      "timeEnd": "2026-06-01T00:00:00.000Z",
+      "deadline": "2026-06-01T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 145,
+      "project_id": "P-17321324",
+      "sprint_id": 51,
+      "epic_id": null,
+      "story_id": 82,
+      "taskName": "Setup Server",
+      "description": "Cấu hình server",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-25T00:00:00.000Z",
+      "timeEnd": "2026-06-01T00:00:00.000Z",
+      "deadline": "2026-06-01T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 146,
+      "project_id": "P-17321324",
+      "sprint_id": 52,
+      "epic_id": null,
+      "story_id": 83,
+      "taskName": "API sản phẩm",
+      "description": "Viết API sản phẩm",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-01T00:00:00.000Z",
+      "timeEnd": "2026-06-08T00:00:00.000Z",
+      "deadline": "2026-06-08T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 147,
+      "project_id": "P-17321324",
+      "sprint_id": 52,
+      "epic_id": null,
+      "story_id": 83,
+      "taskName": "Giao diện sản phẩm",
+      "description": "Làm giao diện danh sách sản phẩm",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-01T00:00:00.000Z",
+      "timeEnd": "2026-06-08T00:00:00.000Z",
+      "deadline": "2026-06-08T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 148,
+      "project_id": "P-17321324",
+      "sprint_id": 52,
+      "epic_id": null,
+      "story_id": 84,
+      "taskName": "Logic giỏ hàng",
+      "description": "Xử lý logic giỏ hàng",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-01T00:00:00.000Z",
+      "timeEnd": "2026-06-08T00:00:00.000Z",
+      "deadline": "2026-06-08T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 149,
+      "project_id": "P-17321324",
+      "sprint_id": 52,
+      "epic_id": null,
+      "story_id": 84,
+      "taskName": "UI giỏ hàng",
+      "description": "Làm giao diện giỏ hàng",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-01T00:00:00.000Z",
+      "timeEnd": "2026-06-08T00:00:00.000Z",
+      "deadline": "2026-06-08T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 150,
+      "project_id": "P-17321324",
+      "sprint_id": 53,
+      "epic_id": null,
+      "story_id": 85,
+      "taskName": "Tích hợp VNPay",
+      "description": "Kết nối VNPay",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-08T00:00:00.000Z",
+      "timeEnd": "2026-06-15T00:00:00.000Z",
+      "deadline": "2026-06-15T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 151,
+      "project_id": "P-17321324",
+      "sprint_id": 53,
+      "epic_id": null,
+      "story_id": 85,
+      "taskName": "Xử lý callback",
+      "description": "Xử lý kết quả thanh toán",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-08T00:00:00.000Z",
+      "timeEnd": "2026-06-15T00:00:00.000Z",
+      "deadline": "2026-06-15T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 152,
+      "project_id": "P-17321324",
+      "sprint_id": 53,
+      "epic_id": null,
+      "story_id": 86,
+      "taskName": "Lưu đơn hàng",
+      "description": "Lưu thông tin đơn hàng",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-08T00:00:00.000Z",
+      "timeEnd": "2026-06-15T00:00:00.000Z",
+      "deadline": "2026-06-15T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 153,
+      "project_id": "P-17321324",
+      "sprint_id": 53,
+      "epic_id": null,
+      "story_id": 86,
+      "taskName": "Lịch sử đơn hàng",
+      "description": "Hiển thị lịch sử đơn hàng",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-08T00:00:00.000Z",
+      "timeEnd": "2026-06-15T00:00:00.000Z",
+      "deadline": "2026-06-15T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 154,
+      "project_id": "P-17321324",
+      "sprint_id": 54,
+      "epic_id": null,
+      "story_id": 87,
+      "taskName": "Unit test",
+      "description": "Viết unit test",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-15T00:00:00.000Z",
+      "timeEnd": "2026-06-22T00:00:00.000Z",
+      "deadline": "2026-06-22T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 155,
+      "project_id": "P-17321324",
+      "sprint_id": 54,
+      "epic_id": null,
+      "story_id": 87,
+      "taskName": "Fix bug",
+      "description": "Sửa lỗi phát sinh",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-15T00:00:00.000Z",
+      "timeEnd": "2026-06-22T00:00:00.000Z",
+      "deadline": "2026-06-22T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 156,
+      "project_id": "P-17321324",
+      "sprint_id": 54,
+      "epic_id": null,
+      "story_id": 88,
+      "taskName": "Deploy server",
+      "description": "Đưa code lên server",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-15T00:00:00.000Z",
+      "timeEnd": "2026-06-22T00:00:00.000Z",
+      "deadline": "2026-06-22T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 157,
+      "project_id": "P-17321324",
+      "sprint_id": 54,
+      "epic_id": null,
+      "story_id": 88,
+      "taskName": "Cấu hình domain",
+      "description": "Trỏ domain",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-15T00:00:00.000Z",
+      "timeEnd": "2026-06-22T00:00:00.000Z",
+      "deadline": "2026-06-22T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 158,
+      "project_id": "P-18869643",
+      "sprint_id": 55,
+      "epic_id": null,
+      "story_id": 89,
+      "taskName": "Vẽ wireframe",
+      "description": "Vẽ wireframe trang chủ",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-24T00:00:00.000Z",
+      "timeEnd": "2026-05-31T00:00:00.000Z",
+      "deadline": "2026-05-31T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 159,
+      "project_id": "P-18869643",
+      "sprint_id": 55,
+      "epic_id": null,
+      "story_id": 89,
+      "taskName": "Thiết kế UI",
+      "description": "Thiết kế chi tiết UI",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-24T00:00:00.000Z",
+      "timeEnd": "2026-05-31T00:00:00.000Z",
+      "deadline": "2026-05-31T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 160,
+      "project_id": "P-18869643",
+      "sprint_id": 55,
+      "epic_id": null,
+      "story_id": 90,
+      "taskName": "Setup server",
+      "description": "Cấu hình server",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-24T00:00:00.000Z",
+      "timeEnd": "2026-05-31T00:00:00.000Z",
+      "deadline": "2026-05-31T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 161,
+      "project_id": "P-18869643",
+      "sprint_id": 55,
+      "epic_id": null,
+      "story_id": 90,
+      "taskName": "Setup DB",
+      "description": "Cấu hình database",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-24T00:00:00.000Z",
+      "timeEnd": "2026-05-31T00:00:00.000Z",
+      "deadline": "2026-05-31T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 162,
+      "project_id": "P-18869643",
+      "sprint_id": 56,
+      "epic_id": null,
+      "story_id": 91,
+      "taskName": "API sản phẩm",
+      "description": "Viết API sản phẩm",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-31T00:00:00.000Z",
+      "timeEnd": "2026-06-07T00:00:00.000Z",
+      "deadline": "2026-06-07T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 163,
+      "project_id": "P-18869643",
+      "sprint_id": 56,
+      "epic_id": null,
+      "story_id": 91,
+      "taskName": "Giao diện sản phẩm",
+      "description": "Làm giao diện danh sách sản phẩm",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-31T00:00:00.000Z",
+      "timeEnd": "2026-06-07T00:00:00.000Z",
+      "deadline": "2026-06-07T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 164,
+      "project_id": "P-18869643",
+      "sprint_id": 56,
+      "epic_id": null,
+      "story_id": 92,
+      "taskName": "Logic giỏ hàng",
+      "description": "Xử lý logic giỏ hàng",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-31T00:00:00.000Z",
+      "timeEnd": "2026-06-07T00:00:00.000Z",
+      "deadline": "2026-06-07T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 165,
+      "project_id": "P-18869643",
+      "sprint_id": 56,
+      "epic_id": null,
+      "story_id": 92,
+      "taskName": "UI giỏ hàng",
+      "description": "Làm giao diện giỏ hàng",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-31T00:00:00.000Z",
+      "timeEnd": "2026-06-07T00:00:00.000Z",
+      "deadline": "2026-06-07T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 166,
+      "project_id": "P-18869643",
+      "sprint_id": 57,
+      "epic_id": null,
+      "story_id": 93,
+      "taskName": "Tích hợp API thanh toán",
+      "description": "Kết nối cổng thanh toán",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-07T00:00:00.000Z",
+      "timeEnd": "2026-06-14T00:00:00.000Z",
+      "deadline": "2026-06-14T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 167,
+      "project_id": "P-18869643",
+      "sprint_id": 57,
+      "epic_id": null,
+      "story_id": 93,
+      "taskName": "Xử lý đơn hàng",
+      "description": "Xử lý trạng thái đơn hàng",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-07T00:00:00.000Z",
+      "timeEnd": "2026-06-14T00:00:00.000Z",
+      "deadline": "2026-06-14T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 168,
+      "project_id": "P-18869643",
+      "sprint_id": 57,
+      "epic_id": null,
+      "story_id": 94,
+      "taskName": "Đăng nhập/Đăng ký",
+      "description": "Xây dựng chức năng auth",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-07T00:00:00.000Z",
+      "timeEnd": "2026-06-14T00:00:00.000Z",
+      "deadline": "2026-06-14T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 169,
+      "project_id": "P-18869643",
+      "sprint_id": 57,
+      "epic_id": null,
+      "story_id": 94,
+      "taskName": "Hồ sơ cá nhân",
+      "description": "Làm trang hồ sơ",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-07T00:00:00.000Z",
+      "timeEnd": "2026-06-14T00:00:00.000Z",
+      "deadline": "2026-06-14T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 170,
+      "project_id": "P-18869643",
+      "sprint_id": 58,
+      "epic_id": null,
+      "story_id": 95,
+      "taskName": "Unit test",
+      "description": "Viết unit test",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-14T00:00:00.000Z",
+      "timeEnd": "2026-06-21T00:00:00.000Z",
+      "deadline": "2026-06-21T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 171,
+      "project_id": "P-18869643",
+      "sprint_id": 58,
+      "epic_id": null,
+      "story_id": 95,
+      "taskName": "Fix bug",
+      "description": "Sửa lỗi phát sinh",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-14T00:00:00.000Z",
+      "timeEnd": "2026-06-21T00:00:00.000Z",
+      "deadline": "2026-06-21T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 172,
+      "project_id": "P-18869643",
+      "sprint_id": 58,
+      "epic_id": null,
+      "story_id": 96,
+      "taskName": "Deploy server",
+      "description": "Đưa dự án lên production",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-14T00:00:00.000Z",
+      "timeEnd": "2026-06-21T00:00:00.000Z",
+      "deadline": "2026-06-21T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 173,
+      "project_id": "P-18869643",
+      "sprint_id": 58,
+      "epic_id": null,
+      "story_id": 96,
+      "taskName": "Bàn giao",
+      "description": "Viết tài liệu hướng dẫn",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-14T00:00:00.000Z",
+      "timeEnd": "2026-06-21T00:00:00.000Z",
+      "deadline": "2026-06-21T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
     }
   ],
   "userTasks": [
@@ -4393,6 +5184,81 @@
     {
       "id": "784fd892-84cc-4e8d-88f8-3e09d062eb5b",
       "taskId": 45,
+      "userId": 2
+    },
+    {
+      "id": "56b6a7ba-6eb7-4672-a68a-06810293c922",
+      "taskId": 158,
+      "userId": 1
+    },
+    {
+      "id": "0867a3fa-521a-4e80-ab81-dbd837e14940",
+      "taskId": 159,
+      "userId": 4
+    },
+    {
+      "id": "831464ad-26d7-47b2-8328-41b999440ba4",
+      "taskId": 161,
+      "userId": 2
+    },
+    {
+      "id": "f8097a2f-feff-41fd-ad20-e927b4bfd503",
+      "taskId": 162,
+      "userId": 1
+    },
+    {
+      "id": "bd7fca1e-7b55-474f-ae66-f38bbbf194d9",
+      "taskId": 163,
+      "userId": 4
+    },
+    {
+      "id": "edd4839d-69c7-4812-bb44-66e99ed26022",
+      "taskId": 164,
+      "userId": 2
+    },
+    {
+      "id": "5339c9fe-a007-4957-9476-9b73612c1cc6",
+      "taskId": 165,
+      "userId": 2
+    },
+    {
+      "id": "9bdb9d29-bf13-42e5-8cc5-22e10c199a08",
+      "taskId": 166,
+      "userId": 1
+    },
+    {
+      "id": "bd53ab73-6268-4b73-a060-1d0488165d30",
+      "taskId": 167,
+      "userId": 4
+    },
+    {
+      "id": "6a794590-55cd-4193-abd7-e7138bc63991",
+      "taskId": 168,
+      "userId": 2
+    },
+    {
+      "id": "64b6d478-8eda-41a2-a5a3-a44e0c13f784",
+      "taskId": 169,
+      "userId": 2
+    },
+    {
+      "id": "35e8c94c-ab31-4ca9-8fa7-9a097660d137",
+      "taskId": 170,
+      "userId": 1
+    },
+    {
+      "id": "54fc7eba-10a1-42eb-868b-11038bf4b223",
+      "taskId": 171,
+      "userId": 4
+    },
+    {
+      "id": "b03ae8ca-22e7-4589-961d-e11859ce1695",
+      "taskId": 172,
+      "userId": 2
+    },
+    {
+      "id": "4567a88e-203e-45bc-b6eb-51cfd3a8837f",
+      "taskId": 173,
       "userId": 2
     }
   ],
@@ -4973,6 +5839,22 @@
         "description": "",
         "walletAddress": ""
       }
+    },
+    {
+      "comment_id": 33,
+      "taskId": 46,
+      "userId": 5,
+      "commmentContent": "✅ MANAGER ĐÃ DUYỆT (ON-CHAIN)",
+      "date": "2026-05-27T14:57:36.800Z",
+      "users": {
+        "user_id": 5,
+        "email": "test@gmail.com",
+        "username": "Nguyễn Tiến Mỹ",
+        "password": "$2b$10$tCO4LnFwu3MA9ZNgxeK.TOsfgTciZpybqlSE4RoM/T0SVcNzK2Fkq",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777269405/afttpaldtlp45xmeaxyf.jpg",
+        "description": "",
+        "walletAddress": ""
+      }
     }
   ],
   "storyComments": [
@@ -5189,6 +6071,21 @@
         "walletAddress": "",
         "roleName": "Owner"
       }
+    },
+    {
+      "message_id": 10,
+      "user_id": 5,
+      "message": "hi",
+      "date": "2026-05-23T06:49:24.227Z",
+      "project_id": "P-07146217",
+      "users": {
+        "user_id": 5,
+        "email": "test@gmail.com",
+        "username": "Nguyễn Tiến Mỹ",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777269405/afttpaldtlp45xmeaxyf.jpg",
+        "walletAddress": "",
+        "roleName": "Owner"
+      }
     }
   ],
   "refreshTokens": [
@@ -5198,9 +6095,9 @@
       "expiresAt": 1778580193356
     },
     {
-      "token": "58bccf67-f91a-441a-9e0d-6b7fa8202ef4a13e3bd12d42488daecb7d7d6704f42f",
+      "token": "b1a55933-c6ff-40f4-892c-c86ee092dd0f99404a44c694433b821dcd51b8610c3c",
       "userId": 5,
-      "expiresAt": 1780007308349
+      "expiresAt": 1780498573991
     }
   ],
   "wallets": {},
@@ -5420,6 +6317,18 @@
       "timestamp": "2026-05-22T13:05:46.036Z",
       "blockHash": "d71622fbbf3deb9cc04b43668c2a4e61b14140b15b4d727f4605b6ae5f570ff3",
       "txHash": "0xd699145e645adc691712ee3957d4d7ada79ec282234c89f2d62420e4ecf27755"
+    },
+    {
+      "blockIndex": 19,
+      "previousHash": "d71622fbbf3deb9cc04b43668c2a4e61b14140b15b4d727f4605b6ae5f570ff3",
+      "taskId": 46,
+      "projectId": "P-46987711",
+      "approverUserId": 5,
+      "approvedStatus": "APPROVED",
+      "note": "",
+      "timestamp": "2026-05-27T14:57:36.761Z",
+      "blockHash": "8c20049d86a507a9e2e8dbe7b29b4677c521633ab4dddd6737c4f9dc27e01551",
+      "txHash": "0x2c09a9a8fb007b02d8e5d85753c6990051674b4c2c6a47286aec4d01df194bd7"
     }
   ]
 }

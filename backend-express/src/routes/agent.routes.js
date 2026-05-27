@@ -36,6 +36,7 @@ const ACTION_INTENTS = new Set([
   "CREATE_TASK",
   "CREATE_CALENDAR_NOTE",
   "UPDATE_SPRINT_STATUS",
+  "REPORT",
 ]);
 
 function shouldUseClarification(intent, validation) {

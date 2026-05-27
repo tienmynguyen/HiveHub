@@ -490,6 +490,12 @@ function buildActionDraft({ intent, payload }) {
         sprintId: payload.sprintId,
         sprintStatus: payload.sprintStatus || "IN_PROGRESS",
       };
+    case "REPORT":
+      return {
+        type: "REPORT",
+        projectId: payload.projectId,
+        projectName: payload.projectName,
+      };
     default:
       return null;
   }
@@ -557,6 +563,9 @@ function validateActionDraft(action) {
   if (action.type === "CREATE_CALENDAR_NOTE") {
     if (!String(action.noteTitle || "").trim()) missing.push("noteTitle");
     if (!action.reminderAt) missing.push("reminderAt");
+  }
+  if (action.type === "REPORT") {
+    if (!action.projectId) missing.push("projectId");
   }
   return { valid: missing.length === 0, missing };
 }
@@ -651,6 +660,16 @@ function buildGuidedPrompt(intent, missingFields = []) {
         "Dat lich nhac demo san pham 2026-05-02 14:00",
         "Set reminder nop bao cao vao 2026-05-05 08:30",
       ],
+    };
+  }
+  if (intent === "REPORT") {
+    const parts = [];
+    if (has("projectId")) parts.push("tên hoặc mã dự án (P-xxxx)");
+    return {
+      title: "Báo cáo tiến độ dự án",
+      question: parts.length ? `Mình cần biết ${parts.join(" và ")} để lập báo cáo.` : "Bạn muốn báo cáo cho dự án nào?",
+      hint: "Ví dụ: 'báo cáo dự án HiveHub' hoặc 'báo cáo P-32457576'.",
+      examples: ['Báo cáo dự án "HiveHub"', "Báo cáo P-32457576"],
     };
   }
 

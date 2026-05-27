@@ -133,22 +133,14 @@ function executeAction(db, action, userId) {
             String(u.username || "").toLowerCase().includes(normName) ||
             String(u.email || "").toLowerCase().includes(normName)
         );
-        return matched ? Number(matched.user_id) : null;
-      };
+        if (!matched) return null;
 
-      const ensureProjectMembership = (uId) => {
-        if (!uId) return;
-        const exists = db.userProjects.some(
-          (up) => up.projectId === String(project.project_id) && Number(up.userId) === Number(uId)
+        // Only assign work to users who are ALREADY members of the project.
+        // For a new project, at this stage only the creator (userId) is in db.userProjects.
+        const isAlreadyMember = db.userProjects.some(
+          (up) => up.projectId === String(project.project_id) && Number(up.userId) === Number(matched.user_id)
         );
-        if (!exists) {
-          db.userProjects.push({
-            userProjectId: uuidv4(),
-            projectId: String(project.project_id),
-            userId: Number(uId),
-            roleId: 1,
-          });
-        }
+        return isAlreadyMember ? Number(matched.user_id) : null;
       };
 
       for (let i = 0; i < sprintCount; i += 1) {
@@ -173,7 +165,6 @@ function executeAction(db, action, userId) {
           for (let j = 0; j < customSprint.stories.length; j += 1) {
             const customStory = customSprint.stories[j];
             const assigneeUserId = resolveAssignee(customStory.assigneeName);
-            ensureProjectMembership(assigneeUserId);
 
             const story = {
               story_id: nextNumericId(db.stories, "story_id"),
@@ -194,7 +185,6 @@ function executeAction(db, action, userId) {
               for (let k = 0; k < customStory.tasks.length; k += 1) {
                 const customTask = customStory.tasks[k];
                 const taskAssigneeId = resolveAssignee(customTask.assigneeName) || assigneeUserId;
-                ensureProjectMembership(taskAssigneeId);
 
                 const task = {
                   task_id: db.tasks.length ? Math.max(...db.tasks.map((t) => t.task_id)) + 1 : 1,
@@ -435,6 +425,12 @@ function executeAction(db, action, userId) {
     }
     sprint.sprintStatus = action.sprintStatus;
     return { ok: true, entity: sprint };
+  }
+
+  if (action.type === "REPORT") {
+    const { buildProjectReport } = require("./agentReportService");
+    const reportData = buildProjectReport(db, { projectId: action.projectId, userId });
+    return { ok: true, entity: reportData };
   }
 
   return {

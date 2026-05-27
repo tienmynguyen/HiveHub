@@ -1,4 +1,4 @@
-const { canManageProject } = require("./projectAccess");
+const { canManageProject, getUserRoleInProject } = require("./projectAccess");
 
 function canExecuteAction(db, action, userId) {
   const canManage = canManageProject(db, action.projectId, userId);
@@ -12,6 +12,8 @@ function canExecuteAction(db, action, userId) {
     case "CREATE_TASK":
     case "UPDATE_SPRINT_STATUS":
       return canManage;
+    case "REPORT":
+      return getUserRoleInProject(db, action.projectId, userId) !== null;
     default:
       return false;
   }
@@ -30,6 +32,8 @@ function explainPolicy(action) {
     case "CREATE_TASK":
     case "UPDATE_SPRINT_STATUS":
       return "Chỉ Owner hoặc Management của project mới được phép thực hiện thao tác này.";
+    case "REPORT":
+      return "Mọi thành viên tham gia dự án đều có thể xem báo cáo.";
     default:
       return "Không xác định quyền cho thao tác.";
   }

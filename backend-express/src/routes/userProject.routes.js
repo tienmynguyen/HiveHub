@@ -153,6 +153,24 @@ router.post("/removememberfromproject", (req, res) => {
   if (db.userProjects.length === before) {
     return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Member link not found" });
   }
+
+  // Get all task IDs of this project
+  const projectTaskIds = db.tasks
+    .filter((t) => String(t.project_id) === projectId)
+    .map((t) => Number(t.task_id));
+
+  // Unassign the user from these project tasks
+  db.userTasks = db.userTasks.filter(
+    (ut) => !(projectTaskIds.includes(Number(ut.taskId)) && Number(ut.userId) === Number(targetUserId))
+  );
+
+  // Unassign the user from stories in this project
+  db.stories.forEach((story) => {
+    if (String(story.project_id) === projectId && Number(story.assignee_user_id) === Number(targetUserId)) {
+      story.assignee_user_id = null;
+    }
+  });
+
   writeDb(db);
   return res.json({ ok: true, projectId, removedUserId: targetUserId });
 });

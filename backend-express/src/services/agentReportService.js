@@ -7,8 +7,19 @@ function buildProjectReport(db, { projectId, userId }) {
 
   const sprintStats = sprints.map((sprint) => {
     const sprintStories = stories.filter((st) => Number(st.sprint_id) === Number(sprint.sprint_id));
-    const sprintTasks = tasks.filter((t) => Number(t.sprint_id) === Number(sprint.sprint_id));
-    const doneTasks = sprintTasks.filter((t) => ["DONE", "COMPLETED"].includes(String(t.taskStatus).toUpperCase())).length;
+    const sprintStoryIds = sprintStories.map((st) => Number(st.story_id));
+    
+    // A task belongs to a sprint if its sprint_id matches or if its parent story belongs to the sprint
+    const sprintTasks = tasks.filter((t) => 
+      Number(t.sprint_id) === Number(sprint.sprint_id) ||
+      (t.story_id && sprintStoryIds.includes(Number(t.story_id)))
+    );
+    
+    const doneTasks = sprintTasks.filter((t) => 
+      ["DONE", "COMPLETED", "APPROVED"].includes(String(t.taskStatus).toUpperCase()) ||
+      t.is_approved === true
+    ).length;
+
     return {
       sprintId: sprint.sprint_id,
       sprintName: sprint.sprintName,
@@ -37,7 +48,10 @@ function buildProjectReport(db, { projectId, userId }) {
       sprintCount: sprints.length,
       storyCount: stories.length,
       taskCount: tasks.length,
-      completedTaskCount: tasks.filter((t) => ["DONE", "COMPLETED"].includes(String(t.taskStatus || "").toUpperCase())).length,
+      completedTaskCount: tasks.filter((t) => 
+        ["DONE", "COMPLETED", "APPROVED"].includes(String(t.taskStatus || "").toUpperCase()) ||
+        t.is_approved === true
+      ).length,
     },
     sprintStats,
     todayFocus: todayTasks.map((t) => ({
