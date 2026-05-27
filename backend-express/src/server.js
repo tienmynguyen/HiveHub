@@ -37,7 +37,7 @@ io.of("/ws").on("connection", (socket) => {
 
 async function bootstrap() {
   await initDataStore();
-  server.listen(env.PORT, () => {
+  server.listen(env.PORT, "0.0.0.0", () => {
     console.log(`Express backend running on http://localhost:${env.PORT}`);
   });
 }
