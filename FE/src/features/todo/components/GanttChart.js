@@ -113,6 +113,7 @@ const GanttChart = ({ tasks = [], stories = [], sprints = [], currentMonth, setC
           start: storyStart,
           end: storyEnd,
           status: story.storyStatus,
+          sprintId: sprint.sprint_id,
         });
         storyTasks
           .sort((a, b) => (toDate(a.timeStart)?.getTime() || 0) - (toDate(b.timeStart)?.getTime() || 0))
@@ -126,6 +127,7 @@ const GanttChart = ({ tasks = [], stories = [], sprints = [], currentMonth, setC
               end: toDate(task.timeEnd || task.deadline) || storyEnd,
               status: task.taskStatus,
               task,
+              storyId: story.story_id,
             });
           });
       });
@@ -234,18 +236,41 @@ const GanttChart = ({ tasks = [], stories = [], sprints = [], currentMonth, setC
               scrollEventThrottle={16}
             >
               <Svg height={chartHeight - CONFIG.headerHeight} width={timelineWidth}>
+                {/* Row background bands for premium visual grouping */}
+                {renderedRows.map((row, i) => {
+                  const y = i * CONFIG.rowHeight;
+                  let rowBg = '#ffffff';
+                  if (row.type === 'sprint') rowBg = '#faf5ff';
+                  else if (row.type === 'story') rowBg = '#f0f9ff';
+                  else rowBg = '#ffffff';
+
+                  return (
+                    <Rect
+                      key={`row-bg-${row.id}`}
+                      x={0}
+                      y={y}
+                      width={timelineWidth}
+                      height={CONFIG.rowHeight}
+                      fill={rowBg}
+                    />
+                  );
+                })}
+
+                {/* Day grid with overlay weekend shading */}
                 {dateArray.map((date, idx) => {
                   const x = idx * CONFIG.cellWidth;
                   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
                   return (
                     <G key={`date-body-${idx}`}>
-                      <Rect
-                        x={x}
-                        y={0}
-                        width={CONFIG.cellWidth}
-                        height={chartHeight - CONFIG.headerHeight}
-                        fill={isWeekend ? CONFIG.colors.weekendBg : '#fff'}
-                      />
+                      {isWeekend ? (
+                        <Rect
+                          x={x}
+                          y={0}
+                          width={CONFIG.cellWidth}
+                          height={chartHeight - CONFIG.headerHeight}
+                          fill="rgba(15, 23, 42, 0.03)"
+                        />
+                      ) : null}
                       <Line x1={x} y1={0} x2={x} y2={chartHeight - CONFIG.headerHeight} stroke={CONFIG.colors.gridBorder} strokeDasharray="3 2" />
                     </G>
                   );
@@ -261,8 +286,77 @@ const GanttChart = ({ tasks = [], stories = [], sprints = [], currentMonth, setC
                   const meta = barMeta(row);
                   const shownText = fitTextOnBar(row.title, barWidth);
 
+                  // Nesting relationship connectors
+                  let connector = null;
+                  if (row.type === 'story' && row.sprintId) {
+                    const parentRow = renderedRows.find(r => r.type === 'sprint' && r.id === `sprint-${row.sprintId}`);
+                    if (parentRow) {
+                      const parentIdx = renderedRows.indexOf(parentRow);
+                      const parentY = parentIdx * CONFIG.rowHeight + CONFIG.rowHeight / 2;
+                      const parentStartIdx = dayOffset(parentRow.start, rangeStart);
+                      const parentX = parentStartIdx * CONFIG.cellWidth;
+                      const currentY = y + CONFIG.rowHeight / 2;
+                      
+                      connector = (
+                        <G key={`connect-${row.id}`}>
+                          <Line
+                            x1={parentX + 10}
+                            y1={parentY}
+                            x2={parentX + 10}
+                            y2={currentY}
+                            stroke="#c084fc"
+                            strokeWidth="1.2"
+                            strokeDasharray="2 2"
+                          />
+                          <Line
+                            x1={parentX + 10}
+                            y1={currentY}
+                            x2={barX}
+                            y2={currentY}
+                            stroke="#c084fc"
+                            strokeWidth="1.2"
+                            strokeDasharray="2 2"
+                          />
+                        </G>
+                      );
+                    }
+                  } else if (row.type === 'subtask' && row.storyId) {
+                    const parentRow = renderedRows.find(r => r.type === 'story' && r.id === `story-${row.storyId}`);
+                    if (parentRow) {
+                      const parentIdx = renderedRows.indexOf(parentRow);
+                      const parentY = parentIdx * CONFIG.rowHeight + CONFIG.rowHeight / 2;
+                      const parentStartIdx = dayOffset(parentRow.start, rangeStart);
+                      const parentX = parentStartIdx * CONFIG.cellWidth;
+                      const currentY = y + CONFIG.rowHeight / 2;
+                      
+                      connector = (
+                        <G key={`connect-${row.id}`}>
+                          <Line
+                            x1={parentX + 10}
+                            y1={parentY}
+                            x2={parentX + 10}
+                            y2={currentY}
+                            stroke="#93c5fd"
+                            strokeWidth="1.2"
+                            strokeDasharray="2 2"
+                          />
+                          <Line
+                            x1={parentX + 10}
+                            y1={currentY}
+                            x2={barX}
+                            y2={currentY}
+                            stroke="#93c5fd"
+                            strokeWidth="1.2"
+                            strokeDasharray="2 2"
+                          />
+                        </G>
+                      );
+                    }
+                  }
+
                   return (
-                    <G key={`bar-${row.id}`}>
+                    <G key={`bar-group-${row.id}`}>
+                      {connector}
                       <Line x1={0} y1={y + CONFIG.rowHeight} x2={timelineWidth} y2={y + CONFIG.rowHeight} stroke="#f1f5f9" />
                       <G onPress={row.task ? () => { setSelectedTask(row.task); setPopupVisible(true); } : undefined}>
                         <Rect
@@ -275,11 +369,15 @@ const GanttChart = ({ tasks = [], stories = [], sprints = [], currentMonth, setC
                           fill={meta.color}
                           opacity={row.type === 'subtask' ? 1 : 0.9}
                         />
-                        {barWidth > 20 ? (
+                        {barWidth >= 60 ? (
                           <SvgText x={barX + 6} y={barY + 12} fill="#fff" fontSize="9" fontWeight="700">
                             {shownText}
                           </SvgText>
-                        ) : null}
+                        ) : (
+                          <SvgText x={barX + barWidth + 6} y={barY + 12} fill="#475569" fontSize="9" fontWeight="700">
+                            {row.title}
+                          </SvgText>
+                        )}
                       </G>
                     </G>
                   );
