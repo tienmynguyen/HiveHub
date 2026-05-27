@@ -145,7 +145,7 @@ export default function AddTask({ route, navigation }) {
                     // Đảm bảo userId là chuỗi hoặc số
                     const cleanId = typeof userId === 'object' ? userId.value : userId;
                     
-                    return axios.post(endpoints.tasks.addUser(taskId, cleanId), {});
+                    return axios.post(endpoints.tasks.addUser(taskId, cleanId, userData?.user_id), {});
                 });
 
                 await Promise.all(userPromises);
