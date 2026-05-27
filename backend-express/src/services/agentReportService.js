@@ -68,6 +68,118 @@ function buildProjectReport(db, { projectId, userId }) {
   };
 }
 
+function buildDailyStandup(db, { projectId, userId }) {
+  const uId = Number(userId);
+
+  // 1. Get all project IDs the user participates in
+  const userProjectIds = db.userProjects
+    .filter((up) => Number(up.userId) === uId)
+    .map((up) => String(up.projectId));
+
+  // If a projectId is provided and the user is in it, filter by that projectId
+  const targetProjectIds = projectId && userProjectIds.includes(String(projectId))
+    ? [String(projectId)]
+    : userProjectIds;
+
+  // 2. Fetch projects details
+  const projects = db.projects.filter((p) => targetProjectIds.includes(String(p.project_id)));
+
+  // 3. Fetch all tasks in these projects assigned to the user
+  const assignedTaskIds = db.userTasks
+    .filter((ut) => Number(ut.userId) === uId)
+    .map((ut) => Number(ut.taskId));
+
+  const allUserTasks = db.tasks.filter((t) => 
+    targetProjectIds.includes(String(t.project_id)) && 
+    assignedTaskIds.includes(Number(t.task_id))
+  );
+
+  // Split into:
+  // - Completed tasks (for Yesterday/Past Work)
+  const completedTasks = allUserTasks.filter((t) => 
+    ["DONE", "COMPLETED", "APPROVED"].includes(String(t.taskStatus || "").toUpperCase()) ||
+    t.is_approved === true
+  );
+
+  // - Active tasks (for Today's Work)
+  const activeTasks = allUserTasks.filter((t) => 
+    !["DONE", "COMPLETED", "APPROVED"].includes(String(t.taskStatus || "").toUpperCase()) &&
+    t.is_approved !== true
+  );
+
+  // - Overdue tasks (as Blockers / Impediments)
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const overdueTasks = activeTasks.filter((t) => {
+    if (!t.deadline) return false;
+    const dl = new Date(t.deadline);
+    return dl < todayStart;
+  });
+
+  // General project blockers in active sprints
+  const activeSprints = db.sprints.filter((s) => 
+    targetProjectIds.includes(String(s.project_id)) &&
+    s.sprintStatus === "IN_PROGRESS"
+  );
+  const activeSprintIds = activeSprints.map((s) => Number(s.sprint_id));
+
+  const projectBlockers = db.tasks.filter((t) => 
+    targetProjectIds.includes(String(t.project_id)) &&
+    activeSprintIds.includes(Number(t.sprint_id)) &&
+    !["DONE", "COMPLETED", "APPROVED"].includes(String(t.taskStatus || "").toUpperCase()) &&
+    t.is_approved !== true
+  );
+
+  return {
+    user: db.users.find((u) => u.user_id === uId) || null,
+    projects: projects.map((p) => ({
+      projectId: p.project_id,
+      projectName: p.projectName,
+    })),
+    yesterday: completedTasks.slice(0, 5).map((t) => {
+      const p = db.projects.find((pr) => String(pr.project_id) === String(t.project_id));
+      return {
+        taskId: t.task_id,
+        taskName: t.taskName,
+        projectName: p ? p.projectName : "Dự án",
+        status: t.taskStatus,
+      };
+    }),
+    today: activeTasks.slice(0, 5).map((t) => {
+      const p = db.projects.find((pr) => String(pr.project_id) === String(t.project_id));
+      return {
+        taskId: t.task_id,
+        taskName: t.taskName,
+        projectName: p ? p.projectName : "Dự án",
+        status: t.taskStatus,
+        deadline: t.deadline,
+      };
+    }),
+    blockers: [
+      ...overdueTasks.map((t) => {
+        const p = db.projects.find((pr) => String(pr.project_id) === String(t.project_id));
+        return {
+          taskId: t.task_id,
+          taskName: t.taskName,
+          projectName: p ? p.projectName : "Dự án",
+          reason: "Quá hạn deadline!",
+          deadline: t.deadline,
+        };
+      }),
+      ...projectBlockers.slice(0, 3).map((t) => {
+        const p = db.projects.find((pr) => String(pr.project_id) === String(t.project_id));
+        return {
+          taskId: t.task_id,
+          taskName: t.taskName,
+          projectName: p ? p.projectName : "Dự án",
+          reason: "Tác vụ chưa hoàn thành trong Sprint đang chạy",
+        };
+      }),
+    ].slice(0, 5),
+  };
+}
+
 module.exports = {
   buildProjectReport,
+  buildDailyStandup,
 };

@@ -465,12 +465,6 @@
       "roleId": 3
     },
     {
-      "userProjectId": "b5ec7732-5af4-4b50-89c6-0cbd3728f557",
-      "projectId": "P-46987711",
-      "userId": 2,
-      "roleId": 1
-    },
-    {
       "userProjectId": "536ebb6e-7380-4db4-b6b8-c0e3db9a1d5b",
       "projectId": "P-46987711",
       "userId": 3,
@@ -5142,11 +5136,6 @@
       "userId": 5
     },
     {
-      "id": "6d005bd1-016b-476d-9b28-2a477e92e71b",
-      "taskId": 44,
-      "userId": 2
-    },
-    {
       "id": "c655cd0f-054d-45b9-93df-85536d3a86d6",
       "taskId": 45,
       "userId": 3
@@ -5162,11 +5151,6 @@
       "userId": 3
     },
     {
-      "id": "528a6d61-f2ec-418f-9af9-9f9777a38fc3",
-      "taskId": 46,
-      "userId": 2
-    },
-    {
       "id": "85b545b8-6edb-4743-9839-3c0847717a8a",
       "taskId": 47,
       "userId": 3
@@ -5175,16 +5159,6 @@
       "id": "95316b4d-e186-49c9-95b7-7f05541a3bd1",
       "taskId": 48,
       "userId": 5
-    },
-    {
-      "id": "3e944017-3155-4b44-880d-ccc4b8332ce3",
-      "taskId": 49,
-      "userId": 2
-    },
-    {
-      "id": "784fd892-84cc-4e8d-88f8-3e09d062eb5b",
-      "taskId": 45,
-      "userId": 2
     },
     {
       "id": "56b6a7ba-6eb7-4672-a68a-06810293c922",

@@ -14,6 +14,11 @@ function canExecuteAction(db, action, userId) {
       return canManage;
     case "REPORT":
       return getUserRoleInProject(db, action.projectId, userId) !== null;
+    case "DAILY_STANDUP":
+      if (action.projectId) {
+        return getUserRoleInProject(db, action.projectId, userId) !== null;
+      }
+      return true;
     default:
       return false;
   }
@@ -34,6 +39,8 @@ function explainPolicy(action) {
       return "Chỉ Owner hoặc Management của project mới được phép thực hiện thao tác này.";
     case "REPORT":
       return "Mọi thành viên tham gia dự án đều có thể xem báo cáo.";
+    case "DAILY_STANDUP":
+      return "Mọi thành viên tham gia đều có thể xem báo cáo Daily Standup.";
     default:
       return "Không xác định quyền cho thao tác.";
   }

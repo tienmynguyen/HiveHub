@@ -53,6 +53,12 @@ function detectIntentFallback(text) {
   }
   if (input.match(/\b(bao cao|report|tien do|tong hop)\b/i)) return "REPORT";
   if (input.match(/\b(goi y|chia viec|planning|ke hoach)\b/i)) return "PLANNING";
+  if (
+    input.match(/\b(standup|daily standup|daily|hop standup|stand up|hom nay lam gi|lam gi hom nay)\b/i) ||
+    input.includes("daily standup") || input.includes("standup") || input.includes("hop standup")
+  ) {
+    return "DAILY_STANDUP";
+  }
   
   return "HELP";
 }
@@ -269,6 +275,7 @@ function sanitizeIntent(value) {
     "UPDATE_SPRINT_STATUS",
     "REPORT",
     "PLANNING",
+    "DAILY_STANDUP",
     "HELP",
   ];
   return allowed.includes(String(value || "").toUpperCase()) ? String(value).toUpperCase() : "HELP";
@@ -340,7 +347,7 @@ async function parseIntentWithAI(commandText, parserContext = {}) {
   const systemPrompt = [
     "You are an intent parser for HiveHub app.",
     "Return ONLY one JSON object. No markdown. No explanation.",
-    'Schema: {"intent":"CREATE_PROJECT|CREATE_PROJECT_BLUEPRINT|CREATE_SPRINT|CREATE_STORY|CREATE_TASK|CREATE_CALENDAR_NOTE|UPDATE_SPRINT_STATUS|REPORT|PLANNING|HELP","payload":{"projectId?":"P-...","projectName?":"...","projectDescription?":"...","sprintName?":"...","storyName?":"...","taskName?":"...","sprintId?":1,"storyId?":1,"sprintStatus?":"TODO|IN_PROGRESS|DONE","noteTitle?":"...","noteContent?":"...","noteDate?":"ISO","reminderAt?":"ISO","sprintCount?":4,"storiesPerSprint?":2,"tasksPerStory?":2,"sprintDurationWeeks?":1,"startDate?":"YYYY-MM-DD","customBlueprint?":{"sprints":[{"sprintName":"...","sprintGoal":"...","stories":[{"storyName":"...","description":"...","assigneeName?":"...","tasks":[{"taskName":"...","description":"...","assigneeName?":"..."}]}]}]}},"confidence":0.0}',
+    'Schema: {"intent":"CREATE_PROJECT|CREATE_PROJECT_BLUEPRINT|CREATE_SPRINT|CREATE_STORY|CREATE_TASK|CREATE_CALENDAR_NOTE|UPDATE_SPRINT_STATUS|REPORT|PLANNING|DAILY_STANDUP|HELP","payload":{"projectId?":"P-...","projectName?":"...","projectDescription?":"...","sprintName?":"...","storyName?":"...","taskName?":"...","sprintId?":1,"storyId?":1,"sprintStatus?":"TODO|IN_PROGRESS|DONE","noteTitle?":"...","noteContent?":"...","noteDate?":"ISO","reminderAt?":"ISO","sprintCount?":4,"storiesPerSprint?":2,"tasksPerStory?":2,"sprintDurationWeeks?":1,"startDate?":"YYYY-MM-DD","customBlueprint?":{"sprints":[{"sprintName":"...","sprintGoal":"...","stories":[{"storyName":"...","description":"...","assigneeName?":"...","tasks":[{"taskName":"...","description":"...","assigneeName?":"..."}]}]}]}},"confidence":0.0}',
     "Use confidence from 0 to 1.",
     "If command says current/this project, use memory.projectId if available.",
     "Prefer projectId from projectHints when project name in command loosely matches.",
@@ -495,6 +502,11 @@ function buildActionDraft({ intent, payload }) {
         type: "REPORT",
         projectId: payload.projectId,
         projectName: payload.projectName,
+      };
+    case "DAILY_STANDUP":
+      return {
+        type: "DAILY_STANDUP",
+        projectId: payload.projectId || null,
       };
     default:
       return null;
@@ -670,6 +682,15 @@ function buildGuidedPrompt(intent, missingFields = []) {
       question: parts.length ? `Mình cần biết ${parts.join(" và ")} để lập báo cáo.` : "Bạn muốn báo cáo cho dự án nào?",
       hint: "Ví dụ: 'báo cáo dự án HiveHub' hoặc 'báo cáo P-32457576'.",
       examples: ['Báo cáo dự án "HiveHub"', "Báo cáo P-32457576"],
+    };
+  }
+
+  if (intent === "DAILY_STANDUP") {
+    return {
+      title: "Họp Daily Standup",
+      question: "Bạn muốn tổng hợp thông tin họp Standup hôm nay của mình đúng không? Hãy nhấn OK để tạo báo cáo.",
+      hint: "Báo cáo standup tổng hợp việc đã làm hôm qua, kế hoạch hôm nay và các vấn đề tắc nghẽn (Blockers) của bạn.",
+      examples: ["Họp standup hôm nay", "Standup dự án P-32457576"],
     };
   }
 

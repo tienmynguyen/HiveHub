@@ -300,6 +300,109 @@ function ProjectReportDashboard({ data }) {
   );
 }
 
+function DailyStandupDashboard({ standupData = {} }) {
+  const { user = {}, projects = [], yesterday = [], today = [], blockers = [] } = standupData;
+  return (
+    <View style={styles.dashboardContainer}>
+      <View style={styles.dashboardHeader}>
+        <Icon name="users" size={14} color="#3b82f6" style={{ marginRight: 6 }} />
+        <Text style={styles.dashboardProjectName} numberOfLines={1}>
+          Báo cáo Daily Standup
+        </Text>
+        <View style={[styles.projectIdBadge, { backgroundColor: '#dbeafe' }]}>
+          <Text style={[styles.projectIdBadgeText, { color: '#1e40af' }]}>Cá nhân</Text>
+        </View>
+      </View>
+
+      <Text style={[styles.dashboardDesc, { marginBottom: 8 }]}>
+        Thành viên: <Text style={{ fontWeight: 'bold', color: '#1e293b' }}>{user.username || user.email || 'Tôi'}</Text>
+      </Text>
+      
+      {projects.length > 0 ? (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 }}>
+          {projects.map((p, idx) => (
+            <View key={`proj-${idx}`} style={[styles.projectIdBadge, { backgroundColor: '#e0f2fe', marginRight: 6, marginBottom: 4 }]}>
+              <Text style={[styles.projectIdBadgeText, { color: '#0369a1' }]}>{p.projectName}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
+      {/* Yesterday's Accomplishments */}
+      <View style={[styles.detailsSection, { marginTop: 0, padding: 10 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+          <Icon name="check-circle" size={12} color="#10b981" style={{ marginRight: 6 }} />
+          <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>1. Hôm qua đã làm gì?</Text>
+        </View>
+        {yesterday.length === 0 ? (
+          <Text style={[styles.progressSubtext, { fontStyle: 'italic', marginLeft: 18 }]}>Chưa ghi nhận tác vụ nào được hoàn thành gần đây.</Text>
+        ) : (
+          yesterday.map((t, idx) => (
+            <View key={`yest-${idx}`} style={{ flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 4, marginLeft: 10 }}>
+              <Text style={{ color: '#10b981', marginRight: 6, fontWeight: 'bold' }}>✓</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, color: '#334155', fontWeight: '500' }}>{t.taskName}</Text>
+                <Text style={{ fontSize: 9, color: '#64748b' }}>Thuộc dự án: {t.projectName}</Text>
+              </View>
+            </View>
+          ))
+        )}
+      </View>
+
+      {/* Today's Focus */}
+      <View style={[styles.detailsSection, { marginTop: 10, padding: 10 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+          <Icon name="play-circle" size={12} color="#3b82f6" style={{ marginRight: 6 }} />
+          <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>2. Hôm nay sẽ làm gì?</Text>
+        </View>
+        {today.length === 0 ? (
+          <Text style={[styles.progressSubtext, { fontStyle: 'italic', marginLeft: 18 }]}>Không có tác vụ nào đang chờ xử lý.</Text>
+        ) : (
+          today.map((t, idx) => (
+            <View key={`tod-${idx}`} style={{ flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 4, marginLeft: 10 }}>
+              <Text style={{ color: '#3b82f6', marginRight: 6, fontWeight: 'bold' }}>➔</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, color: '#334155', fontWeight: '500' }}>{t.taskName}</Text>
+                <Text style={{ fontSize: 9, color: '#64748b' }}>
+                  Dự án: {t.projectName} | Trạng thái: <Text style={{ fontWeight: 'bold', color: t.status === 'IN_PROGRESS' ? '#f59e0b' : '#64748b' }}>{t.status}</Text>
+                </Text>
+              </View>
+            </View>
+          ))
+        )}
+      </View>
+
+      {/* Blockers & Obstacles */}
+      {blockers.length > 0 ? (
+        <View style={[styles.blockerCard, { marginTop: 12, padding: 10 }]}>
+          <View style={styles.blockerCardHeader}>
+            <Icon name="exclamation-triangle" size={10} color="#b91c1c" style={{ marginRight: 6 }} />
+            <Text style={styles.blockerCardTitle}>3. Khó khăn & Trở ngại ({blockers.length})</Text>
+          </View>
+          {blockers.map((t, idx) => (
+            <View key={`blocker-${idx}`} style={{ marginVertical: 4, marginLeft: 4 }}>
+              <Text style={{ fontSize: 11, color: '#991b1b', fontWeight: '500' }}>
+                ⚠️ {t.taskName}
+              </Text>
+              <Text style={{ fontSize: 9, color: '#b91c1c', opacity: 0.8, marginLeft: 14 }}>
+                {t.projectName} | Lý do: {t.reason}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <View style={[styles.todayCard, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', marginTop: 12, padding: 10 }]}>
+          <View style={styles.todayCardHeader}>
+            <Icon name="smile" size={10} color="#16a34a" style={{ marginRight: 6 }} />
+            <Text style={[styles.todayCardTitle, { color: '#16a34a' }]}>3. Khó khăn & Trở ngại</Text>
+          </View>
+          <Text style={{ fontSize: 11, color: '#16a34a', fontStyle: 'italic', marginLeft: 16 }}>Tuyệt vời! Không có trở ngại hay tác vụ quá hạn nào.</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
 export default function Assistant({ route }) {
   const { userData } = useContext(AuthContext);
   const routeProjectId = route?.params?.projectId || null;
@@ -480,6 +583,7 @@ export default function Assistant({ route }) {
         'CREATE_CALENDAR_NOTE',
         'UPDATE_SPRINT_STATUS',
         'REPORT',
+        'DAILY_STANDUP',
       ];
       const clarificationActive = Boolean(data?.clarification?.active);
       if (actionableIntents.includes(String(data?.intent || '')) && data?.actionReady && !clarificationActive) {
@@ -500,7 +604,7 @@ export default function Assistant({ route }) {
           setLatestGuide(previewRes.data?.guide || data?.guide || null);
           
           const previewActionType = String(previewRes.data?.action?.type || '').toUpperCase();
-          const isRisky = ['UPDATE_SPRINT_STATUS', 'DELETE_PROJECT', 'REMOVE_MEMBER', 'REPORT'].includes(previewActionType);
+          const isRisky = ['UPDATE_SPRINT_STATUS', 'DELETE_PROJECT', 'REMOVE_MEMBER', 'REPORT', 'DAILY_STANDUP'].includes(previewActionType);
           
           if (!isRisky && previewRes.data?.confirmationToken) {
             try {
@@ -518,8 +622,8 @@ export default function Assistant({ route }) {
               pushMessage('assistant', `Preview đã sẵn sàng nhưng thực thi tự động bị lỗi: ${execMsg}`);
             }
           } else {
-            const previewMsg = previewActionType === 'REPORT'
-              ? `Đã tìm thấy dự án phù hợp! Vui lòng bấm "Mở xác nhận execute" để xác nhận mã số dự án.`
+            const previewMsg = (previewActionType === 'REPORT' || previewActionType === 'DAILY_STANDUP')
+              ? `Đã nhận diện yêu cầu báo cáo! Vui lòng bấm "Mở xác nhận execute" để xác nhận.`
               : `Đã tạo preview cho lệnh "${message}". Chưa thực thi. Bạn bấm "Mở xác nhận execute" để xem và xác nhận.`;
             pushMessage('assistant', previewMsg);
           }
@@ -600,6 +704,16 @@ export default function Assistant({ route }) {
             role: 'assistant',
             text: `Báo cáo tiến độ dự án ${data.entity?.project?.projectName || ''} (${data.entity?.project?.project_id || ''})`,
             reportData: data.entity,
+          },
+        ]);
+      } else if (data?.executedAction === 'DAILY_STANDUP') {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `standup-${Date.now()}-${Math.random()}`,
+            role: 'assistant',
+            text: `Báo cáo Daily Standup cá nhân`,
+            standupData: data.entity,
           },
         ]);
       } else {
@@ -792,10 +906,12 @@ export default function Assistant({ route }) {
           <View style={[
             styles.messageRow,
             item.role === 'user' ? styles.userRow : styles.aiRow,
-            item.reportData ? { maxWidth: '100%', width: '100%', alignSelf: 'stretch', backgroundColor: '#fff', borderWidth: 0, padding: 0 } : null
+            (item.reportData || item.standupData) ? { maxWidth: '100%', width: '100%', alignSelf: 'stretch', backgroundColor: '#fff', borderWidth: 0, padding: 0 } : null
           ]}>
             {item.reportData ? (
               <ProjectReportDashboard data={item.reportData} />
+            ) : item.standupData ? (
+              <DailyStandupDashboard standupData={item.standupData} />
             ) : (
               <MarkdownText text={item.text} style={styles.messageText} />
             )}
@@ -853,6 +969,17 @@ export default function Assistant({ route }) {
                 <Text style={styles.confirmReportText}>Bạn đang yêu cầu xem báo cáo tiến độ cho dự án:</Text>
                 <Text style={styles.confirmReportName}>✨ {previewPayload?.projectName || 'Dự án'}</Text>
                 <Text style={styles.confirmReportCode}>Mã số: {previewPayload?.projectId || 'N/A'}</Text>
+              </View>
+            ) : previewActionType === 'DAILY_STANDUP' ? (
+              <View style={styles.confirmReportBox}>
+                <Icon name="users" size={32} color="#3b82f6" style={{ alignSelf: 'center', marginBottom: 10 }} />
+                <Text style={styles.confirmReportText}>Bạn đang yêu cầu tổng hợp báo cáo họp Daily Standup cá nhân:</Text>
+                <Text style={styles.confirmReportName}>📅 Hôm nay</Text>
+                {previewPayload?.projectId ? (
+                  <Text style={styles.confirmReportCode}>Lọc theo dự án: {previewPayload.projectId}</Text>
+                ) : (
+                  <Text style={styles.confirmReportCode}>Tất cả các dự án tham gia</Text>
+                )}
               </View>
             ) : previewResult?.action ? (
               <Text style={styles.modalBody}>{prettyJson(previewResult.action)}</Text>

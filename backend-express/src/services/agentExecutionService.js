@@ -433,6 +433,12 @@ function executeAction(db, action, userId) {
     return { ok: true, entity: reportData };
   }
 
+  if (action.type === "DAILY_STANDUP") {
+    const { buildDailyStandup } = require("./agentReportService");
+    const standupData = buildDailyStandup(db, { projectId: action.projectId, userId });
+    return { ok: true, entity: standupData };
+  }
+
   return {
     ok: false,
     error: "UNSUPPORTED_ACTION",
