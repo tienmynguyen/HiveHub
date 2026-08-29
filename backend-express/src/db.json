@@ -71,6 +71,51 @@
       "imagePath": null,
       "description": "",
       "walletAddress": ""
+    },
+    {
+      "user_id": 9,
+      "email": "test_web_user@gmail.com",
+      "username": "TestWeb",
+      "password": "$2b$10$ZGjTT0s.9iUWUErIyjLJj.sbNQZArNnfaMq9znVUxt3tjvjoqkTa2",
+      "imagePath": null,
+      "description": "",
+      "walletAddress": ""
+    },
+    {
+      "user_id": 10,
+      "email": "abc123@gmail.com",
+      "username": "ac",
+      "password": "$2b$10$bmQRytWi.D6ZBMFeeQwx1.PQ975ee.V.0g/eXXLdUHSVx7E5eiVNq",
+      "imagePath": null,
+      "description": "",
+      "walletAddress": ""
+    },
+    {
+      "user_id": 11,
+      "email": "dev_lead@hivehub.com",
+      "username": "Dev Lead Master",
+      "password": "$2b$10$iImF7XM2GcnkQpKIDW37oOd.hOKtmDZCvYSanlF9or.1DgoMjCmX.",
+      "imagePath": null,
+      "description": "",
+      "walletAddress": ""
+    },
+    {
+      "user_id": 12,
+      "email": "qa_lead@hivehub.com",
+      "username": "QA Specialist",
+      "password": "$2b$10$U1C1hCSBNqi/UfsOofGdTu6iUmUvc5IvnYLpyz.rNKzD6f/juRJne",
+      "imagePath": null,
+      "description": "",
+      "walletAddress": ""
+    },
+    {
+      "user_id": 13,
+      "email": "designer@hivehub.com",
+      "username": "UI UX Designer",
+      "password": "$2b$10$TKCMXAtomvN2o87WNUyaRuEykmcQnX0T7JNbT5FOAnIJxKmI/jXNS",
+      "imagePath": null,
+      "description": "",
+      "walletAddress": ""
     }
   ],
   "projects": [
@@ -313,6 +358,298 @@
       "projectowner": 5,
       "timeStart": "2026-05-27T17:00:00.000Z",
       "timeEnd": "2026-06-24T17:00:00.000Z"
+    },
+    {
+      "project_id": "P-32893914",
+      "projectName": "Sendo",
+      "projectDescription": "Xây dựng website bán hàng",
+      "projectowner": 5,
+      "timeStart": "2026-05-26T00:00:00.000Z",
+      "timeEnd": "2026-06-23T00:00:00.000Z"
+    },
+    {
+      "project_id": "P-16760753",
+      "projectName": "ABC",
+      "projectDescription": "ádasfasfasdgasdfgasdf",
+      "projectowner": 10,
+      "timeStart": "2026-08-29",
+      "timeEnd": "2026-09-30"
+    },
+    {
+      "project_id": "P-17077652",
+      "projectName": "HiveHub Web Platform",
+      "projectDescription": "Hệ thống quản lý công việc Agile Scrum chuyên sâu trên nền tảng Web",
+      "projectowner": 11,
+      "timeStart": "2026-08-29T15:24:37.652Z",
+      "timeEnd": "2026-08-29T15:24:37.652Z"
+    },
+    {
+      "project_id": "P-17077729",
+      "projectName": "E-Commerce Agile Portal",
+      "projectDescription": "Dự án mua sắm trực tuyến với tính năng thanh toán Blockchain & Token HIVE",
+      "projectowner": 12,
+      "timeStart": "2026-08-29T15:24:37.729Z",
+      "timeEnd": "2026-08-29T15:24:37.729Z"
+    },
+    {
+      "project_id": "P-19751105",
+      "projectName": "Dự án Thác Nước Waterfall Demo",
+      "projectDescription": "",
+      "projectowner": 11,
+      "timeStart": "2026-08-29T16:09:11.105Z",
+      "timeEnd": "2026-08-29T16:09:11.105Z"
+    },
+    {
+      "project_id": "P-19772704",
+      "projectName": "Dự án Thác Nước Waterfall Demo",
+      "projectDescription": "",
+      "projectowner": 11,
+      "projectScale": "LARGE",
+      "methodology": "WATERFALL",
+      "wipLimits": {
+        "todo": 10,
+        "in_progress": 3,
+        "in_review": 3,
+        "done": 100
+      },
+      "phases": [
+        {
+          "phase_id": "P1",
+          "name": "1. Yêu Cầu & Phân Tích",
+          "status": "IN_PROGRESS",
+          "order": 1
+        },
+        {
+          "phase_id": "P2",
+          "name": "2. Thiết Kế Hệ Thống",
+          "status": "TODO",
+          "order": 2
+        },
+        {
+          "phase_id": "P3",
+          "name": "3. Phát Triển & Lập Trình",
+          "status": "TODO",
+          "order": 3
+        },
+        {
+          "phase_id": "P4",
+          "name": "4. Kiểm Thử (QA / UAT)",
+          "status": "TODO",
+          "order": 4
+        },
+        {
+          "phase_id": "P5",
+          "name": "5. Nghiệm Thu & Blockchain PoW",
+          "status": "TODO",
+          "order": 5
+        }
+      ],
+      "timeStart": "2026-08-29T16:09:32.704Z",
+      "timeEnd": "2026-08-29T16:09:32.704Z"
+    },
+    {
+      "project_id": "P-19779156",
+      "projectName": "Dự án Thác Nước Demo 2",
+      "projectDescription": "",
+      "projectowner": 11,
+      "projectScale": "LARGE",
+      "methodology": "WATERFALL",
+      "wipLimits": {
+        "todo": 10,
+        "in_progress": 3,
+        "in_review": 3,
+        "done": 100
+      },
+      "phases": [
+        {
+          "phase_id": "P1",
+          "name": "1. Yêu Cầu & Phân Tích",
+          "status": "IN_PROGRESS",
+          "order": 1
+        },
+        {
+          "phase_id": "P2",
+          "name": "2. Thiết Kế Hệ Thống",
+          "status": "TODO",
+          "order": 2
+        },
+        {
+          "phase_id": "P3",
+          "name": "3. Phát Triển & Lập Trình",
+          "status": "TODO",
+          "order": 3
+        },
+        {
+          "phase_id": "P4",
+          "name": "4. Kiểm Thử (QA / UAT)",
+          "status": "TODO",
+          "order": 4
+        },
+        {
+          "phase_id": "P5",
+          "name": "5. Nghiệm Thu & Blockchain PoW",
+          "status": "TODO",
+          "order": 5
+        }
+      ],
+      "timeStart": "2026-08-29T16:09:39.156Z",
+      "timeEnd": "2026-08-29T16:09:39.156Z"
+    },
+    {
+      "project_id": "P-19805283",
+      "projectName": "Dự án Thác Nước Demo 2",
+      "projectDescription": "",
+      "projectowner": 11,
+      "projectScale": "LARGE",
+      "methodology": "WATERFALL",
+      "wipLimits": {
+        "todo": 10,
+        "in_progress": 3,
+        "in_review": 3,
+        "done": 100
+      },
+      "phases": [
+        {
+          "phase_id": "P1",
+          "name": "1. Yêu Cầu & Phân Tích",
+          "status": "IN_PROGRESS",
+          "order": 1
+        },
+        {
+          "phase_id": "P2",
+          "name": "2. Thiết Kế Hệ Thống",
+          "status": "TODO",
+          "order": 2
+        },
+        {
+          "phase_id": "P3",
+          "name": "3. Phát Triển & Lập Trình",
+          "status": "TODO",
+          "order": 3
+        },
+        {
+          "phase_id": "P4",
+          "name": "4. Kiểm Thử (QA / UAT)",
+          "status": "TODO",
+          "order": 4
+        },
+        {
+          "phase_id": "P5",
+          "name": "5. Nghiệm Thu & Blockchain PoW",
+          "status": "TODO",
+          "order": 5
+        }
+      ],
+      "timeStart": "2026-08-29T16:10:05.283Z",
+      "timeEnd": "2026-08-29T16:10:05.283Z"
+    },
+    {
+      "project_id": "P-19901204",
+      "projectName": "HTTT",
+      "projectDescription": "TTTASS",
+      "projectowner": 12,
+      "projectScale": "SMALL",
+      "methodology": "HYBRID",
+      "wipLimits": {
+        "todo": 10,
+        "in_progress": 3,
+        "in_review": 3,
+        "done": 100
+      },
+      "phases": [
+        {
+          "phase_id": "H1",
+          "name": "Giai Đoạn 1 (Waterfall): Khởi Tạo & Yêu Cầu",
+          "status": "IN_PROGRESS",
+          "order": 1
+        },
+        {
+          "phase_id": "H2",
+          "name": "Giai Đoạn 2 (Agile Scrum/Kanban): Phát Triển Tính Năng",
+          "status": "TODO",
+          "order": 2
+        },
+        {
+          "phase_id": "H3",
+          "name": "Giai Đoạn 3 (Waterfall): Kiểm Thử & Triển Khai",
+          "status": "TODO",
+          "order": 3
+        }
+      ],
+      "timeStart": "2026-08-29",
+      "timeEnd": "2026-10-28"
+    },
+    {
+      "project_id": "P-19965113",
+      "projectName": "AAA",
+      "projectDescription": "ấdfasdas",
+      "projectowner": 12,
+      "projectScale": "MEDIUM",
+      "methodology": "HYBRID",
+      "wipLimits": {
+        "todo": 10,
+        "in_progress": 3,
+        "in_review": 3,
+        "done": 100
+      },
+      "phases": [
+        {
+          "phase_id": "H1",
+          "name": "Giai Đoạn 1 (Waterfall): Khởi Tạo & Yêu Cầu",
+          "status": "IN_PROGRESS",
+          "order": 1
+        },
+        {
+          "phase_id": "H2",
+          "name": "Giai Đoạn 2 (Agile Scrum/Kanban): Phát Triển Tính Năng",
+          "status": "TODO",
+          "order": 2
+        },
+        {
+          "phase_id": "H3",
+          "name": "Giai Đoạn 3 (Waterfall): Kiểm Thử & Triển Khai",
+          "status": "TODO",
+          "order": 3
+        }
+      ],
+      "timeStart": "2026-08-29",
+      "timeEnd": "2026-10-28"
+    },
+    {
+      "project_id": "P-20104356",
+      "projectName": "â",
+      "projectDescription": "a",
+      "projectowner": 12,
+      "projectScale": "MEDIUM",
+      "methodology": "HYBRID",
+      "wipLimits": {
+        "todo": 10,
+        "in_progress": 3,
+        "in_review": 3,
+        "done": 100
+      },
+      "phases": [
+        {
+          "phase_id": "H1",
+          "name": "Giai Đoạn 1 (Waterfall): Khởi Tạo & Yêu Cầu",
+          "status": "IN_PROGRESS",
+          "order": 1
+        },
+        {
+          "phase_id": "H2",
+          "name": "Giai Đoạn 2 (Agile Scrum/Kanban): Phát Triển Tính Năng",
+          "status": "TODO",
+          "order": 2
+        },
+        {
+          "phase_id": "H3",
+          "name": "Giai Đoạn 3 (Waterfall): Kiểm Thử & Triển Khai",
+          "status": "TODO",
+          "order": 3
+        }
+      ],
+      "timeStart": "2026-08-29",
+      "timeEnd": "2026-10-28"
     }
   ],
   "userProjects": [
@@ -543,6 +880,96 @@
       "projectId": "P-46987711",
       "userId": 2,
       "roleId": 1
+    },
+    {
+      "userProjectId": "c3dfd7a7-861b-4288-899a-c449fe2c5941",
+      "projectId": "P-32893914",
+      "userId": 5,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "ad8e9273-44c9-41e0-8885-977161eaa928",
+      "projectId": "P-16760753",
+      "userId": 10,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "1a81a9a2-2084-4d5e-8a6d-075eac4f46f5",
+      "projectId": "P-17077652",
+      "userId": 11,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "90a81bf3-4c48-487b-a0af-bd91271d691e",
+      "projectId": "P-17077652",
+      "userId": 12,
+      "roleId": 1
+    },
+    {
+      "userProjectId": "b0302503-2154-4961-9cf6-16868c1942ac",
+      "projectId": "P-17077652",
+      "userId": 13,
+      "roleId": 1
+    },
+    {
+      "userProjectId": "0c9d998a-d65b-4f37-8bb8-86dd33c7423c",
+      "projectId": "P-17077729",
+      "userId": 12,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "519e68af-db73-4a77-9eee-fc90065eaa45",
+      "projectId": "P-17077729",
+      "userId": 11,
+      "roleId": 1
+    },
+    {
+      "userProjectId": "73b95360-4c57-48e1-87ad-8cdd5dacc680",
+      "projectId": "P-17077729",
+      "userId": 13,
+      "roleId": 1
+    },
+    {
+      "userProjectId": "9b8a6620-711c-4b32-b1da-7aea3ef9c41f",
+      "projectId": "P-19751105",
+      "userId": 11,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "47ca7e93-33f4-42e4-8978-2639451af1e8",
+      "projectId": "P-19772704",
+      "userId": 11,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "9382335e-3714-46d1-ab1a-391909160e13",
+      "projectId": "P-19779156",
+      "userId": 11,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "8354d1cd-8f4e-4780-8998-a9847bb5ad37",
+      "projectId": "P-19805283",
+      "userId": 11,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "67929b23-ea79-4b72-bb4e-881d638cac3a",
+      "projectId": "P-19901204",
+      "userId": 12,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "c6182594-842c-41c4-904d-9f8ccf5faa8d",
+      "projectId": "P-19965113",
+      "userId": 12,
+      "roleId": 3
+    },
+    {
+      "userProjectId": "5d8ce4d1-f062-4927-bcd6-d6f70cee75fa",
+      "projectId": "P-20104356",
+      "userId": 12,
+      "roleId": 3
     }
   ],
   "sprints": [
@@ -1162,6 +1589,112 @@
       "isDefault": false,
       "timeStart": "2026-06-17T17:00:00.000Z",
       "timeEnd": "2026-06-24T17:00:00.000Z"
+    },
+    {
+      "sprint_id": 64,
+      "project_id": "P-32893914",
+      "sprintName": "Sprint 1",
+      "sprintGoal": "Khởi tạo hệ thống",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-05-26T00:00:00.000Z",
+      "timeEnd": "2026-06-02T00:00:00.000Z"
+    },
+    {
+      "sprint_id": 65,
+      "project_id": "P-32893914",
+      "sprintName": "Sprint 2",
+      "sprintGoal": "Phát triển tính năng sản phẩm",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-06-02T00:00:00.000Z",
+      "timeEnd": "2026-06-09T00:00:00.000Z"
+    },
+    {
+      "sprint_id": 66,
+      "project_id": "P-32893914",
+      "sprintName": "Sprint 3",
+      "sprintGoal": "Giỏ hàng và thanh toán",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-06-09T00:00:00.000Z",
+      "timeEnd": "2026-06-16T00:00:00.000Z"
+    },
+    {
+      "sprint_id": 67,
+      "project_id": "P-32893914",
+      "sprintName": "Sprint 4",
+      "sprintGoal": "Kiểm thử và bàn giao",
+      "sprintStatus": "TODO",
+      "isDefault": false,
+      "timeStart": "2026-06-16T00:00:00.000Z",
+      "timeEnd": "2026-06-23T00:00:00.000Z"
+    },
+    {
+      "sprint_id": 68,
+      "project_id": "P-32893914",
+      "sprintName": "Backlog Sprint",
+      "sprintGoal": "Default sprint for migrated tasks",
+      "isDefault": true,
+      "timeStart": "2026-07-07T11:32:21.356Z",
+      "timeEnd": "2026-07-07T11:32:21.356Z"
+    },
+    {
+      "sprint_id": 69,
+      "project_id": "P-17077652",
+      "sprintName": "Backlog Sprint",
+      "sprintGoal": "Default sprint for migrated tasks",
+      "isDefault": true,
+      "timeStart": "2026-08-29T15:24:37.669Z",
+      "timeEnd": "2026-08-29T15:24:37.669Z"
+    },
+    {
+      "sprint_id": 70,
+      "project_id": "P-17077729",
+      "sprintName": "Backlog Sprint",
+      "sprintGoal": "Default sprint for migrated tasks",
+      "isDefault": true,
+      "timeStart": "2026-08-29T15:24:37.744Z",
+      "timeEnd": "2026-08-29T15:24:37.744Z"
+    },
+    {
+      "sprint_id": 71,
+      "project_id": "P-17077652",
+      "sprintName": "Sprint 3 - Web Final Polish",
+      "sprintGoal": "Hoàn thiện toàn bộ giao diện Web",
+      "sprintStatus": "TODO",
+      "timeStart": "2026-08-29T15:49:18.256Z",
+      "timeEnd": "2026-08-29T15:49:18.257Z",
+      "isDefault": false
+    },
+    {
+      "sprint_id": 72,
+      "project_id": "P-17077652",
+      "sprintName": "Sprint 3 - BBB",
+      "sprintGoal": "áasdasdas ấdas ádas đá ",
+      "sprintStatus": "TODO",
+      "timeStart": "2026-09-05",
+      "timeEnd": "2026-09-24",
+      "isDefault": false
+    },
+    {
+      "sprint_id": 73,
+      "project_id": "P-17077652",
+      "sprintName": "a",
+      "sprintGoal": "a",
+      "sprintStatus": "TODO",
+      "timeStart": "2026-08-29",
+      "timeEnd": "2026-09-12",
+      "isDefault": false
+    },
+    {
+      "sprint_id": 74,
+      "project_id": "P-19805283",
+      "sprintName": "Backlog Sprint",
+      "sprintGoal": "Default sprint for migrated tasks",
+      "isDefault": true,
+      "timeStart": "2026-08-29T16:10:05.295Z",
+      "timeEnd": "2026-08-29T16:10:05.295Z"
     }
   ],
   "epics": [
@@ -2458,6 +2991,142 @@
       "storyOrder": 104,
       "assignee_user_id": null,
       "isDefault": false
+    },
+    {
+      "story_id": 106,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "storyName": "Thiết lập môi trường",
+      "description": "Cấu hình server và database",
+      "storyStatus": "TODO",
+      "storyOrder": 104,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 107,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "storyName": "Giao diện cơ bản",
+      "description": "Xây dựng trang chủ",
+      "storyStatus": "TODO",
+      "storyOrder": 105,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 108,
+      "project_id": "P-32893914",
+      "sprint_id": 65,
+      "epic_id": null,
+      "storyName": "Danh mục sản phẩm",
+      "description": "Hiển thị danh sách",
+      "storyStatus": "TODO",
+      "storyOrder": 106,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 109,
+      "project_id": "P-32893914",
+      "sprint_id": 65,
+      "epic_id": null,
+      "storyName": "Chi tiết sản phẩm",
+      "description": "Trang chi tiết",
+      "storyStatus": "TODO",
+      "storyOrder": 107,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 110,
+      "project_id": "P-32893914",
+      "sprint_id": 66,
+      "epic_id": null,
+      "storyName": "Giỏ hàng",
+      "description": "Thêm xóa sửa giỏ hàng",
+      "storyStatus": "TODO",
+      "storyOrder": 108,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 111,
+      "project_id": "P-32893914",
+      "sprint_id": 66,
+      "epic_id": null,
+      "storyName": "Thanh toán",
+      "description": "Tích hợp cổng thanh toán",
+      "storyStatus": "TODO",
+      "storyOrder": 109,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 112,
+      "project_id": "P-32893914",
+      "sprint_id": 67,
+      "epic_id": null,
+      "storyName": "Fix bug",
+      "description": "Sửa lỗi tồn đọng",
+      "storyStatus": "TODO",
+      "storyOrder": 110,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 113,
+      "project_id": "P-32893914",
+      "sprint_id": 67,
+      "epic_id": null,
+      "storyName": "Deploy",
+      "description": "Triển khai production",
+      "storyStatus": "TODO",
+      "storyOrder": 111,
+      "assignee_user_id": null,
+      "isDefault": false
+    },
+    {
+      "story_id": 114,
+      "project_id": "P-32893914",
+      "sprint_id": 68,
+      "epic_id": null,
+      "storyName": "General Story",
+      "description": "Default story for migrated tasks",
+      "storyStatus": "TODO",
+      "isDefault": true
+    },
+    {
+      "story_id": 115,
+      "project_id": "P-17077652",
+      "sprint_id": 69,
+      "epic_id": null,
+      "storyName": "General Story",
+      "description": "Default story for migrated tasks",
+      "storyStatus": "TODO",
+      "isDefault": true
+    },
+    {
+      "story_id": 116,
+      "project_id": "P-17077729",
+      "sprint_id": 70,
+      "epic_id": null,
+      "storyName": "General Story",
+      "description": "Default story for migrated tasks",
+      "storyStatus": "TODO",
+      "isDefault": true
+    },
+    {
+      "story_id": 117,
+      "project_id": "P-19805283",
+      "sprint_id": 74,
+      "epic_id": null,
+      "storyName": "General Story",
+      "description": "Default story for migrated tasks",
+      "storyStatus": "TODO",
+      "isDefault": true
     }
   ],
   "tasks": [
@@ -3247,12 +3916,17 @@
       "story_id": 31,
       "taskName": "Viết API",
       "description": "lấy thông tin người dùng",
-      "taskStatus": "TODO",
+      "taskStatus": "APPROVED",
       "timeStart": "2026-05-17T06:29:09.000Z",
       "timeEnd": "2026-05-21T06:29:09.000Z",
       "deadline": "2026-05-21T06:29:09.000Z",
-      "is_approved": false,
-      "txHash": null
+      "is_approved": true,
+      "txHash": "0x5b302ffe1880cfec169a752e88253dc9dee23765f670f79bc49fbe6dbdeb0d47",
+      "approvedBy": 5,
+      "approvedAt": "2026-05-28T02:08:45.749Z",
+      "blockHash": "c8cb07d159ef6f4cd0b5a42c0ded4f330a9452ec34b435873b3a2b33d00d5d93",
+      "onChainMode": "off",
+      "onChainSynced": false
     },
     {
       "task_id": 48,
@@ -3277,12 +3951,17 @@
       "story_id": 33,
       "taskName": "Train AI",
       "description": "Train dựa theo data đã được cấp",
-      "taskStatus": "TODO",
+      "taskStatus": "APPROVED",
       "timeStart": "2026-05-23T06:29:09.000Z",
       "timeEnd": "2026-05-28T06:29:09.000Z",
       "deadline": "2026-05-28T06:29:09.000Z",
-      "is_approved": false,
-      "txHash": null
+      "is_approved": true,
+      "txHash": "0xe893228cd6c9b0bcef01a339d8d719d985c0592efecc2729c49e7262bee26078",
+      "approvedBy": 5,
+      "approvedAt": "2026-05-28T02:10:12.881Z",
+      "blockHash": "eacca8ec4087063e10ea70dcf7577f7234994892616fe4c021e1eef5a767f7b4",
+      "onChainMode": "off",
+      "onChainSynced": false
     },
     {
       "task_id": 50,
@@ -5398,6 +6077,615 @@
       "deadline": "2026-05-28T16:47:04.000Z",
       "is_approved": false,
       "txHash": null
+    },
+    {
+      "task_id": 193,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 106,
+      "taskName": "Setup server",
+      "description": "Cài đặt môi trường dev",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-26T00:00:00.000Z",
+      "timeEnd": "2026-06-02T00:00:00.000Z",
+      "deadline": "2026-06-02T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 194,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 106,
+      "taskName": "Setup DB",
+      "description": "Khởi tạo schema",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-26T00:00:00.000Z",
+      "timeEnd": "2026-06-02T00:00:00.000Z",
+      "deadline": "2026-06-02T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 195,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "Layout header",
+      "description": "Code header",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-26T00:00:00.000Z",
+      "timeEnd": "2026-06-02T00:00:00.000Z",
+      "deadline": "2026-06-02T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 196,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "Layout footer",
+      "description": "Code footer",
+      "taskStatus": "TODO",
+      "timeStart": "2026-05-26T00:00:00.000Z",
+      "timeEnd": "2026-06-02T00:00:00.000Z",
+      "deadline": "2026-06-02T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 197,
+      "project_id": "P-32893914",
+      "sprint_id": 65,
+      "epic_id": null,
+      "story_id": 108,
+      "taskName": "API sản phẩm",
+      "description": "Viết API",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-02T00:00:00.000Z",
+      "timeEnd": "2026-06-09T00:00:00.000Z",
+      "deadline": "2026-06-09T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 198,
+      "project_id": "P-32893914",
+      "sprint_id": 65,
+      "epic_id": null,
+      "story_id": 108,
+      "taskName": "UI sản phẩm",
+      "description": "Code giao diện",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-02T00:00:00.000Z",
+      "timeEnd": "2026-06-09T00:00:00.000Z",
+      "deadline": "2026-06-09T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 199,
+      "project_id": "P-32893914",
+      "sprint_id": 65,
+      "epic_id": null,
+      "story_id": 109,
+      "taskName": "API chi tiết",
+      "description": "Viết API",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-02T00:00:00.000Z",
+      "timeEnd": "2026-06-09T00:00:00.000Z",
+      "deadline": "2026-06-09T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 200,
+      "project_id": "P-32893914",
+      "sprint_id": 65,
+      "epic_id": null,
+      "story_id": 109,
+      "taskName": "UI chi tiết",
+      "description": "Code giao diện",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-02T00:00:00.000Z",
+      "timeEnd": "2026-06-09T00:00:00.000Z",
+      "deadline": "2026-06-09T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 201,
+      "project_id": "P-32893914",
+      "sprint_id": 66,
+      "epic_id": null,
+      "story_id": 110,
+      "taskName": "Logic giỏ hàng",
+      "description": "Xử lý state",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-09T00:00:00.000Z",
+      "timeEnd": "2026-06-16T00:00:00.000Z",
+      "deadline": "2026-06-16T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 202,
+      "project_id": "P-32893914",
+      "sprint_id": 66,
+      "epic_id": null,
+      "story_id": 110,
+      "taskName": "UI giỏ hàng",
+      "description": "Code giao diện",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-09T00:00:00.000Z",
+      "timeEnd": "2026-06-16T00:00:00.000Z",
+      "deadline": "2026-06-16T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 203,
+      "project_id": "P-32893914",
+      "sprint_id": 66,
+      "epic_id": null,
+      "story_id": 111,
+      "taskName": "API thanh toán",
+      "description": "Kết nối VNPay",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-09T00:00:00.000Z",
+      "timeEnd": "2026-06-16T00:00:00.000Z",
+      "deadline": "2026-06-16T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 204,
+      "project_id": "P-32893914",
+      "sprint_id": 66,
+      "epic_id": null,
+      "story_id": 111,
+      "taskName": "UI thanh toán",
+      "description": "Code giao diện",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-09T00:00:00.000Z",
+      "timeEnd": "2026-06-16T00:00:00.000Z",
+      "deadline": "2026-06-16T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 205,
+      "project_id": "P-32893914",
+      "sprint_id": 67,
+      "epic_id": null,
+      "story_id": 112,
+      "taskName": "Fix UI",
+      "description": "Sửa lỗi giao diện",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-16T00:00:00.000Z",
+      "timeEnd": "2026-06-23T00:00:00.000Z",
+      "deadline": "2026-06-23T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 206,
+      "project_id": "P-32893914",
+      "sprint_id": 67,
+      "epic_id": null,
+      "story_id": 112,
+      "taskName": "Fix API",
+      "description": "Sửa lỗi logic",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-16T00:00:00.000Z",
+      "timeEnd": "2026-06-23T00:00:00.000Z",
+      "deadline": "2026-06-23T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 207,
+      "project_id": "P-32893914",
+      "sprint_id": 67,
+      "epic_id": null,
+      "story_id": 113,
+      "taskName": "Build app",
+      "description": "Đóng gói",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-16T00:00:00.000Z",
+      "timeEnd": "2026-06-23T00:00:00.000Z",
+      "deadline": "2026-06-23T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 208,
+      "project_id": "P-32893914",
+      "sprint_id": 67,
+      "epic_id": null,
+      "story_id": 113,
+      "taskName": "Deploy server",
+      "description": "Đưa lên server",
+      "taskStatus": "TODO",
+      "timeStart": "2026-06-16T00:00:00.000Z",
+      "timeEnd": "2026-06-23T00:00:00.000Z",
+      "deadline": "2026-06-23T00:00:00.000Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 209,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "aaaa",
+      "description": "aaaaa",
+      "taskStatus": "TODO",
+      "timeStart": "2026-07-07T11:31:53.947Z",
+      "timeEnd": "2026-07-07T11:31:53.947Z",
+      "deadline": "2026-07-07T11:31:53.947Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 210,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "aaaa",
+      "description": "aaaaa",
+      "taskStatus": "TODO",
+      "timeStart": "2026-07-07T11:31:53.947Z",
+      "timeEnd": "2026-07-07T11:31:53.947Z",
+      "deadline": "2026-07-07T11:31:53.947Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 211,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "aaaa",
+      "description": "aaaaa",
+      "taskStatus": "TODO",
+      "timeStart": "2026-07-07T11:31:53.947Z",
+      "timeEnd": "2026-07-07T11:31:53.947Z",
+      "deadline": "2026-07-07T11:31:53.947Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 212,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "aaaa",
+      "description": "aaaaa",
+      "taskStatus": "TODO",
+      "timeStart": "2026-07-07T11:31:53.947Z",
+      "timeEnd": "2026-07-07T11:31:53.947Z",
+      "deadline": "2026-07-07T11:31:53.947Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 213,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "aaaa",
+      "description": "aaaaa",
+      "taskStatus": "TODO",
+      "timeStart": "2026-07-07T11:31:53.947Z",
+      "timeEnd": "2026-07-07T11:31:53.947Z",
+      "deadline": "2026-07-07T11:31:53.947Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 214,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "aaaa",
+      "description": "aaaaa",
+      "taskStatus": "TODO",
+      "timeStart": "2026-07-07T11:31:53.947Z",
+      "timeEnd": "2026-07-07T11:31:53.947Z",
+      "deadline": "2026-07-07T11:31:53.947Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 215,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "aaaa",
+      "description": "aaaaa",
+      "taskStatus": "TODO",
+      "timeStart": "2026-07-07T11:31:53.947Z",
+      "timeEnd": "2026-07-07T11:31:53.947Z",
+      "deadline": "2026-07-07T11:31:53.947Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 216,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "aaaa",
+      "description": "aaaaa",
+      "taskStatus": "TODO",
+      "timeStart": "2026-07-07T11:31:53.947Z",
+      "timeEnd": "2026-07-07T11:31:53.947Z",
+      "deadline": "2026-07-07T11:31:53.947Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 217,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "aaaa",
+      "description": "aaaaa",
+      "taskStatus": "TODO",
+      "timeStart": "2026-07-07T11:31:53.947Z",
+      "timeEnd": "2026-07-07T11:31:53.947Z",
+      "deadline": "2026-07-07T11:31:53.947Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 218,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "aaaa",
+      "description": "aaaaa",
+      "taskStatus": "TODO",
+      "timeStart": "2026-07-07T11:31:53.947Z",
+      "timeEnd": "2026-07-07T11:31:53.947Z",
+      "deadline": "2026-07-07T11:31:53.947Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 219,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "aaaa",
+      "description": "aaaaa",
+      "taskStatus": "TODO",
+      "timeStart": "2026-07-07T11:31:53.947Z",
+      "timeEnd": "2026-07-07T11:31:53.947Z",
+      "deadline": "2026-07-07T11:31:53.947Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 220,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "aaaa",
+      "description": "aaaaa",
+      "taskStatus": "TODO",
+      "timeStart": "2026-07-07T11:31:53.947Z",
+      "timeEnd": "2026-07-07T11:31:53.947Z",
+      "deadline": "2026-07-07T11:31:53.947Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 221,
+      "project_id": "P-32893914",
+      "sprint_id": 64,
+      "epic_id": null,
+      "story_id": 107,
+      "taskName": "aaaa",
+      "description": "aaaaa",
+      "taskStatus": "TODO",
+      "timeStart": "2026-07-07T11:31:53.947Z",
+      "timeEnd": "2026-07-07T11:31:53.947Z",
+      "deadline": "2026-07-07T11:31:53.947Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 222,
+      "project_id": "P-17077652",
+      "sprint_id": 71,
+      "epic_id": null,
+      "story_id": 115,
+      "taskName": "Thiết kế UI/UX Glassmorphism Bảng Kanban",
+      "description": "Xây dựng giao diện CSS Variables, Dark mode và các cột trạng thái",
+      "taskStatus": "IN_REVIEW",
+      "timeStart": "2026-08-29T15:24:37.669Z",
+      "timeEnd": "2026-08-29T15:24:37.669Z",
+      "deadline": "2026-09-03T15:24:37.667Z",
+      "is_approved": false,
+      "txHash": null,
+      "inProgressStartedAt": "2026-08-29T15:44:53.172Z",
+      "executionDurationMs": 2009,
+      "executionDurationText": "2 giây"
+    },
+    {
+      "task_id": 223,
+      "project_id": "P-17077652",
+      "sprint_id": 69,
+      "epic_id": null,
+      "story_id": 115,
+      "taskName": "Tích hợp Drag and Drop Kanban Board",
+      "description": "Sử dụng @hello-pangea/dnd kéo thả task và cập nhật API",
+      "taskStatus": "APPROVED",
+      "timeStart": "2026-08-29T15:24:37.683Z",
+      "timeEnd": "2026-08-29T15:24:37.683Z",
+      "deadline": "2026-09-01T15:24:37.682Z",
+      "is_approved": true,
+      "txHash": "0xf13c8ebb2392aa9ea3bcb2e33dfbace7f45bd01ed3674a59ae3a6f5fca59ef76",
+      "approvedBy": 11,
+      "approvedAt": "2026-08-29T15:26:38.779Z",
+      "blockHash": "e78079a134a5a59b0a2c20da45153a40d189cfaf0536cf8c5edc149cd5920ad3",
+      "onChainMode": "off",
+      "onChainSynced": false
+    },
+    {
+      "task_id": 225,
+      "project_id": "P-17077652",
+      "sprint_id": 71,
+      "epic_id": null,
+      "story_id": 115,
+      "taskName": "Kiểm thử tự động hóa REST API Backend Express",
+      "description": "Viết test suite kiểm tra toàn bộ REST Endpoints",
+      "taskStatus": "TODO",
+      "timeStart": "2026-08-29",
+      "timeEnd": "2026-08-29",
+      "deadline": "2026-08-29",
+      "is_approved": true,
+      "txHash": "0xa1590d8eb21d8e7ba30db85301d1e9ad657ae402a02d44d5d6bacf6e406e392c",
+      "approvedBy": 11,
+      "approvedAt": "2026-08-29T15:24:37.725Z",
+      "blockHash": "cf022fc30310c1292a5ff25ba12e2c60f3fef096f0e5bafd8bd533a119a875bb",
+      "onChainMode": "off",
+      "onChainSynced": false,
+      "priority": "MEDIUM"
+    },
+    {
+      "task_id": 226,
+      "project_id": "P-17077729",
+      "sprint_id": 70,
+      "epic_id": null,
+      "story_id": 116,
+      "taskName": "Xây dựng giao diện Thanh Toán Thẻ & Ví Token",
+      "description": "Thiết kế form nhập ví Ganache và xác nhận giao dịch",
+      "taskStatus": "TODO",
+      "timeStart": "2026-08-29T15:24:37.744Z",
+      "timeEnd": "2026-08-29T15:24:37.744Z",
+      "deadline": "2026-09-02T15:24:37.743Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 227,
+      "project_id": "P-17077729",
+      "sprint_id": 70,
+      "epic_id": null,
+      "story_id": 116,
+      "taskName": "Tối ưu hóa tốc độ tải trang Dashboard Analytics",
+      "description": "Giảm thời gian load dữ liệu Recharts xuống dưới 200ms",
+      "taskStatus": "IN_PROGRESS",
+      "timeStart": "2026-08-29T15:24:37.758Z",
+      "timeEnd": "2026-08-29T15:24:37.758Z",
+      "deadline": "2026-09-04T15:24:37.757Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 228,
+      "project_id": "P-17077652",
+      "sprint_id": 71,
+      "epic_id": null,
+      "story_id": 115,
+      "taskName": "ầ",
+      "description": "ádasfasf",
+      "taskStatus": "IN_REVIEW",
+      "timeStart": "2026-08-29",
+      "timeEnd": "2026-09-05",
+      "deadline": "2026-09-05",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 229,
+      "project_id": "P-17077652",
+      "sprint_id": 72,
+      "epic_id": null,
+      "story_id": 115,
+      "taskName": "ádasd",
+      "description": "ádasd",
+      "taskStatus": "IN_PROGRESS",
+      "timeStart": "2026-08-29",
+      "timeEnd": "2026-09-05",
+      "deadline": "2026-09-05",
+      "is_approved": false,
+      "txHash": null,
+      "inProgressStartedAt": "2026-08-29T15:55:10.951Z"
+    },
+    {
+      "task_id": 230,
+      "project_id": "P-17077652",
+      "sprint_id": 72,
+      "epic_id": null,
+      "story_id": 115,
+      "taskName": "ádasd",
+      "description": "ádasd",
+      "taskStatus": "TODO",
+      "timeStart": "2026-08-29",
+      "timeEnd": "2026-09-05",
+      "deadline": "2026-09-05",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 231,
+      "project_id": "P-19805283",
+      "sprint_id": 74,
+      "epic_id": null,
+      "story_id": 117,
+      "phaseId": null,
+      "dependsOnTaskId": null,
+      "pairUserId": null,
+      "taskName": "Task 1: Yêu cầu",
+      "description": "",
+      "taskStatus": "DONE",
+      "priority": "MEDIUM",
+      "timeStart": "2026-08-29T16:10:05.295Z",
+      "timeEnd": "2026-08-29T16:10:05.295Z",
+      "deadline": "2026-08-29T16:10:05.295Z",
+      "is_approved": false,
+      "txHash": null
+    },
+    {
+      "task_id": 232,
+      "project_id": "P-19805283",
+      "sprint_id": 74,
+      "epic_id": null,
+      "story_id": 117,
+      "phaseId": null,
+      "dependsOnTaskId": 231,
+      "pairUserId": null,
+      "taskName": "Task 2: Thiết kế CSDL",
+      "description": "",
+      "taskStatus": "IN_PROGRESS",
+      "priority": "MEDIUM",
+      "timeStart": "2026-08-29T16:10:05.303Z",
+      "timeEnd": "2026-08-29T16:10:05.303Z",
+      "deadline": "2026-08-29T16:10:05.303Z",
+      "is_approved": false,
+      "txHash": null,
+      "inProgressStartedAt": "2026-08-29T16:10:09.640Z"
     }
   ],
   "userTasks": [
@@ -5650,6 +6938,156 @@
       "id": "55fd36a2-165c-4437-968b-772a20056305",
       "taskId": 192,
       "userId": 5
+    },
+    {
+      "id": "609d662c-51aa-4a97-837e-f072f8867cd7",
+      "taskId": 193,
+      "userId": 5
+    },
+    {
+      "id": "63a4e628-adf4-4c37-913d-1d4cfa75e33c",
+      "taskId": 196,
+      "userId": 5
+    },
+    {
+      "id": "532e02e7-b2b5-48dc-9885-7b343f606d4a",
+      "taskId": 199,
+      "userId": 5
+    },
+    {
+      "id": "d05f1e86-ac9c-4a27-9036-f5f3d90fd166",
+      "taskId": 202,
+      "userId": 5
+    },
+    {
+      "id": "32e717f5-ffd1-40e3-85bf-b6f15f7a1ed4",
+      "taskId": 205,
+      "userId": 5
+    },
+    {
+      "id": "91c454c6-4949-4319-b8e1-9c7601501daa",
+      "taskId": 208,
+      "userId": 5
+    },
+    {
+      "id": "67350635-13b1-4f60-8778-7f45325c0f02",
+      "taskId": 49,
+      "userId": 2
+    },
+    {
+      "id": "c690de2d-7dd7-4afa-9904-c40c8cf8403f",
+      "taskId": 209,
+      "userId": 5
+    },
+    {
+      "id": "c29cfb88-47ab-4921-adfd-b5001ed9f923",
+      "taskId": 210,
+      "userId": 5
+    },
+    {
+      "id": "3fdf7617-aa0b-414b-9fdb-8cc6558acfde",
+      "taskId": 211,
+      "userId": 5
+    },
+    {
+      "id": "9d798566-24d8-4726-9a5c-6bed98701218",
+      "taskId": 212,
+      "userId": 5
+    },
+    {
+      "id": "4d14f3c1-221f-4b84-91da-13299f94e005",
+      "taskId": 213,
+      "userId": 5
+    },
+    {
+      "id": "b6d9851c-2f55-47a7-9254-9962e6ed8339",
+      "taskId": 214,
+      "userId": 5
+    },
+    {
+      "id": "7ab65e09-c266-4e32-8811-58015ad7d03e",
+      "taskId": 215,
+      "userId": 5
+    },
+    {
+      "id": "a3396074-ceed-442e-ad1a-4ce7b31794e8",
+      "taskId": 216,
+      "userId": 5
+    },
+    {
+      "id": "70dbe47c-995a-4935-8005-fa6ac30a7d24",
+      "taskId": 217,
+      "userId": 5
+    },
+    {
+      "id": "6e47d602-0020-4056-90e3-599ef3724a27",
+      "taskId": 218,
+      "userId": 5
+    },
+    {
+      "id": "c55d1fb6-906e-41a2-8bd2-f7f056b186b2",
+      "taskId": 219,
+      "userId": 5
+    },
+    {
+      "id": "07e2de9c-140c-412b-9b2b-901bfcb4bebe",
+      "taskId": 220,
+      "userId": 5
+    },
+    {
+      "id": "20126fe6-7677-4d59-a986-abe290355f3b",
+      "taskId": 221,
+      "userId": 5
+    },
+    {
+      "id": "b8a60fe2-ae2d-49ff-a92b-c65cd0963f31",
+      "taskId": 222,
+      "userId": 11
+    },
+    {
+      "id": "b0296de6-7e97-4fa7-a85c-480baa958e67",
+      "taskId": 222,
+      "userId": 13
+    },
+    {
+      "id": "bc5c204b-7e43-4bf6-99aa-f2b5e8c8f9dc",
+      "taskId": 223,
+      "userId": 11
+    },
+    {
+      "id": "77a975cb-1180-431d-be92-5605b480b17d",
+      "taskId": 223,
+      "userId": 12
+    },
+    {
+      "id": "bba2be40-e34a-48ac-bf9a-5eb7c9598957",
+      "taskId": 225,
+      "userId": 12
+    },
+    {
+      "id": "80a9c364-f912-4d1c-a0ef-b62129ec2a04",
+      "taskId": 225,
+      "userId": 11
+    },
+    {
+      "id": "9c7cb690-a905-4a19-ab59-32a471d3cd5f",
+      "taskId": 226,
+      "userId": 12
+    },
+    {
+      "id": "618494c0-81fc-404d-bcd5-2168fa83113c",
+      "taskId": 226,
+      "userId": 13
+    },
+    {
+      "id": "f7cf342f-3004-41ec-a0ab-0a03c3254744",
+      "taskId": 227,
+      "userId": 11
+    },
+    {
+      "id": "72e880a0-cc2b-46cf-9323-b78ab69ac300",
+      "taskId": 227,
+      "userId": 12
     }
   ],
   "notes": [
@@ -5741,6 +7179,16 @@
       "noteDate": "2026-05-12T00:00:00.000Z",
       "reminderAt": "2026-05-12T01:00:00.000Z",
       "date": "2026-05-10T15:10:40.466Z",
+      "pinned": false
+    },
+    {
+      "note_id": 12,
+      "userId": 12,
+      "title": "aaa",
+      "content": "aaaa",
+      "noteDate": "2026-08-29T15:57:33.775Z",
+      "reminderAt": null,
+      "date": "2026-08-29T15:57:33.775Z",
       "pinned": false
     }
   ],
@@ -6245,6 +7693,86 @@
         "description": "",
         "walletAddress": ""
       }
+    },
+    {
+      "comment_id": 34,
+      "taskId": 47,
+      "userId": 5,
+      "commmentContent": "✅ MANAGER ĐÃ DUYỆT (ON-CHAIN)",
+      "date": "2026-05-28T02:08:45.727Z",
+      "users": {
+        "user_id": 5,
+        "email": "test@gmail.com",
+        "username": "Nguyễn Tiến Mỹ",
+        "password": "$2b$10$tCO4LnFwu3MA9ZNgxeK.TOsfgTciZpybqlSE4RoM/T0SVcNzK2Fkq",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777269405/afttpaldtlp45xmeaxyf.jpg",
+        "description": "",
+        "walletAddress": ""
+      }
+    },
+    {
+      "comment_id": 35,
+      "taskId": 49,
+      "userId": 2,
+      "commmentContent": "[TRẠNG THÁI: DONE]",
+      "date": "2026-05-28T02:09:43.340Z",
+      "users": {
+        "user_id": 2,
+        "email": "abc@gmail.com",
+        "username": "Abc",
+        "password": "$2b$10$Y6amz4KzF5KuFZ3/EHIWS.9fiNu6fw7eNLtVy0atjKW7Fw8iTRagO",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777051883/slwbpgfdlti9u0obyd1a.jpg",
+        "description": "Frontend member",
+        "walletAddress": ""
+      }
+    },
+    {
+      "comment_id": 36,
+      "taskId": 49,
+      "userId": 5,
+      "commmentContent": "✅ MANAGER ĐÃ DUYỆT (ON-CHAIN)",
+      "date": "2026-05-28T02:10:12.801Z",
+      "users": {
+        "user_id": 5,
+        "email": "test@gmail.com",
+        "username": "Nguyễn Tiến Mỹ",
+        "password": "$2b$10$tCO4LnFwu3MA9ZNgxeK.TOsfgTciZpybqlSE4RoM/T0SVcNzK2Fkq",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777269405/afttpaldtlp45xmeaxyf.jpg",
+        "description": "",
+        "walletAddress": ""
+      }
+    },
+    {
+      "comment_id": 37,
+      "taskId": 142,
+      "userId": 5,
+      "commmentContent": "Phần wireframe đã xong, link figma : \"http://aaa/aaa\"",
+      "date": "2026-07-07T11:35:46.176Z",
+      "users": {
+        "user_id": 5,
+        "email": "test@gmail.com",
+        "username": "Nguyễn Tiến Mỹ",
+        "password": "$2b$10$tCO4LnFwu3MA9ZNgxeK.TOsfgTciZpybqlSE4RoM/T0SVcNzK2Fkq",
+        "imagePath": "https://res.cloudinary.com/dndzoxaym/image/upload/v1777269405/afttpaldtlp45xmeaxyf.jpg",
+        "description": "",
+        "walletAddress": ""
+      }
+    },
+    {
+      "comment_id": 38,
+      "taskId": 225,
+      "userId": 11,
+      "commmentContent": "ádfasd",
+      "date": "2026-08-29T15:55:27.504Z",
+      "users": {
+        "user_id": 11,
+        "email": "dev_lead@hivehub.com",
+        "username": "Dev Lead Master",
+        "password": "$2b$10$iImF7XM2GcnkQpKIDW37oOd.hOKtmDZCvYSanlF9or.1DgoMjCmX.",
+        "imagePath": null,
+        "description": "",
+        "walletAddress": ""
+      }
     }
   ],
   "storyComments": [
@@ -6268,6 +7796,20 @@
       "userId": 1,
       "commmentContent": "Bo sung nut add member o top-right Plan.",
       "date": "2026-05-06T08:10:00.000Z"
+    },
+    {
+      "comment_id": 4,
+      "storyId": 26,
+      "userId": 5,
+      "commmentContent": "hi",
+      "date": "2026-07-07T11:34:38.795Z"
+    },
+    {
+      "comment_id": 5,
+      "storyId": 81,
+      "userId": 5,
+      "commmentContent": "hi",
+      "date": "2026-07-07T11:34:55.565Z"
     }
   ],
   "notifications": [
@@ -6310,6 +7852,16 @@
       "message": "Subtask \"Add status color legend\" changed to DONE",
       "read": true,
       "createdAt": "2026-04-25T08:00:50.529Z"
+    },
+    {
+      "notification_id": 5,
+      "projectId": "P-46987711",
+      "ownerUserId": 5,
+      "actorUserId": 2,
+      "type": "SUBTASK_STATUS_CHANGED",
+      "message": "Subtask \"Train AI\" changed to DONE",
+      "read": true,
+      "createdAt": "2026-05-28T02:09:43.421Z"
     }
   ],
   "messages": [
@@ -6476,6 +8028,38 @@
         "walletAddress": "",
         "roleName": "Owner"
       }
+    },
+    {
+      "message_id": 11,
+      "user_id": 11,
+      "message": "xin cahof",
+      "date": "2026-08-29T15:55:55.753Z",
+      "project_id": "P-17077652",
+      "users": {
+        "user_id": 11,
+        "email": "dev_lead@hivehub.com",
+        "username": "Dev Lead Master",
+        "password": "$2b$10$iImF7XM2GcnkQpKIDW37oOd.hOKtmDZCvYSanlF9or.1DgoMjCmX.",
+        "imagePath": null,
+        "description": "",
+        "walletAddress": ""
+      }
+    },
+    {
+      "message_id": 12,
+      "user_id": 12,
+      "message": "ok",
+      "date": "2026-08-29T15:57:20.300Z",
+      "project_id": "P-17077652",
+      "users": {
+        "user_id": 12,
+        "email": "qa_lead@hivehub.com",
+        "username": "QA Specialist",
+        "password": "$2b$10$U1C1hCSBNqi/UfsOofGdTu6iUmUvc5IvnYLpyz.rNKzD6f/juRJne",
+        "imagePath": null,
+        "description": "",
+        "walletAddress": ""
+      }
     }
   ],
   "refreshTokens": [
@@ -6485,9 +8069,19 @@
       "expiresAt": 1778580193356
     },
     {
-      "token": "9fd8612e-1655-438c-b994-4bed4c464b8698f84513e7af41daabf9926bf44cef5e",
+      "token": "e0a0f4ec-600d-4635-897c-0d555f9e5758d40d282ca92e4bba9167f254b42d7ac0",
       "userId": 5,
-      "expiresAt": 1780504654601
+      "expiresAt": 1784028697718
+    },
+    {
+      "token": "ff9c56bd-7860-4454-8a0a-865020e69230ca7476e6fc944e7ca0226d741405cd73",
+      "userId": 13,
+      "expiresAt": 1788621877647
+    },
+    {
+      "token": "6f9f3cf7-5034-4fa7-aaf6-b63f12413db769c3b04d6dbd4f4588a0293682afe139",
+      "userId": 12,
+      "expiresAt": 1788625463826
     }
   ],
   "wallets": {},
@@ -6719,6 +8313,128 @@
       "timestamp": "2026-05-27T14:57:36.761Z",
       "blockHash": "8c20049d86a507a9e2e8dbe7b29b4677c521633ab4dddd6737c4f9dc27e01551",
       "txHash": "0x2c09a9a8fb007b02d8e5d85753c6990051674b4c2c6a47286aec4d01df194bd7"
+    },
+    {
+      "blockIndex": 20,
+      "previousHash": "8c20049d86a507a9e2e8dbe7b29b4677c521633ab4dddd6737c4f9dc27e01551",
+      "taskId": 47,
+      "projectId": "P-46987711",
+      "approverUserId": 5,
+      "approvedStatus": "APPROVED",
+      "note": "",
+      "timestamp": "2026-05-28T02:08:45.749Z",
+      "blockHash": "c8cb07d159ef6f4cd0b5a42c0ded4f330a9452ec34b435873b3a2b33d00d5d93",
+      "txHash": "0x5b302ffe1880cfec169a752e88253dc9dee23765f670f79bc49fbe6dbdeb0d47"
+    },
+    {
+      "blockIndex": 21,
+      "previousHash": "c8cb07d159ef6f4cd0b5a42c0ded4f330a9452ec34b435873b3a2b33d00d5d93",
+      "taskId": 49,
+      "projectId": "P-46987711",
+      "approverUserId": 5,
+      "approvedStatus": "APPROVED",
+      "note": "",
+      "timestamp": "2026-05-28T02:10:12.881Z",
+      "blockHash": "eacca8ec4087063e10ea70dcf7577f7234994892616fe4c021e1eef5a767f7b4",
+      "txHash": "0xe893228cd6c9b0bcef01a339d8d719d985c0592efecc2729c49e7262bee26078"
+    },
+    {
+      "blockIndex": 22,
+      "previousHash": "eacca8ec4087063e10ea70dcf7577f7234994892616fe4c021e1eef5a767f7b4",
+      "taskId": 225,
+      "projectId": "P-17077652",
+      "approverUserId": 11,
+      "approvedStatus": "APPROVED",
+      "note": "Duyệt tự động",
+      "timestamp": "2026-08-29T15:24:37.725Z",
+      "blockHash": "cf022fc30310c1292a5ff25ba12e2c60f3fef096f0e5bafd8bd533a119a875bb",
+      "txHash": "0xa1590d8eb21d8e7ba30db85301d1e9ad657ae402a02d44d5d6bacf6e406e392c"
+    },
+    {
+      "blockIndex": 23,
+      "previousHash": "cf022fc30310c1292a5ff25ba12e2c60f3fef096f0e5bafd8bd533a119a875bb",
+      "taskId": 224,
+      "projectId": "P-17077652",
+      "approverUserId": 11,
+      "approvedStatus": "APPROVED",
+      "note": "Duyệt hoàn thành từ Web Dashboard",
+      "timestamp": "2026-08-29T15:26:12.339Z",
+      "blockHash": "78537ed9db205d32c83301e2046ec6e6fc597d9935afa2640b2f9cd0e3de1243",
+      "txHash": "0xd1a8dd7a78c0a4e5d4c555b41ed95077f67ff4f1548b69534a91aa5e3f4b2a8c"
+    },
+    {
+      "blockIndex": 24,
+      "previousHash": "78537ed9db205d32c83301e2046ec6e6fc597d9935afa2640b2f9cd0e3de1243",
+      "taskId": 223,
+      "projectId": "P-17077652",
+      "approverUserId": 11,
+      "approvedStatus": "APPROVED",
+      "note": "Duyệt hoàn thành từ Web Dashboard",
+      "timestamp": "2026-08-29T15:26:38.779Z",
+      "blockHash": "e78079a134a5a59b0a2c20da45153a40d189cfaf0536cf8c5edc149cd5920ad3",
+      "txHash": "0xf13c8ebb2392aa9ea3bcb2e33dfbace7f45bd01ed3674a59ae3a6f5fca59ef76"
+    }
+  ],
+  "taskLogs": [
+    {
+      "log_id": "0fb4e416-1df4-40d0-aa41-f6c0e9241a01",
+      "task_id": 222,
+      "project_id": "P-17077652",
+      "taskName": "Thiết kế UI/UX Glassmorphism Bảng Kanban",
+      "user_id": 11,
+      "oldStatus": "IN_REVIEW",
+      "newStatus": "IN_PROGRESS",
+      "durationMs": 0,
+      "executionDurationText": null,
+      "timestamp": "2026-08-29T15:44:53.172Z"
+    },
+    {
+      "log_id": "eaf78f8e-e131-425e-82eb-4f8d90ef0bc2",
+      "task_id": 222,
+      "project_id": "P-17077652",
+      "taskName": "Thiết kế UI/UX Glassmorphism Bảng Kanban",
+      "user_id": 11,
+      "oldStatus": "IN_PROGRESS",
+      "newStatus": "IN_REVIEW",
+      "durationMs": 2009,
+      "executionDurationText": "2 giây",
+      "timestamp": "2026-08-29T15:44:55.181Z"
+    },
+    {
+      "log_id": "fadfdcbc-8cd2-4c92-b6f8-56a9cded2bba",
+      "task_id": 229,
+      "project_id": "P-17077652",
+      "taskName": "ádasd",
+      "user_id": 11,
+      "oldStatus": "TODO",
+      "newStatus": "IN_PROGRESS",
+      "durationMs": 0,
+      "executionDurationText": null,
+      "timestamp": "2026-08-29T15:55:10.951Z"
+    },
+    {
+      "log_id": "b63fea38-bb2c-44ba-a80b-96ff9a54c22c",
+      "task_id": 231,
+      "project_id": "P-19805283",
+      "taskName": "Task 1: Yêu cầu",
+      "user_id": 11,
+      "oldStatus": "TODO",
+      "newStatus": "DONE",
+      "durationMs": 0,
+      "executionDurationText": null,
+      "timestamp": "2026-08-29T16:10:09.628Z"
+    },
+    {
+      "log_id": "90787ce1-d472-4a18-ace4-01cff8b8543b",
+      "task_id": 232,
+      "project_id": "P-19805283",
+      "taskName": "Task 2: Thiết kế CSDL",
+      "user_id": 11,
+      "oldStatus": "TODO",
+      "newStatus": "IN_PROGRESS",
+      "durationMs": 0,
+      "executionDurationText": null,
+      "timestamp": "2026-08-29T16:10:09.640Z"
     }
   ]
 }

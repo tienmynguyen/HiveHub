@@ -2,7 +2,7 @@ const express = require("express");
 const { v4: uuidv4 } = require("uuid");
 const { readDb, writeDb, ensureScrumSchema } = require("../data/db");
 const env = require("../config/env");
-const { canManageProject, ensureDefaultStoryForProject, createOwnerNotification } = require("../services/projectAccess");
+const { canManageProject, getUserRoleInProject, ensureDefaultStoryForProject, createOwnerNotification } = require("../services/projectAccess");
 const { recordTaskApprovalOnChain } = require("../services/blockchainAuditService");
 const { isEnabled: isOnchainEnabled, submitTaskApprovalOnChain } = require("../services/onchainApprovalService");
 
@@ -11,36 +11,54 @@ const router = express.Router();
 function enrichTasks(db, tasks) {
   return tasks.map((t) => {
     const project = db.projects.find((p) => String(p.project_id) === String(t.project_id));
+    const userTaskLinks = db.userTasks.filter((ut) => Number(ut.taskId) === Number(t.task_id));
+    const assigneeIds = userTaskLinks.map((ut) => Number(ut.userId));
+    const assignees = db.users
+      .filter((u) => assigneeIds.includes(Number(u.user_id)))
+      .map((u) => ({ user_id: u.user_id, username: u.username, email: u.email, imagePath: u.imagePath }));
+
     return {
       ...t,
       project: project ? { projectName: project.projectName } : null,
       projectName: project ? project.projectName : "Dự án cá nhân",
+      assignees,
     };
   });
 }
 
 router.post("/addtask", (req, res) => {
   const projectId = String(req.query.projectId);
-  const ownerId = Number(req.query.ownerId || req.body?.ownerId || 0);
+  const ownerId = Number(req.query.ownerId || req.query.actorId || req.query.userId || req.body?.ownerId || req.body?.actorId || req.body?.userId || 0);
   const storyIdFromQuery = req.query.storyId ? Number(req.query.storyId) : null;
+  const sprintIdFromQuery = req.query.sprintId ? Number(req.query.sprintId) : null;
   const body = req.body || {};
   const db = readDb();
   ensureScrumSchema(db);
-  if (!canManageProject(db, projectId, ownerId)) {
-    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or management can create subtask" });
+
+  const memberRole = getUserRoleInProject(db, projectId, ownerId);
+  if (!memberRole && ownerId !== 0) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only project members can create task" });
   }
+
   const fallback = ensureDefaultStoryForProject(db, projectId);
-  const storyId = Number(body.storyId || storyIdFromQuery || fallback.story.story_id);
+  const storyId = Number(body.storyId || body.story_id || storyIdFromQuery || fallback.story.story_id);
   const story = db.stories.find((x) => Number(x.story_id) === storyId);
+
+  const targetSprintId = Number(body.sprint_id || body.sprintId || sprintIdFromQuery || story?.sprint_id || fallback.sprint.sprint_id);
+
   const task = {
     task_id: db.tasks.length ? Math.max(...db.tasks.map((t) => t.task_id)) + 1 : 1,
     project_id: projectId,
-    sprint_id: story?.sprint_id ?? fallback.sprint.sprint_id,
+    sprint_id: targetSprintId,
     epic_id: story?.epic_id ?? null,
-    story_id: story?.story_id ?? fallback.story.story_id,
+    story_id: storyId,
+    phaseId: body.phaseId || null,
+    dependsOnTaskId: body.dependsOnTaskId ? Number(body.dependsOnTaskId) : null,
+    pairUserId: body.pairUserId ? Number(body.pairUserId) : null,
     taskName: body.taskName || "Untitled Task",
     description: body.description || "",
     taskStatus: body.taskStatus || "TODO",
+    priority: body.priority || "MEDIUM",
     timeStart: body.timeStart || new Date().toISOString(),
     timeEnd: body.timeEnd || new Date().toISOString(),
     deadline: body.deadline || new Date().toISOString(),
@@ -61,14 +79,15 @@ router.post("/addusertask", (req, res) => {
   const task = db.tasks.find((t) => t.task_id === taskId);
   if (!task) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Task not found" });
 
-  if (!canManageProject(db, task.project_id, actorId)) {
-    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or manager can add assignees" });
+  if (getUserRoleInProject(db, task.project_id, actorId) == null) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only project members can add assignees" });
   }
 
-  const exists = db.userTasks.some((x) => x.taskId === taskId && x.userId === userId);
-  if (!exists) db.userTasks.push({ id: uuidv4(), taskId, userId });
-  writeDb(db);
-  return res.json({ taskId, userId });
+  if (!db.userTasks.some((x) => Number(x.taskId) === taskId && Number(x.userId) === userId)) {
+    db.userTasks.push({ taskId, userId });
+    writeDb(db);
+  }
+  return res.json(enrichTasks(db, [task])[0]);
 });
 
 router.post("/removeusertask", (req, res) => {
@@ -79,13 +98,13 @@ router.post("/removeusertask", (req, res) => {
   const task = db.tasks.find((t) => t.task_id === taskId);
   if (!task) return res.status(404).json({ code: "RESOURCE_NOT_FOUND", message: "Task not found" });
 
-  if (!canManageProject(db, task.project_id, actorId)) {
-    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or manager can remove assignees" });
+  if (getUserRoleInProject(db, task.project_id, actorId) == null) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only project members can remove assignees" });
   }
 
-  db.userTasks = db.userTasks.filter((x) => !(x.taskId === taskId && x.userId === userId));
+  db.userTasks = db.userTasks.filter((x) => !(Number(x.taskId) === taskId && Number(x.userId) === userId));
   writeDb(db);
-  return res.json({ success: true, taskId, userId });
+  return res.json(enrichTasks(db, [task])[0]);
 });
 
 router.get("/gettaskbyprojectid", (req, res) => {
@@ -129,6 +148,77 @@ router.get("/findtaskbydate", (req, res) => {
   return res.json(enrichTasks(db, tasks));
 });
 
+function formatDurationMs(ms) {
+  if (!ms || ms <= 0) return "0 phút";
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) {
+    return `${days} ngày ${hours % 24} giờ`;
+  }
+  if (hours > 0) {
+    return `${hours} giờ ${minutes % 60} phút`;
+  }
+  if (minutes > 0) {
+    return `${minutes} phút`;
+  }
+  return `${seconds} giây`;
+}
+
+function logTaskStatusChange(db, task, oldStatus, newStatus, userId) {
+  if (!Array.isArray(db.taskLogs)) db.taskLogs = [];
+  if (oldStatus === newStatus) return;
+
+  let executionDurationText = null;
+  let durationMs = 0;
+
+  if (newStatus === "IN_PROGRESS") {
+    task.inProgressStartedAt = new Date().toISOString();
+  }
+
+  if (oldStatus === "IN_PROGRESS" && (newStatus === "IN_REVIEW" || newStatus === "DONE" || newStatus === "APPROVED")) {
+    if (task.inProgressStartedAt) {
+      durationMs = Date.now() - new Date(task.inProgressStartedAt).getTime();
+      task.executionDurationMs = (task.executionDurationMs || 0) + durationMs;
+      task.executionDurationText = formatDurationMs(task.executionDurationMs);
+      executionDurationText = formatDurationMs(durationMs);
+    }
+  }
+
+  db.taskLogs.push({
+    log_id: uuidv4(),
+    task_id: task.task_id,
+    project_id: task.project_id,
+    taskName: task.taskName,
+    user_id: Number(userId),
+    oldStatus: oldStatus || "TODO",
+    newStatus: newStatus,
+    durationMs: durationMs,
+    executionDurationText: executionDurationText,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+router.get("/gettaskhistory", (req, res) => {
+  const projectId = String(req.query.projectId);
+  const db = readDb();
+  if (!Array.isArray(db.taskLogs)) db.taskLogs = [];
+  const logs = db.taskLogs
+    .filter((l) => String(l.project_id) === projectId)
+    .map((l) => {
+      const u = db.users.find((user) => Number(user.user_id) === Number(l.user_id));
+      return {
+        ...l,
+        username: u ? u.username : "Thành viên",
+        email: u ? u.email : "",
+      };
+    })
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  return res.json(logs);
+});
+
 router.post("/updatetask", (req, res) => {
   const taskId = Number(req.query.taskId);
   const userId = Number(req.query.userId || req.body?.userId || 0);
@@ -141,6 +231,27 @@ router.post("/updatetask", (req, res) => {
   if (!manager && !assigned) {
     return res.status(403).json({ code: "FORBIDDEN", message: "Not allowed to update this subtask" });
   }
+
+  const oldStatus = task.taskStatus;
+  const newStatus = body.taskStatus || oldStatus;
+
+  // Enforce Waterfall Prerequisite Task Constraint
+  if (newStatus === "IN_PROGRESS" || newStatus === "IN_REVIEW" || newStatus === "DONE" || newStatus === "APPROVED") {
+    const dependsOnId = body.dependsOnTaskId !== undefined ? body.dependsOnTaskId : task.dependsOnTaskId;
+    if (dependsOnId) {
+      const prereqTask = db.tasks.find((t) => Number(t.task_id) === Number(dependsOnId));
+      if (prereqTask) {
+        const prereqDone = prereqTask.taskStatus === "DONE" || prereqTask.taskStatus === "APPROVED" || prereqTask.is_approved;
+        if (!prereqDone) {
+          return res.status(400).json({
+            code: "PREREQUISITE_NOT_COMPLETED",
+            message: `🔒 Công việc "${task.taskName}" phụ thuộc vào task tiên quyết "${prereqTask.taskName}" (Mã #${prereqTask.task_id}) chưa hoàn thành!`
+          });
+        }
+      }
+    }
+  }
+
   if (!manager) {
     if (body.taskStatus !== undefined) task.taskStatus = body.taskStatus;
     createOwnerNotification(
@@ -153,8 +264,11 @@ router.post("/updatetask", (req, res) => {
   } else {
     Object.assign(task, body);
   }
+
+  logTaskStatusChange(db, task, oldStatus, newStatus, userId);
+
   writeDb(db);
-  return res.json(task);
+  return res.json(enrichTasks(db, [task])[0]);
 });
 
 router.post("/approvetask", async (req, res) => {

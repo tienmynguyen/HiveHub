@@ -32,18 +32,19 @@ router.post("/notifications/read", (req, res) => {
 
 router.post("/addsprint", (req, res) => {
   const projectId = String(req.query.projectId);
-  const ownerId = Number(req.query.ownerId || req.body?.ownerId || 0);
+  const ownerId = Number(req.query.ownerId || req.query.actorId || req.query.userId || req.body?.ownerId || req.body?.actorId || req.body?.userId || 0);
   const body = req.body || {};
   const db = readDb();
   ensureScrumSchema(db);
-  if (!canManageProject(db, projectId, ownerId)) {
-    return res.status(403).json({ code: "FORBIDDEN", message: "Only owner or management can create sprint" });
+  const userRole = db.userProjects.find((x) => String(x.projectId) === String(projectId) && Number(x.userId) === Number(ownerId));
+  if (!userRole && ownerId !== 0) {
+    return res.status(403).json({ code: "FORBIDDEN", message: "Only project members can create sprint" });
   }
   const sprint = {
     sprint_id: nextNumericId(db.sprints, "sprint_id"),
     project_id: projectId,
     sprintName: body.sprintName || `Sprint ${db.sprints.length + 1}`,
-    sprintGoal: body.sprintGoal || "",
+    sprintGoal: body.sprintGoal || body.goal || "",
     sprintStatus: body.sprintStatus || "TODO",
     timeStart: body.timeStart || new Date().toISOString(),
     timeEnd: body.timeEnd || new Date().toISOString(),

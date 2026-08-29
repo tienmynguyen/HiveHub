@@ -1,6 +1,6 @@
 // screens/Login.js
 import React, { useState, useContext } from 'react';
-import { TouchableOpacity, StyleSheet, View } from 'react-native';
+import { TouchableOpacity, StyleSheet, View, Platform } from 'react-native';
 import { Text } from 'react-native-paper';
 import Background from '../../../components/common/Background';
 import Logo from '../../../components/common/Logo';
@@ -41,7 +41,9 @@ export default function LoginScreen({ navigation }) {
                 password: hashedPassword,
             });
             await applySession(responseData);
-            navigation.navigate("MainTabs");
+            if (Platform.OS !== 'web') {
+                navigation.navigate("MainTabs");
+            }
         } catch (error) {
             const apiError = error?.response?.data;
             const message = apiError?.message || apiError?.code || 'Login failed';

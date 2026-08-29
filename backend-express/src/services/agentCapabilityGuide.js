@@ -46,7 +46,7 @@ function getAgentFunctionList() {
       required: ["projectId", "storyName"],
       optional: ["sprintId", "epicId", "storyStatus"],
       notes: [
-        "Cần projectId hợp lệ mà user đang tham gia", 
+        "Cần projectId hợp lệ mà user đang tham gia",
         "Chi Owner được phép thực thi",
       ],
       examples: [
@@ -60,7 +60,7 @@ function getAgentFunctionList() {
       required: ["projectId", "taskName"],
       optional: ["storyId", "description", "taskStatus", "deadline"],
       notes: [
-        "Nếu có storyId thì task được gán story", 
+        "Nếu có storyId thì task được gán story",
         "Chi Owner được phép thực thi",
       ],
       examples: [
@@ -115,7 +115,7 @@ function getAgentUsageGuide() {
     principles: [
       "Reasoning trước, không đoán theo keyword đơn lẻ",
       "Sử dụng user memory + project hints để hiểu 'dự án này/dự án hiện tại'",
-      "Nếu thiếu thông tin quan trọng thì hỏi tiếp để làm rõ",  
+      "Nếu thiếu thông tin quan trọng thì hỏi tiếp để làm rõ",
       "Không đẩy xuất hành động vuot qua quyền policy",
     ],
     decisionFlow: [

@@ -1,0 +1,297 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Primary Warm Orange Brand Color matching Mobile UI (Image1-6) */
+  --accent-primary: #ff9500;
+  --accent-primary-hover: #e08300;
+  --accent-gradient: linear-gradient(135deg, #ff9500 0%, #ff5e00 100%);
+  --accent-light: rgba(255, 149, 0, 0.12);
+  
+  /* Light Warm Theme (Matching Mobile Default) */
+  --bg-primary: #f6f7f9;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fafafa;
+  --bg-elevated: #f1f3f5;
+  
+  --text-primary: #1c1e21;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  
+  --border-color: #f0f1f3;
+  --border-active: rgba(255, 149, 0, 0.4);
+  
+  /* Mobile Task Status Colors */
+  --status-todo-bg: #fff1f2;
+  --status-todo-text: #e11d48;
+  --status-todo-bar: #f43f5e;
+  
+  --status-in-progress-bg: #fffbe6;
+  --status-in-progress-text: #d97706;
+  --status-in-progress-bar: #ff9500;
+  
+  --status-in-review-bg: #f3e8ff;
+  --status-in-review-text: #7e22ce;
+  --status-in-review-bar: #a855f7;
+  
+  --status-done-bg: #f0fdf4;
+  --status-done-text: #15803d;
+  --status-done-bar: #22c55e;
+  
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #121418;
+  --bg-secondary: #1a1d24;
+  --bg-card: #1e222a;
+  --bg-card-hover: #252a34;
+  --bg-elevated: #2a2f3d;
+  
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(255, 149, 0, 0.5);
+  
+  --glass-bg: rgba(26, 29, 36, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: 'Outfit', sans-serif;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 999px;
+  opacity: 0.4;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* Glassmorphism & Panel Styling matching Mobile */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-active);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Mobile Task Card Left Colored Bar */
+.task-card-accent-todo {
+  border-left: 5px solid var(--status-todo-bar) !important;
+}
+
+.task-card-accent-in_progress {
+  border-left: 5px solid var(--status-in-progress-bar) !important;
+}
+
+.task-card-accent-in_review {
+  border-left: 5px solid var(--status-in-review-bar) !important;
+}
+
+.task-card-accent-done {
+  border-left: 5px solid var(--status-done-bar) !important;
+}
+
+/* Status Badges */
+.badge-todo {
+  background: var(--status-todo-bg);
+  color: var(--status-todo-text);
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.badge-in_progress {
+  background: var(--status-in-progress-bg);
+  color: var(--status-in-progress-text);
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.badge-in_review {
+  background: var(--status-in-review-bg);
+  color: var(--status-in-review-text);
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.badge-done {
+  background: var(--status-done-bg);
+  color: var(--status-done-text);
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+/* Kanban Board Column */
+.kanban-column {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 160px);
+  min-width: 320px;
+  max-width: 360px;
+  flex: 1;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+}
+
+.kanban-column-dragging-over {
+  border-color: var(--accent-primary);
+  background: rgba(255, 149, 0, 0.05);
+}
+
+.kanban-card-dragging {
+  box-shadow: 0 16px 32px rgba(255, 149, 0, 0.25), 0 0 0 2px var(--accent-primary) !important;
+  transform: rotate(2deg) scale(1.02);
+  cursor: grabbing !important;
+  z-index: 100;
+}
+
+/* Gradient Text */
+.text-gradient {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Mobile Orange Buttons */
+.btn-primary {
+  background: var(--accent-gradient);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(255, 149, 0, 0.35);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(255, 149, 0, 0.5);
+  opacity: 0.95;
+}
+
+.btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--text-muted);
+}
+
+/* Floating Action Button (FAB) matching Mobile UI */
+.fab-orange {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(255, 149, 0, 0.4);
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.fab-orange:hover {
+  transform: scale(1.08);
+  box-shadow: 0 12px 28px rgba(255, 149, 0, 0.6);
+}
+
+/* Mobile Orange Chat Bubble */
+.chat-bubble-me {
+  background: var(--accent-gradient);
+  color: #ffffff;
+  border-radius: 18px 18px 4px 18px;
+  padding: 12px 18px;
+  box-shadow: 0 4px 14px rgba(255, 149, 0, 0.3);
+}
+
+.chat-bubble-other {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 18px 18px 18px 4px;
+  padding: 12px 18px;
+}

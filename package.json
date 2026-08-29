@@ -1,0 +1,11 @@
+{
+  "name": "hivehub-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "web": "npm run dev --prefix web",
+    "web:build": "npm run build --prefix web",
+    "backend": "npm run dev --prefix backend-express",
+    "mobile": "npm start --prefix FE"
+  }
+}

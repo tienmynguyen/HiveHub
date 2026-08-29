@@ -65,6 +65,20 @@ npm start
 
 Update backend API URL in `FE/src/config/config.json` if needed.
 
+### 3) Web Dashboard (`web`)
+
+```bash
+# Lệnh nhanh từ thư mục gốc:
+npm run web
+
+# Hoặc vào thư mục web:
+cd web
+npm install
+npm run dev
+```
+
+Web Dashboard sẽ chạy tại `http://localhost:3000` với giao diện Bảng Kanban Drag & Drop, Real-time Chat và Trợ lý AI Agent.
+
 ## Backend Module Structure
 
 `backend-express/src`:

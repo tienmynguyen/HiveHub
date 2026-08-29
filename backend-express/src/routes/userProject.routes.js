@@ -28,17 +28,46 @@ router.post("/updateuser", (req, res) => {
 });
 
 router.post("/createdproject", (req, res) => {
-  const userId = Number(req.query.userId);
+  const userId = Number(req.query.userId || req.body?.userId || 0);
   const body = req.body || {};
   const db = readDb();
+
+  const scale = body.projectScale || "MEDIUM";
+  const methodology = (body.methodology || "SCRUM").toUpperCase();
+  const wipLimits = body.wipLimits || { todo: 10, in_progress: 3, in_review: 3, done: 100 };
+
+  let defaultPhases = body.phases || [];
+  if (!defaultPhases.length) {
+    if (methodology === "WATERFALL") {
+      defaultPhases = [
+        { phase_id: "P1", name: "1. Yêu Cầu & Phân Tích", status: "IN_PROGRESS", order: 1 },
+        { phase_id: "P2", name: "2. Thiết Kế Hệ Thống", status: "TODO", order: 2 },
+        { phase_id: "P3", name: "3. Phát Triển & Lập Trình", status: "TODO", order: 3 },
+        { phase_id: "P4", name: "4. Kiểm Thử (QA / UAT)", status: "TODO", order: 4 },
+        { phase_id: "P5", name: "5. Nghiệm Thu & Blockchain PoW", status: "TODO", order: 5 },
+      ];
+    } else if (methodology === "HYBRID") {
+      defaultPhases = [
+        { phase_id: "H1", name: "Giai Đoạn 1 (Waterfall): Khởi Tạo & Yêu Cầu", status: "IN_PROGRESS", order: 1 },
+        { phase_id: "H2", name: "Giai Đoạn 2 (Agile Scrum/Kanban): Phát Triển Tính Năng", status: "TODO", order: 2 },
+        { phase_id: "H3", name: "Giai Đoạn 3 (Waterfall): Kiểm Thử & Triển Khai", status: "TODO", order: 3 },
+      ];
+    }
+  }
+
   const project = {
     project_id: body.project_id || `P-${Date.now().toString().slice(-8)}`,
     projectName: body.projectName || "Untitled Project",
     projectDescription: body.projectDescription || "",
     projectowner: userId,
+    projectScale: scale,
+    methodology: methodology,
+    wipLimits: wipLimits,
+    phases: defaultPhases,
     timeStart: body.timeStart || new Date().toISOString(),
     timeEnd: body.timeEnd || new Date().toISOString(),
   };
+
   db.projects.push(project);
   db.userProjects.push({
     userProjectId: uuidv4(),

@@ -24,33 +24,26 @@ async function initDataStore() {
     return;
   }
 
-  const conn = await connectMongo();
-  mongoCollection = conn.collection(env.MONGODB_COLLECTION);
-
-  const existing = await mongoCollection.findOne({ _id: env.MONGODB_DOCUMENT_ID });
-  if (existing?.data) {
-    inMemoryDb = cloneDeep(existing.data);
-    console.log("DataStore: loaded data snapshot from MongoDB Atlas");
-    return;
+  try {
+    const conn = await Promise.race([
+      connectMongo(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Mongo timeout")), 3000))
+    ]);
+    if (conn) {
+      mongoCollection = conn.collection(env.MONGODB_COLLECTION);
+      const existing = await mongoCollection.findOne({ _id: env.MONGODB_DOCUMENT_ID });
+      if (existing?.data) {
+        inMemoryDb = cloneDeep(existing.data);
+        console.log("DataStore: loaded data snapshot from MongoDB Atlas");
+      }
+    }
+  } catch (err) {
+    console.log("DataStore: Mongo optional fallback, using local db.json:", err?.message || err);
   }
-
-  await mongoCollection.updateOne(
-    { _id: env.MONGODB_DOCUMENT_ID },
-    {
-      $set: {
-        data: cloneDeep(fallbackDb),
-        updatedAt: new Date(),
-      },
-    },
-    { upsert: true }
-  );
-  console.log("DataStore: initialized MongoDB snapshot from local db.json");
 }
 
 function readDb() {
-  if (!inMemoryDb) {
-    inMemoryDb = loadFromFile();
-  }
+  inMemoryDb = loadFromFile();
   return cloneDeep(inMemoryDb);
 }
 
